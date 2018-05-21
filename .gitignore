@@ -1,3 +1,7 @@
+# safe-cli-boilerplate
+
+### What follows is the standard .gitignore for Node
+
 # Logs
 logs
 *.log

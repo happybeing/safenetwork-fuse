@@ -1,0 +1,24 @@
+{
+  "name": "safecmd",
+  "version": "0.0.1",
+  "description": "SAFE Network command line application (CLI) boilerplate example",
+  "main": "cli.js",
+  "scripts": {
+    "build": "mkdir -p ./dist/prod && cp -R node_modules ./dist/prod && pkg -t node8-linux-x64 -o ./dist/prod/safecmd cli.js",
+    "buildall": "mkdir -p ./dist/prod && cp -R node_modules ./dist/prod && pkg -o ./dist/prod/safecmd cli.js",
+    "build-mock": "mkdir -p ./dist/mock && cp -R node_modules ./dist/mock && pkg -t node8-linux-x64 -o ./dist/mock/safecmd cli.js",
+    "buildall-mock": "mkdir -p ./dist/mock && cp -R node_modules ./dist/mock && pkg -o ./dist/mock/safecmd cli.js"
+  },
+  "pkg": {
+    "assets": "node_modules/@maidsafe/safe-node-app/src/native/mock/**/*.*"
+  },
+  "author": "theWebalyst",
+  "license": "GPL-3.0",
+  "repository": "https://github.com/theWebalyst/safe-cli-boilerplate",
+  "dependencies": {
+    "@maidsafe/safe-node-app": "^0.8.1",
+    "filesize": "^3.6.1",
+    "node-ipc": "^9.1.1",
+    "yargs": "^11.0.0"
+  }
+}
