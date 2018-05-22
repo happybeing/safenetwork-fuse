@@ -5,10 +5,10 @@
   "main": "cli.js",
   "scripts": {
     "testbuild": "pkg . -d -t node8-linux-x64 -o ./dist/mock/safecmd",
-    "build": "mkdir -p ./dist/prod/node_modules && cp -R node_modules/\\@maidsafe ./dist/prod/node_modules && pkg -t node8-linux-x64 -o ./dist/prod/safecmd cli.js",
-    "buildall": "mkdir -p ./dist/prod/node_modules && cp -R node_modules\\@maidsafe ./dist/prod/node_modules && pkg -o ./dist/prod/safecmd cli.js",
-    "build-mock": "mkdir -p ./dist/mock/node_modules && cp -R node_modules\\@maidsafe ./dist/mock/node_modules && pkg -t node8-linux-x64 -o ./dist/mock/safecmd cli.js",
-    "buildall-mock": "mkdir -p ./dist/mock/node_modules && cp -R node_modules\\@maidsafe ./dist/mock/node_modules && pkg -o ./dist/mock/safecmd cli.js"
+    "build": "mkdir -p ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/prod/*.* ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && pkg -t host -o ./dist/prod/safecmd cli.js",
+    "buildall": "mkdir -p ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/prod/*.* ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && pkg -t linux,macos,win -o ./dist/prod/safecmd cli.js",
+    "build-mock": "mkdir -p ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/mock/*.* ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && pkg -t host -o ./dist/mock/safecmd cli.js",
+    "buildall-mock": "mkdir -p ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/mock/*.* ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && pkg -t linux,macos,win -o ./dist/mock/safecmd cli.js"
   },
   "pkg": {
     "assets": [

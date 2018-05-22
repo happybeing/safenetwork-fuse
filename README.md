@@ -1,6 +1,12 @@
+# What's This?
+
+This Project contains 'boilerplate' open source code which can be customised to create command line applications (for Linux, Windows and Mac OS) which interact with the SAFE Network.
+
+The [SAFE Network](https://safenetwork.org/) is a truly autonomous, decentralised internet and web platform. It provides unprecedented security, anonymity and censorship resistance and is the basis for an open internet/web platform aligned with the original visions for the internet and the world wide web.
+
 # Get the source
 
-Clone this repository into safe-cli-boilerplate
+Clone this repository into safe-cli-boilerplate:
 ```
 git clone https://github.com/theWebalyst/safe-cli-boilerplate
 cd safe-cli-boilerplate
@@ -9,7 +15,7 @@ npm install
 
 # Build for mock network
 
-Build for Linux target only, the default (output in ./dist/mock):
+Build an executable for the host OS only, the default (output in ./dist/mock):
 ```
 export NODE_ENV=dev
 npm run build-mock
@@ -55,14 +61,26 @@ The content of the file which has been read: Hello Safe World
 ```
 
 # Build for live network
-Build for Linux target only, the default (output in ./dist/prod):
+Build an executable for the host OS only, the default (output in ./dist/prod):
 ```
+export NODE_ENV=
 npm run build
 ```
 For Linux, Mac and Windows targets:
 ```
+export NODE_ENV=
 npm run buildall
 ```
 
 # Problems?
-Before requesting help here, please follow the [SAFE Network nodejs tutorial](https://hub.safedev.org/platform/nodejs/) and ensure you are able to build a desktop app. That should ensure you have all the pre-requisites, and have understood the process of testing with a mock SAFE Network.
+Before requesting help here, please follow the [SAFE Network nodejs tutorial](https://hub.safedev.org/platform/nodejs/) and ensure you are able to build a desktop app. That should ensure you have all the pre-requisites, and help you to understood how to test using a **mock** SAFE Network.
+
+# Contributions
+Pull requests are welcome for outstanding issues and feature requests. Please note that contributions must be subject to the Project License (see below), and that if an incompatible license is present in your contribution it will be rejected. 
+
+**IMPORTANT:** By submitting a pull request, you will be offering code under either the Project License or a license that is compatible with and does not restrict the Project License of any existing files in the Project, or of any code in the Project that is substantially similar to your contribution. If your submission is not compatible with the Project License, the license specified below (under 'License') will apply to your submission by default.
+
+# Project License
+This project is made available under the [GPL-3.0 LICENSE](https://opensource.org/licenses/GPL-3.0) except for individual files which contain their own license so long as that file license is compatible with GPL-3.0. 
+
+The responsibility for checking this licensing is valid and that your use of this code complies lies with any person and organisation making any use of it.
