@@ -4,13 +4,14 @@
   "description": "SAFE Network command line application (CLI) boilerplate example",
   "main": "cli.js",
   "scripts": {
-    "build": "mkdir -p ./dist/prod && cp -R node_modules ./dist/prod && pkg -t node8-linux-x64 -o ./dist/prod/safecmd cli.js",
-    "buildall": "mkdir -p ./dist/prod && cp -R node_modules ./dist/prod && pkg -o ./dist/prod/safecmd cli.js",
-    "build-mock": "mkdir -p ./dist/mock && cp -R node_modules ./dist/mock && pkg -t node8-linux-x64 -o ./dist/mock/safecmd cli.js",
-    "buildall-mock": "mkdir -p ./dist/mock && cp -R node_modules ./dist/mock && pkg -o ./dist/mock/safecmd cli.js"
+    "testbuild": "pkg -d -t node8-linux-x64 -o ./dist/mock/safecmd cli.js",
+    "build": "mkdir -p ./dist/prod/node_modules && cp -R node_modules/\\@maidsafe ./dist/prod/node_modules && pkg -t node8-linux-x64 -o ./dist/prod/safecmd cli.js",
+    "buildall": "mkdir -p ./dist/prod/node_modules && cp -R node_modules\\@maidsafe ./dist/prod/node_modules && pkg -o ./dist/prod/safecmd cli.js",
+    "build-mock": "mkdir -p ./dist/mock/node_modules && cp -R node_modules\\@maidsafe ./dist/mock/node_modules && pkg -t node8-linux-x64 -o ./dist/mock/safecmd cli.js",
+    "buildall-mock": "mkdir -p ./dist/mock/node_modules && cp -R node_modules\\@maidsafe ./dist/mock/node_modules && pkg -o ./dist/mock/safecmd cli.js"
   },
   "pkg": {
-    "assets": "node_modules/@maidsafe/safe-node-app/src/native/mock/**/*.*"
+    "assets": "/**/safe-cli-testing/node_modules/\\@maidsafe/safe-node-app/src/native/**/*.*"
   },
   "author": "theWebalyst",
   "license": "GPL-3.0",
