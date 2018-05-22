@@ -2,10 +2,10 @@
 
 This Project contains 'boilerplate' open source code which can be customised to create command line applications which interact with the SAFE Network. It uses [pkg](http://npmjs.com/package/pkg) to create packaged executables for Linux, Windows and Mac OS.
 
-The [SAFE Network](https://safenetwork.org/) is a truly autonomous, decentralised internet and web platform, providing a new basis for an open internet/web platform aligned with the original vision held by the creators and early users of the internet and the world wide web. The Secure Access For Everyone (SAFE) Network tackles the increasing risks to individuals, business and nation states arising from over centralisation, domination by commercial monopolies, security risks from malware, hacking, surveillance and so on.
+The [SAFE Network](https://safenetwork.org/) is a truly autonomous, decentralised internet. A new basis for an open internet aligned with the original vision held by its creators and early users, with security, net neutrality and unmediated open access, all baked in. The Secure Access For Everyone (SAFE) Network tackles the increasing risks to individuals, business and nation states arising from over centralisation, domination by commercial monopolies, security risks from malware, hacking, surveillance and so on.
 
 # Get the source
-If you are not yet familiar with developing for SAFE Network, or have not previously used the 'mock' SAFE Browser to develop and test your code, I recommend that you try the [SAFE Network Nodejs](https://hub.safedev.org/platform/nodejs/) Tutorial *before* proceeding.
+If you are not yet familiar with developing for SAFE Network, or have not previously used the 'mock' SAFE Browser to develop and test your code, I recommend that you try the [SAFE Network Nodejs](https://hub.safedev.org/platform/nodejs/) Tutorial *before* proceeding. Doing so will ensure you have all the pre-requisites and help you understand anything not made explicit in the instructions below.
 
 Clone this repository into safe-cli-boilerplate:
 ```
