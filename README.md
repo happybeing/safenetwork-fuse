@@ -1,10 +1,11 @@
 # What's This?
 
-This Project contains 'boilerplate' open source code which can be customised to create command line applications (for Linux, Windows and Mac OS) which interact with the SAFE Network.
+This Project contains 'boilerplate' open source code which can be customised to create command line applications which interact with the SAFE Network. It uses [pkg](http://npmjs.com/package/pkg) to create packaged executables for Linux, Windows and Mac OS.
 
-The [SAFE Network](https://safenetwork.org/) is a truly autonomous, decentralised internet and web platform. It provides unprecedented security, anonymity and censorship resistance and is the basis for an open internet/web platform aligned with the original visions for the internet and the world wide web.
+The [SAFE Network](https://safenetwork.org/) is a truly autonomous, decentralised internet and web platform, providing a new basis for an open internet/web platform aligned with the original vision held by the creators and early users of the internet and the world wide web. The Secure Access For Everyone (SAFE) Network tackles the increasing risks to individuals, business and nation states arising from over centralisation, domination by commercial monopolies, security risks from malware, hacking, surveillance and so on.
 
 # Get the source
+If you are not yet familiar with developing for SAFE Network, or have not previously used the 'mock' SAFE Browser to develop and test your code, I recommend that you try the [SAFE Network Nodejs](https://hub.safedev.org/platform/nodejs/) Tutorial *before* proceeding.
 
 Clone this repository into safe-cli-boilerplate:
 ```
@@ -73,7 +74,7 @@ npm run buildall
 ```
 
 # Problems?
-Before requesting help here, please follow the [SAFE Network nodejs tutorial](https://hub.safedev.org/platform/nodejs/) and ensure you are able to build a desktop app. That should ensure you have all the pre-requisites, and help you to understood how to test using a **mock** SAFE Network.
+Before requesting help here, please follow the [SAFE Network Nodejs Tutorial](https://hub.safedev.org/platform/nodejs/) and ensure you are able to build a desktop app. That should ensure you have all the pre-requisites, and help you to understood how to test using a **mock** SAFE Network.
 
 # Contributions
 Pull requests are welcome for outstanding issues and feature requests. Please note that contributions must be subject to the Project License (see below), and that if an incompatible license is present in your contribution it will be rejected. 
