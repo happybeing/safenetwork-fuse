@@ -28,26 +28,16 @@ SOFTWARE. */
 const fs = require('fs')
 const ipc = require('node-ipc')
 const path = require('path')
-const yargs = require('yargs')
 const Safe = require('@maidsafe/safe-node-app')
 
 // No stdout from node-ipc
 ipc.config.silent = true
 
-Safe.bootstrap = async (info) => {
+Safe.bootstrap = async (appInfo, argv) => {
+  console.log('\nSafe.bootstrap() with appInfo: ' + JSON.stringify(appInfo))
   const options = {
     libPath: getLibPath()
   }
-
-  const argv = yargs
-    .option('pid', {
-      type: 'number'
-    })
-    .option('uri', {
-      type: 'string'
-    })
-    .help()
-    .argv
 
   if (argv.pid !== undefined) {
     if (argv.uri === undefined) {
@@ -63,32 +53,34 @@ Safe.bootstrap = async (info) => {
   if (argv.uri !== undefined) {
     uri = argv.uri
   } else {
-    await authorise(process.pid, info, options)
+    await authorise(process.pid, appInfo, options)
     uri = await ipcReceive(String(process.pid))
   }
 
-  return Safe.fromAuthURI(info, uri, null, options)
+  return Safe.fromAuthURI(appInfo, uri, null, options)
 }
 
-async function authorise (pid, info, options) {
-  info.customExecPath = [
+async function authorise (pid, appInfo, options) {
+  appInfo.customExecPath = [
     process.argv[0], process.argv[1],
     '--pid', String(pid),
     '--uri'
   ]
 
-  const app = await Safe.initializeApp(info, null, options)
+  const app = await Safe.initializeApp(appInfo, null, options)
   const uri = await app.auth.genAuthUri({})
 
   await app.auth.openUri(uri.uri)
 }
 
 async function ipcReceive (id) {
+  console.log('ipcReceive(' + id + ')')
   return new Promise((resolve) => {
     ipc.config.id = id
 
     ipc.serve(() => {
       ipc.server.on('auth-uri', (data) => {
+        console.log('on(auth-uri) handling data.message: ' + data.message)
         resolve(data.message)
         ipc.server.stop()
       })
@@ -99,11 +91,14 @@ async function ipcReceive (id) {
 }
 
 async function ipcSend (id, data) {
+  console.log('ipcSend(' + id + ', ' + data + ')')
+
   return new Promise((resolve) => {
     ipc.config.id = id + '-cli'
 
     ipc.connectTo(id, () => {
       ipc.of[id].on('connect', () => {
+        console.log('on(connect)')
         ipc.of[id].emit('auth-uri', { id: ipc.config.id, message: data })
 
         resolve()
@@ -131,11 +126,13 @@ function getLibPath () {
       const dir = path.join(root, location)
 
       if (fs.existsSync(dir)) {
+        console.log('getLibPath() returning: ', dir)
         return dir
       }
     }
   }
 
+  console.log('No library directory found.')
   throw Error('No library directory found.')
 }
 

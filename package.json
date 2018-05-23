@@ -1,14 +1,14 @@
 {
   "name": "safecmd",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "SAFE Network command line application (CLI) boilerplate example",
-  "main": "cli.js",
+  "main": "safecmd.js",
   "scripts": {
     "testbuild": "pkg . -d -t node8-linux-x64 -o ./dist/mock/safecmd",
-    "build": "mkdir -p ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/prod/*.* ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && pkg -t host -o ./dist/prod/safecmd cli.js",
-    "buildall": "mkdir -p ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/prod/*.* ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && pkg -t linux,macos,win -o ./dist/prod/safecmd cli.js",
-    "build-mock": "mkdir -p ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/mock/*.* ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && pkg -t host -o ./dist/mock/safecmd cli.js",
-    "buildall-mock": "mkdir -p ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/mock/*.* ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && pkg -t linux,macos,win -o ./dist/mock/safecmd cli.js"
+    "build": "mkdir -p ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/prod/*.* ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && pkg -t host -o ./dist/prod/safecmd safecmd.js",
+    "buildall": "mkdir -p ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/prod/*.* ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && pkg -t linux,macos,win -o ./dist/prod/safecmd safecmd.js",
+    "build-mock": "mkdir -p ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/mock/*.* ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && pkg -t host -o ./dist/mock/safecmd safecmd.js",
+    "buildall-mock": "mkdir -p ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/mock/*.* ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && pkg -t linux,macos,win -o ./dist/mock/safecmd safecmd.js"
   },
   "pkg": {
     "assets": [
@@ -16,7 +16,7 @@
       "node_modules/@maidsafe/safe-node-app/src/native/mock/*.*"
     ]
   },"bin": {
-    "app": "cli.js"
+    "app": "safecmd.js"
   },
   "author": "theWebalyst",
   "license": "GPL-3.0",
