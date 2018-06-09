@@ -2,11 +2,45 @@
 
 # What's This?
 
-This Project contains 'boilerplate' open source code which can be customised to create command line applications which interact with the SAFE Network. It uses [pkg](http://npmjs.com/package/pkg) to create packaged executables for Linux, Windows and Mac OS.
+**IMPORTANT: THIS PROJECT IS NOT USABLE YET - GET IN TOUCH IF YOU WANT TO HELP MAKE IT SO :-)**
 
+**What is planned:**
+
+A virtual drive for SAFE Network that works on Windows, Mac OS and Linux to provide the following features through a drive mounted on the local filesystem:
+
+- mount a SAFE NFS container as a FUSE volume
+- mount a SAFE public names container as a FUSE volume
+- mount a specified group of containers as a FUSE volume
+- a default which mounts all the standard containers it can find
+- etc (suggestions and feature requests welcome: please submit as [issues](http://github.com/theWebalyst/safenetwork-fuse/issues))
+
+Containers will appear according to a standardised structure based on the defaults in a user account on SAFE Network (i.e. under public, documents, music, publicNames etc).
+
+Each mounted container gives access to relevant functions through the command line, for example:
+
+- SAFE NFS container: file system operations such as list, copy, create and remove files using native OS commands
+- SAFE public names container: create public name (DNS entry) and upload a website to it
+- etc (suggestions and feature requests welcome: please submit as [issues](http://github.com/theWebalyst/safenetwork-fuse/issues))
+
+## About SAFE Network
 The [SAFE Network](https://safenetwork.org/) is a truly autonomous, decentralised internet. A new basis for an open internet aligned with the original vision held by its creators and early users, with security, net neutrality and unmediated open access, all baked in. The Secure Access For Everyone (SAFE) Network tackles the increasing risks to individuals, business and nation states arising from over centralisation, domination by commercial monopolies, security risks from malware, hacking, surveillance and so on.
 
-# Get the source
+# How To Use
+
+**TODO: write 'how to use'**
+
+# Implementation
+It is modelled on [ipfs-fuse](https://github.com/tableflip/ipfs-fuse) (hat tip to [@tableflip](https://github.com/tableflip)) but substantially modified.
+
+Although created using NodeJS, it builds as a stand-alone executable for Windows, Mac OS and Linux.
+
+To achieve this is based on the [safe-cli-boilerplate](https://github.com/theWebalyst/safe-cli-boilerplate) which uses [pkg](http://npmjs.com/package/pkg) to create packaged executables which do not need NodeJS to be installed on the local system.
+
+# Development
+
+**TODO: update 'Development' - currently the following text describes safe-cli-boilerplate so is relevant but incomplete and misleading.**
+
+## Get the source
 If you are not yet familiar with developing for SAFE Network, or have not previously used the 'mock' SAFE Browser to develop and test your code, I recommend that you try the [SAFE Network Nodejs](https://hub.safedev.org/platform/nodejs/) Tutorial *before* proceeding. Doing so will ensure you have all the pre-requisites and help you understand anything not made explicit in the instructions below.
 
 Clone this repository into safe-cli-boilerplate:
@@ -16,7 +50,7 @@ cd safe-cli-boilerplate
 npm install
 ```
 
-# Build for mock network
+## Build for mock network
 
 Build an executable for the host OS only, the default (output in ./dist/mock):
 ```
@@ -28,7 +62,7 @@ For Linux, Mac and Windows targets:
 export NODE_ENV=dev
 npm run buildall-mock
 ```
-## To test with mock
+### To test with mock
 Start the SAFE Browser in another terminal with:
 ```
 export NODE_ENV=dev
@@ -63,7 +97,7 @@ The file has been opened and read
 The content of the file which has been read: Hello Safe World
 ```
 
-# Build for live network
+## Build for live network
 Build an executable for the host OS only, the default (output in ./dist/prod):
 ```
 export NODE_ENV=
@@ -75,7 +109,7 @@ export NODE_ENV=
 npm run buildall
 ```
 
-# Problems?
+## Problems Building?
 Before requesting help here, please follow the [SAFE Network Nodejs Tutorial](https://hub.safedev.org/platform/nodejs/) and ensure you are able to build a desktop app. That should ensure you have all the pre-requisites, and help you to understood how to test using a **mock** SAFE Network.
 
 # Contributions

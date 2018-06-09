@@ -1,30 +1,54 @@
 {
-  "name": "safecmd",
-  "version": "0.0.2",
-  "description": "SAFE Network command line application (CLI) boilerplate example",
-  "main": "safecmd.js",
+  "name": "safenetwork-fuse",
+  "version": "0.0.1",
+  "description": "Mount SAFE Network as a FUSE volume",
+  "main": "index.js",
   "scripts": {
-    "testbuild": "pkg . -d -t node8-linux-x64 -o ./dist/mock/safecmd",
-    "build": "mkdir -p ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/prod/*.* ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && pkg -t host -o ./dist/prod/safecmd safecmd.js",
-    "buildall": "mkdir -p ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/prod/*.* ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && pkg -t linux,macos,win -o ./dist/prod/safecmd safecmd.js",
-    "build-mock": "mkdir -p ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/mock/*.* ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && pkg -t host -o ./dist/mock/safecmd safecmd.js",
-    "buildall-mock": "mkdir -p ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/mock/*.* ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && pkg -t linux,macos,win -o ./dist/mock/safecmd safecmd.js"
+    "start": "node bin",
+    "testbuild": "pkg . -d -t node8-linux-x64 -o ./dist/mock/mount-safe",
+    "build": "mkdir -p ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/prod/*.* ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && pkg -t host -o ./dist/prod/mount-safe index.js",
+    "buildall": "mkdir -p ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/prod/*.* ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && pkg -t linux,macos,win -o ./dist/prod/mount-safe index.js",
+    "build-mock": "mkdir -p ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/mock/*.* ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && pkg -t host -o ./dist/mock/mount-safe index.js",
+    "buildall-mock": "mkdir -p ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/mock/*.* ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && pkg -t linux,macos,win -o ./dist/mock/mount-safe index.js"
   },
   "pkg": {
     "assets": [
       "node_modules/@maidsafe/safe-node-app/src/native/prod/*.*",
       "node_modules/@maidsafe/safe-node-app/src/native/mock/*.*"
     ]
-  },"bin": {
-    "app": "safecmd.js"
   },
-  "author": "theWebalyst",
+  "bin": {
+    "safenetwork-fuse": "bin.js"
+  },
+  "keywords": [
+    "SAFEnetwork",
+    "FUSE",
+    "filesystem",
+    "mount"
+  ],
+  "author": "Mark Hughes",
   "license": "GPL-3.0",
-  "repository": "https://github.com/theWebalyst/safe-cli-boilerplate",
   "dependencies": {
     "@maidsafe/safe-node-app": "^0.8.1",
     "filesize": "^3.6.1",
     "node-ipc": "^9.1.1",
-    "yargs": "^11.0.0"
-  }
+    "yargs": "^11.0.0",
+    "async": "^2.6.0",
+    "debug": "^3.1.0",
+    "explain-error": "^1.0.4",
+    "fuse-bindings": "^2.11.2",
+    "mkdirp": "^0.5.1"
+  },
+  "devDependencies": {
+    "ipfs-api": "^22.0.1",
+    "standard": "^11.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/theWebalyst/safenetwork-fuse.git"
+  },
+  "bugs": {
+    "url": "https://github.com/theWebalyst/safenetwork-fuse/issues"
+  },
+  "homepage": "https://github.com/theWebalyst/safenetwork-fuse#readme"
 }
