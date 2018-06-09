@@ -1,76 +1,98 @@
 /* TODO theWebalyst notes:
-[ ] Async: looks like I could replace with Promises (https://caolan.github.io/async/docs.html#auto)
+[x] Async: looks like I could replace with Promises (https://caolan.github.io/async/docs.html#auto)
+
+NOTE:
+1) safenetworkjs is trying to support two APIs (web and node) which have
+different auth flows. For now I'm following the node API but...
+[ ] when web DOM API is updated add DOM support back to safenetworkjs
+
+2) for safenetwork-fuse auth must be done in the CLI binary
+(not safenetwork-fuse) because the executable needs to be invoked a
+second time to pass the authUri back to the process which calls openUri().
+So...
+[ ] merge safecmd.js code into bin.js in order to parse FUSE args and safecmd
+    args (and pass CLI args including auth URI and process ID)
+[ ] for development, add path of a safe-cli-boilerplate executable
+    to appInfo as follows:
+      const authCmd = "/home/mrh/src/safe/safe-cli-boilerplate/dist/mock/safecmd"
+      const authScript = "/snapshot/safe-cli-boilerplate/safecmd.js"
+      appInfo.customExecPath = [
+        authCmd, authScript,
+        '--pid', String(pid),
+        '--uri']
+
+[ ] do the auth before attempting the mount
+[ ] on successful auth, call mount and pass in the safeApi and initialised safeApp
+[ ] get this to auth with mock network
+  NOTE for development I need a built CLI cmd to pass the URI back to this process
+[ ] change ./safenetwork-webapi from copies to safenetworkjs (and npm link it)
  */
 
 const Fuse = require('fuse-bindings')
 const debug = require('debug')('ipfs-fuse:index')
-// TODO change ./safenetwork-webapi from copies to dependency:
-const Safenetwork = require('./safenetwork-webapi') // was ipfs-api
 const mkdirp = require('mkdirp')
-// const Async = require('async')
+const Async = require('async')
 const createIpfsFuse = require('./safenetwork-fuse')
 
-exports.mount = async (mountPath, opts, cb) => {
+exports.mount = (safeApi, mountPath, opts, cb) => {
+  Safenetwork = safeApi
   if (!cb) {
     cb = opts
     opts = {}
   }
+
   opts = opts || {}
   cb = cb || (() => {})
 
-  async function path () {
-    mkdirp(mountPath, (err) => {
-      if (err) {
-        debug(err)
-        throw (err)
-      }
-    })
-  }
+  Async.auto({
+    path (cb) {
+      mkdirp(mountPath, (err) => {
+        console.log('log:index.js:path()!!!')
+        debug('index.js:path()!!!')
+        if (err) {
+          err = explain(err, 'Failed to create mount point')
+          debug(err)
+          return cb(err)
+        }
 
-  async function ipfs () {
-    // WAS: const ipfs = new IpfsApi(opts.ipfs)
+        cb()
+      })
+    },
+    ipfs (cb) {
+      console.log('log:index.js:ipfs()!!! - REMOVE THIS')
+      debug('index.js:ipfs()!!!')
+      /* WAS: const ipfs = new IpfsApi(opts.ipfs)
 
-    // TODO: parameterise these? or separate out?
-    const safeAppConfig = {
-      id: 'unspecified id',
-      name: 'SAFE Plume (WARNING config.json not found)',
-      vendor: 'unspecified vendor'
-    }
-    const appPermissions = {
-      // TODO is this right for solid service container (ie solid.<safepublicid>)
-      _public: ['Read', 'Insert', 'Update', 'Delete'], // request to insert into `_public` container
-      _publicNames: ['Read', 'Insert', 'Update', 'Delete'] // TODO maybe reduce defaults later
-    }
+      ipfs.id((err, id) => {
+        if (err) {
+          err = explain(err, 'Failed to connect to IPFS node')
+          debug(err)
+          return cb(err)
+        }
 
-    if (!Safenetwork.isAuthorised()) {
-      console.log('safe:plume AUTH simpleAuthorise()')
-      Safenetwork.simpleAuthorise(safeAppConfig, appPermissions)
-    }
+        debug(id)
+        cb(null, ipfs)
+      })
+      */
+    },
+    mount: ['path', 'ipfs', (res, cb) => {
+      Fuse.mount(mountPath, createIpfsFuse(safeApi), opts.fuse, (err) => {
+        if (err) {
+          err = explain(err, 'Failed to mount IPFS FUSE volume')
+          debug(err)
+          return cb(err)
+        }
 
-    if (!Safenetwork.isAuthorised()) {
-      let err = 'Failed to connect to SAFE Network'
+        cb(null, {})
+      })
+    }]
+  }, (err) => {
+    if (err) {
       debug(err)
-      throw err
+      return cb(err)
     }
-
-    return Safenetwork
-  }
-
-  try {
-    const result = await Promise.all([path, ipfs])
-    const safe = result[1]
-    Fuse.mount(mountPath, createIpfsFuse(safe), opts.fuse, (err) => {
-      if (err) {
-        err = 'Failed to mount IPFS FUSE volume'
-        debug(err)
-        throw err
-      }
-    })
-  } catch (err) {
-    cb(err)
-  }
-
-  cb(null, {})  // Success with empty return object
+    cb(null, {})
+  })
 }
 
 exports.unmount = (mountPath, cb) => {
@@ -78,7 +100,7 @@ exports.unmount = (mountPath, cb) => {
 
   Fuse.unmount(mountPath, (err) => {
     if (err) {
-      err = 'Failed to unmount IPFS FUSE volume'
+      err = explain(err, 'Failed to unmount IPFS FUSE volume')
       debug(err)
       return cb(err)
     }
