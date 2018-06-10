@@ -33,6 +33,7 @@ const debug = require('debug')('ipfs-fuse:index')
 const mkdirp = require('mkdirp')
 const Async = require('async')
 const createIpfsFuse = require('./safenetwork-fuse')
+const explain = require('explain-error')
 
 exports.mount = (safeApi, mountPath, opts, cb) => {
   Safenetwork = safeApi

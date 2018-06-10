@@ -2,9 +2,16 @@
 
 const Os = require('os')
 const Path = require('path')
-// const Safenetwork = require('safenetworkjs').SafenetworkApi
-const Safenetwork = require('./bootstrap')
+const Safenetwork = require('safenetworkjs').SafenetworkApi
 const IpfsFuse = require('./index.js')
+const explain = require('explain-error')
+const yargs = require('yargs')
+
+const argv = yargs
+  .option('pid', { type: 'number' }) // pid for SAFE Auth
+  .option('uri', { type: 'string' }) // uri for SAFE Auth
+  .help()
+  .argv
 
 const mountPath = process.platform !== 'win32'
   ? Path.join(Os.homedir(), 'IPFS')
@@ -12,9 +19,9 @@ const mountPath = process.platform !== 'win32'
 
 // TODO: parameterise these? or separate out?
 let appConfig = {
-  id: 'unspecified id',
-  name: 'SAFE Plume (WARNING config.json not found)',
-  vendor: 'unspecified vendor'
+  id: 'safenetwork-fuse',
+  name: 'SAFE Network FUSE',
+  vendor: 'theWebalyst'
 }
 
 const appPermissions = {
@@ -36,7 +43,7 @@ if (false) { // TODO can I make this conditional on being run as script?
 // Auth with Safetnetwork
 try {
   console.log('try bootstrap()...')
-  Safenetwork.bootstrap(appConfig, appPermissions, process.argv).then(app => {
+  Safenetwork.bootstrap(appConfig, appPermissions, argv).then(app => {
     IpfsFuse.mount(Safenetwork, mountPath, {
       ipfs: {},
       fuse: { displayFolder: true, force: true }
