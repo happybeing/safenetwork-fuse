@@ -14,7 +14,7 @@ const argv = yargs
   .argv
 
 const mountPath = process.platform !== 'win32'
-  ? Path.join(Os.homedir(), 'IPFS')
+  ? Path.join(Os.homedir(), 'SAFE')
   : 'I:\\'
 
 // TODO: parameterise these? or separate out?
@@ -49,11 +49,11 @@ try {
       fuse: { displayFolder: true, force: true }
     }, (err) => {
       if (err) return console.error(err.message)
-      console.log(`Mounted IPFS filesystem on ${mountPath}`)
+      console.log(`Mounted SAFE filesystem on ${mountPath}`)
     })
   })
 } catch (err) {
-  const msg = 'Failed to mount IPFS FUSE volume'
+  const msg = 'Failed to mount SAFE FUSE volume'
   console.log(msg)
   explain(err, msg)
   //        throw new Error(err)
@@ -68,6 +68,6 @@ process.on('SIGINT', () => {
 
   IpfsFuse.unmount(mountPath, (err) => {
     if (err) return console.error(err.message)
-    console.log(`Unmounted IPFS filesystem at ${mountPath}`)
+    console.log(`Unmounted SAFE filesystem at ${mountPath}`)
   })
 })

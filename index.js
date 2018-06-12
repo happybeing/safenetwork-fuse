@@ -66,7 +66,7 @@ exports.mount = (safeApi, mountPath, opts, cb) => {
 
       ipfs.id((err, id) => {
         if (err) {
-          err = explain(err, 'Failed to connect to IPFS node')
+          err = explain(err, 'Failed to connect to SAFE node')
           debug(err)
           return cb(err)
         }
@@ -76,10 +76,10 @@ exports.mount = (safeApi, mountPath, opts, cb) => {
       })
       */
     },
-    mount: ['path', 'ipfs', (res, cb) => {
+    mount: ['path', (res, cb) => {
       Fuse.mount(mountPath, createIpfsFuse(safeApi), opts.fuse, (err) => {
         if (err) {
-          err = explain(err, 'Failed to mount IPFS FUSE volume')
+          err = explain(err, 'Failed to mount SAFE FUSE volume')
           debug(err)
           return cb(err)
         }
@@ -101,7 +101,7 @@ exports.unmount = (mountPath, cb) => {
 
   Fuse.unmount(mountPath, (err) => {
     if (err) {
-      err = explain(err, 'Failed to unmount IPFS FUSE volume')
+      err = explain(err, 'Failed to unmount SAFE FUSE volume')
       debug(err)
       return cb(err)
     }
