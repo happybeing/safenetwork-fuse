@@ -1,15 +1,15 @@
 {
   "name": "safenetwork-fuse",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Mount SAFE Network as a FUSE volume",
   "main": "index.js",
   "scripts": {
     "start": "node bin",
     "testbuild": "pkg . -d -t node8-linux-x64 -o ./dist/mock/mount-safe",
-    "build": "mkdir -p ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/prod/*.* ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && pkg -t host -o ./dist/prod/mount-safe index.js",
-    "buildall": "mkdir -p ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/prod/*.* ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && pkg -t linux,macos,win -o ./dist/prod/mount-safe index.js",
-    "build-mock": "mkdir -p ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/mock/*.* ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && pkg -t host -o ./dist/mock/mount-safe index.js",
-    "buildall-mock": "mkdir -p ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/mock/*.* ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && pkg -t linux,macos,win -o ./dist/mock/mount-safe index.js"
+    "build": "mkdir -p ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/prod/*.* ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && pkg -t host -o ./dist/prod/mount-safe bin.js",
+    "buildall": "mkdir -p ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/prod/*.* ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && pkg -t linux,macos,win -o ./dist/prod/mount-safe bin.js",
+    "build-mock": "mkdir -p ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/mock/*.* ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && pkg -t host -o ./dist/mock/mount-safe bin.js",
+    "buildall-mock": "mkdir -p ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/mock/*.* ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && pkg -t linux,macos,win -o ./dist/mock/mount-safe bin.js"
   },
   "pkg": {
     "assets": [
@@ -42,6 +42,7 @@
   "devDependencies": {
     "explain-error": "^1.0.4",
     "ipfs-api": "^22.0.1",
+    "pkg": "^4.3.1",
     "standard": "^11.0.0"
   },
   "repository": {
