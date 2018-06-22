@@ -13,7 +13,8 @@
     "testbuild1": "pkg bin.js -d -t node8-linux-x64 -o ./dist/mock/mount-safe",
     "testbuild2": "pkg . -d -t host -o ./dist/mock/mount-safe",
     "testbuild3": "pkg ./src/bin.js -d -t host -o ./dist/mock/mount-safe",
-    "testbuild-doesnt-package-assets": "pkg -d -t host -o ./dist/mock/mount-safe bin.js"
+    "testbuild-doesnt-package-assets": "pkg -d -t host -o ./dist/mock/mount-safe bin.js",
+    "tw-docs": "cp -R /home/mrh/Notebooks/Notes/computers-Project_SAFE/SAFE-App-Ideas/SAFE-App_Drive_\\(FUSE\\)/SAFE-FUSE_Design_\\(repo\\) ./docs/zim-wiki/"
   },
   "pkg": {
     "assets": [

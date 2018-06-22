@@ -1,5 +1,7 @@
 # safe-cli-boilerplate
 dist/
+*.zim/
+notebook.zim
 
 ### What follows is the standard .gitignore for Node
 
