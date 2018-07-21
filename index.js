@@ -1,7 +1,11 @@
 /* TODO theWebalyst notes:
 [x] Async: looks like I could replace with Promises (https://caolan.github.io/async/docs.html#auto)
 
-NOTE:
+SAFE-VFS
+========
+
+Overview
+--------
 1) safenetworkjs is trying to support two APIs (web and node) which have
 different auth flows. For now I'm following the node API but...
 [ ] when web DOM API is updated add DOM support back to safenetworkjs
@@ -26,7 +30,67 @@ So...
 [ ] get this to auth with mock network
   NOTE for development I need a built CLI cmd to pass the URI back to this process
 [ ] change ./safenetwork-webapi from copies to safenetworkjs (and npm link it)
- */
+
+SafeVfs
+-------
+SAFE-VFS in the design document is implemented by SafeVfs.
+
+SafeVfs implements the Path Map containing entries which map a path
+to a vfsHandler object. The Path Map contains:
+- one top level entry for each mount point (e.g. _publicNames, _documents etc.)
+- zero or more entries for sub-paths of a top level path entry, that are
+  also containers
+- provides a getHandler() to get the vfsHandler for a given path
+
+SafeVfs.fuseHandler()
+---------------------
+This checks the map for an entry for a given path.
+If the entry exists, it returns the entry, a vfsHandler object.
+If it does not exist, recurses by calling itself on the parent path and on
+resolving inserts the returned vfsHandler object into the map.
+
+This method is called by the FUSE operator implementations. Example
+proto code for a SAFE VFS implementation of readdir (see readdir.js)
+  module.exports = (safeVfs) => {
+    return {
+      readdir (path, cb) {
+        debug({ path })
+        try {
+          cb(0, await safeVfs.fuseHandler(path).readdir(path))
+          catch (err) {
+            err = explain(err, 'Failed to readdir path: ' + path)
+            debug(err)
+            cb(Fuse.EREMOTEIO)
+          }
+        })
+      }
+    }
+  }
+
+vfsHandler Object
+-----------------
+vfsHandlerObject = {
+    fuseHandler <vfsFuseHandler>,
+    container <mutableData>,  // Then handler is specific to the MD role, such
+                              // as public names, services, NFS, email etc.
+    params <object>           // Params (e.g. as a key in the container if the
+                              // mount is within the container)
+}
+
+vfsFuseHandler classes
+----------------------
+There is a vfsFuseHandler class for each supported MD container
+role (public names, services, NFS service, email service etc.)
+
+Each class provides a method for each supported FUSE operation (readdir,
+mkdir etc).
+
+Another method, vfsFuseHandler::newVfsFuseHandler(key) returns a new
+vfsFuseHandlerObject corresponding to the MD role of the value at the
+given key. The new object will be initialised so methods on the object
+have any information needed when they are called (such as a key within
+the container which they handle).
+*/
 
 const Fuse = require('fuse-bindings')
 const debug = require('debug')('ipfs-fuse:index')
