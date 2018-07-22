@@ -17,21 +17,19 @@ const fakeGetattr = {
   '/one/happybeing': 'file'
 }
 /*
- * Pseudocode for a SAFE VFS implementation:
+ * Pseudocode for a SAFE VFS implementation of readdir()
  *
 module.exports = (safeVfs) => {
   return {
     readdir (path, cb) {
       debug({ path })
       try {
-        // TODO: Convert this to Promises
-        let listing = safeVfs.fuseHandler(path).readdir(path, (err, files) => {
-        if (err) {
+        cb(0, await safeVfs.fuseHandler(path).readdir(path))
+        catch (err) {
           err = explain(err, 'Failed to readdir path: ' + path)
           debug(err)
-          return reply(Fuse.EREMOTEIO)
+          cb(Fuse.EREMOTEIO)
         }
-        reply(0, files.map(f => f.name || f.hash))
       })
     }
   }

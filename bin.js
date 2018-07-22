@@ -3,7 +3,7 @@
 const Os = require('os')
 const Path = require('path')
 const Safenetwork = require('safenetworkjs').SafenetworkApi
-const IpfsFuse = require('./index.js')
+const IpfsFuse = require('./src/safe-vfs/index.js') // TODO rename IpfsFuse SafeVfs
 const explain = require('explain-error')
 const yargs = require('yargs')
 
