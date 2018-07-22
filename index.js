@@ -32,7 +32,7 @@ So...
 [ ] change ./safenetwork-webapi from copies to safenetworkjs (and npm link it)
 
 SafeVfs
--------
+=======
 SAFE-VFS in the design document is implemented by SafeVfs.
 
 SafeVfs implements the Path Map containing entries which map a path
@@ -40,17 +40,31 @@ to a vfsHandler object. The Path Map contains:
 - one top level entry for each mount point (e.g. _publicNames, _documents etc.)
 - zero or more entries for sub-paths of a top level path entry, that are
   also containers
-- provides a getHandler() to get the vfsHandler for a given path
+- provides a getHandler() to get the vfsHandler for a given path (see next)
 
-SafeVfs.fuseHandler()
----------------------
-This checks the map for an entry for a given path.
-If the entry exists, it returns the entry, a vfsHandler object.
-If it does not exist, recurses by calling itself on the parent path and on
-resolving inserts the returned vfsHandler object into the map.
+SafeVfs.getHandler()
+--------------------
+SafeVfs.getHandler() checks the map for an entry for a given path. If the entry
+exists, it returns the entry, a vfsHandler object. If there is no entry
+matching the path getHandler() recurses by calling itself on the parent path
+and on resolving inserts the returned vfsHandler object into the map.
 
-This method is called by the FUSE operator implementations. Example
-proto code for a SAFE VFS implementation of readdir (see readdir.js)
+vfsHandlerObject
+----------------
+vfsHandlerObject = {
+  fuseHandler <vfsFuseHandler>, // Handler for MD role at the leaf of path
+                                // (e.g public names, services, NFS service etc
+
+  container <mutableData>,  // The corresponding MD (null if lazy init)
+  params <object>           // Params (e.g. as a key in the container if the
+                            // mounted path is below the container root)
+}
+
+vfsHandler.fuseHandler()
+------------------------
+This method is called by the FUSE operator implementations. Below is
+example SAFE-VFS code for the FUSE readdir operator (implemented in readdir.js):
+
   module.exports = (safeVfs) => {
     return {
       readdir (path, cb) {
@@ -67,29 +81,22 @@ proto code for a SAFE VFS implementation of readdir (see readdir.js)
     }
   }
 
-vfsHandler Object
------------------
-vfsHandlerObject = {
-    fuseHandler <vfsFuseHandler>,
-    container <mutableData>,  // Then handler is specific to the MD role, such
-                              // as public names, services, NFS, email etc.
-    params <object>           // Params (e.g. as a key in the container if the
-                              // mount is within the container)
-}
-
 vfsFuseHandler classes
 ----------------------
-There is a vfsFuseHandler class for each supported MD container
-role (public names, services, NFS service, email service etc.)
+A vfsHandlerObject is an instance of a vfsFuseHandler<type> class, where there
+is a type corresponds to the MD container role: PublicNames, Services,
+ServiceNfs, ServiceEmail
 
 Each class provides a method for each supported FUSE operation (readdir,
 mkdir etc).
 
-Another method, vfsFuseHandler::newVfsFuseHandler(key) returns a new
-vfsFuseHandlerObject corresponding to the MD role of the value at the
-given key. The new object will be initialised so methods on the object
-have any information needed when they are called (such as a key within
-the container which they handle).
+newVfsFuseHandler({key, lazyInitialise, {params} })
+Another method, newVfsFuseHandler(key) returns a new vfsHandlerObject
+corresponding to the MD role of the value at the given key. The new
+object will contain any supplied 'params' (such as a key within the
+container which they handle), and a 'lazyInitialise' flag which determines
+whether to initialise the 'container' member using the API, or set it to
+null and return immediately. See vfsHandlerObject above.
 */
 
 const Fuse = require('fuse-bindings')
