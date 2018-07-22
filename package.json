@@ -2,7 +2,7 @@
   "name": "safenetwork-fuse",
   "version": "0.0.3",
   "description": "Mount SAFE Network as a FUSE volume",
-  "main": "index.js",
+  "main": "bin.js",
   "scripts": {
     "start": "node bin",
     "build": "mkdir -p ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/prod/*.* ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && pkg . -t host -o ./dist/prod/mount-safe",
