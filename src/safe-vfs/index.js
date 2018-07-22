@@ -1,5 +1,6 @@
 /* TODO theWebalyst notes:
 [ ] Async: looks like I could replace with Promises (https://caolan.github.io/async/docs.html#auto)
+  -> tried but didn't work so leave for later.
 
 1) safenetworkjs is trying to support two APIs (web and node) which have
 different auth flows. For now I'm following the node API but...
@@ -9,9 +10,10 @@ different auth flows. For now I'm following the node API but...
 (not safenetwork-fuse) because the executable needs to be invoked a
 second time to pass the authUri back to the process which calls openUri().
 So...
-[x] merge safecmd.js code into bin.js in order to parse FUSE args and safecmd
+[/] merge safecmd.js code into bin.js in order to parse FUSE args and safecmd
     args (and pass CLI args including auth URI and process ID)
-[ ] for development, add path of a safe-cli-boilerplate executable
+[x] NOT NEEDED (but code left in ./bin.js for now)...
+    for development, add path of a safe-cli-boilerplate executable
     to appInfo as follows:
       const authCmd = "/home/mrh/src/safe/safe-cli-boilerplate/dist/mock/safecmd"
       const authScript = "/snapshot/safe-cli-boilerplate/safecmd.js"
@@ -20,11 +22,11 @@ So...
         '--pid', String(pid),
         '--uri']
 
-[ ] do the auth before attempting the mount
-[ ] on successful auth, call mount and pass in the safeApi and initialised safeApp
-[ ] get this to auth with mock network
+[/] do the auth before attempting the mount
+[/] on successful auth, call mount and pass in the safeApi and initialised safeApp
+[/] get this to auth with mock network
   NOTE for development I need a built CLI cmd to pass the URI back to this process
-[ ] change ./safenetwork-webapi from copies to safenetworkjs (and npm link it)
+[/] change ./safenetwork-webapi from copies to safenetworkjs (and npm link it)
 
 SAFE-VFS - DESIGN (July 2018)
 =================
