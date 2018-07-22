@@ -1,11 +1,6 @@
 /* TODO theWebalyst notes:
-[x] Async: looks like I could replace with Promises (https://caolan.github.io/async/docs.html#auto)
+[ ] Async: looks like I could replace with Promises (https://caolan.github.io/async/docs.html#auto)
 
-SAFE-VFS
-========
-
-Overview
---------
 1) safenetworkjs is trying to support two APIs (web and node) which have
 different auth flows. For now I'm following the node API but...
 [ ] when web DOM API is updated add DOM support back to safenetworkjs
@@ -14,7 +9,7 @@ different auth flows. For now I'm following the node API but...
 (not safenetwork-fuse) because the executable needs to be invoked a
 second time to pass the authUri back to the process which calls openUri().
 So...
-[ ] merge safecmd.js code into bin.js in order to parse FUSE args and safecmd
+[x] merge safecmd.js code into bin.js in order to parse FUSE args and safecmd
     args (and pass CLI args including auth URI and process ID)
 [ ] for development, add path of a safe-cli-boilerplate executable
     to appInfo as follows:
@@ -31,10 +26,17 @@ So...
   NOTE for development I need a built CLI cmd to pass the URI back to this process
 [ ] change ./safenetwork-webapi from copies to safenetworkjs (and npm link it)
 
-SafeVfs
-=======
-SAFE-VFS in the design document is implemented by SafeVfs.
+SAFE-VFS - DESIGN (July 2018)
+=================
+IMPORTANT: these notes may not be maintained, so use to help you understand
+the code, but if they become too outdated to help please either update them
+or remove them.
 
+SAFE-VFS design follows, please refer to ./docs for additional design
+documentation including the master architectural diagram for SAFE FUSE.
+
+SafeVfs
+-------
 SafeVfs implements the Path Map containing entries which map a path
 to a vfsHandler object. The Path Map contains:
 - one top level entry for each mount point (e.g. _publicNames, _documents etc.)
