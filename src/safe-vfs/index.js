@@ -1,32 +1,10 @@
 /* TODO theWebalyst notes:
+[ ] add support for CLI to configure mounting:
+    SafeVfs currently hard codes a default set of path mappings, this should
+    be replaced by settings from the CLI parameters, so users can choose what
+    to mount and where.
 [ ] Async: looks like I could replace with Promises (https://caolan.github.io/async/docs.html#auto)
   -> tried but didn't work so leave for later.
-
-1) safenetworkjs is trying to support two APIs (web and node) which have
-different auth flows. For now I'm following the node API but...
-[ ] when web DOM API is updated add DOM support back to safenetworkjs
-
-2) for safenetwork-fuse auth must be done in the CLI binary
-(not safenetwork-fuse) because the executable needs to be invoked a
-second time to pass the authUri back to the process which calls openUri().
-So...
-[/] merge safecmd.js code into bin.js in order to parse FUSE args and safecmd
-    args (and pass CLI args including auth URI and process ID)
-[x] NOT NEEDED (but code left in ./bin.js for now)...
-    for development, add path of a safe-cli-boilerplate executable
-    to appInfo as follows:
-      const authCmd = "/home/mrh/src/safe/safe-cli-boilerplate/dist/mock/safecmd"
-      const authScript = "/snapshot/safe-cli-boilerplate/safecmd.js"
-      appInfo.customExecPath = [
-        authCmd, authScript,
-        '--pid', String(pid),
-        '--uri']
-
-[/] do the auth before attempting the mount
-[/] on successful auth, call mount and pass in the safeApi and initialised safeApp
-[/] get this to auth with mock network
-  NOTE for development I need a built CLI cmd to pass the URI back to this process
-[/] change ./safenetwork-webapi from copies to safenetworkjs (and npm link it)
 
 SAFE-VFS - DESIGN (July 2018)
 =================
@@ -110,8 +88,9 @@ const Async = require('async')
 const createIpfsFuse = require('../fuse-operations')
 const explain = require('explain-error')
 
+let Safenetwork // Set to safenetworkjs SafenetworkApi on successful mount
+
 exports.mount = (safeApi, mountPath, opts, cb) => {
-  Safenetwork = safeApi
   if (!cb) {
     cb = opts
     opts = {}
@@ -158,6 +137,8 @@ exports.mount = (safeApi, mountPath, opts, cb) => {
           debug(err)
           return cb(err)
         }
+        Safenetwork = safeApi
+        // TODO await initalisePathMap()
 
         cb(null, {})
       })
@@ -180,6 +161,111 @@ exports.unmount = (mountPath, cb) => {
       debug(err)
       return cb(err)
     }
+    Safenetwork = null
     cb()
   })
 }
+
+// TODO implement handler for each Mutable Data role (public names, services, NFS service)
+/**
+ * vfsHandler for _publicNames container
+ * @param  {[type]} ??? [description]
+ * @return {[type]}      [description]
+ */
+async function publicNamesHandler () {
+  try {
+    throw new Error('TODO implement publicNamesHandler')
+  } catch (err) {
+    throw err
+  }
+}
+
+/**
+ * vfsHandler for a services container
+ * @param  {[type]} ??? [description]
+ * @return {[type]}      [description]
+ */
+async function servicesHandler () {
+  try {
+    throw new Error('TODO implement servicesHandler')
+  } catch (err) {
+    throw err
+  }
+}
+
+/**
+ * vfsHandler for an NFS container
+ * @param  {[type]} ??? [description]
+ * @return {[type]}      [description]
+ */
+async function nfsHandler () {
+  try {
+    throw new Error('TODO implement nfsHandler')
+  } catch (err) {
+    throw err
+  }
+}
+
+// TODO Path map ???
+const pathMap = {}
+
+/**
+ * Mount SAFE container (Mutable Data)
+ *
+ * @param  {string} safePath      path starting with a root container
+ * Examples:
+ *   _publicNames                  mount _publicNames container
+ *   _publicNames/happybeing      mount services container for 'happybeing'
+ *   _publicNames/www.happybeing  mount www container (NFS for service at www.happybeing)
+ *   _publicNames/thing.happybeing mount the services container (NFS, mail etc at thing.happybeing
+ *
+ * @param  {string} mountPath     (optional) subpath of the mount point
+ * @param  {string} containerHandler (optional) handler for the container type
+ * @return {Promise}              which resolves to a vfsHandlerObject
+ */
+
+async function mountContainer (safePath, mountPath, containerHandler) {
+  let defaultHandler
+  if (safePath === '_publicNames') {
+    defaultHandler = publicNamesHandler
+  } else {
+    defaultHandler = nfsHandler
+  }
+
+  mountPath = mountPath || safePath
+  containerHandler = containerHandler || defaultHandler
+  try {
+    throw new Error('TODO implement mountContainer')
+  } catch (err) {
+    throw err
+  }
+}
+
+// Called after successful mount
+async function initialisePathMap () {
+  mountContainer('_publicNames')
+  try {
+    throw new Error('TODO implement initialisePathMap')
+  } catch (err) {
+    throw err
+  }
+}
+
+/**
+ * Get handler object for a FUSE mount path
+ *
+ * @param {string} path - a path with a mounted container at its root
+ *
+ * @returns a Promise which resolves to a handler object
+ */
+
+async function fuseHandler (path) {
+  throw new Error('TODO implement SafefuseHandler')
+  try {
+  } catch (err) {
+    throw err
+  }
+}
+
+module.exports.fuseHandler = fuseHandler
+module.exports.mountContainer = mountContainer
