@@ -53,15 +53,42 @@ initialisation until needed.
 SafeVfs.getHandler()
 --------------------
 SafeVfs.getHandler() checks the map for an entry for a given path. If the entry
-exists, it returns the entry, a vfsHandler object. If there is no entry
-matching the path getHandler() recurses by calling itself on the parent path
-and on resolving inserts the returned vfsHandler object into the map.
+exists, it returns the entry, a vfsHandler object.
+
+If there is no entry matching the path, it calls itself to obtain the handler
+object for the parent path. This recursion continues, and will 'unroll' once
+a handler is found (which may ultimately be the root handler object for '/').
+
+Once it obtains a handler object for a parent path, it calls getHandlerFor()
+on that object, to obtain a handler for the contained item and returns that.
+
+The above works for containers, but what about leaves (e.g. an NFS file)?
+
+To cope with files, SafeVfs.getHandler() will obtain the handler for the parent
+container (NFS directory) and then call getHandlerFor() on that (see below).
 
 vfsHandler Object
 -----------------
 A vfsHandler object is an instance of a class such as vfsPublicNamesHandler or
 vfsNfsHandler. Those classes are each implemented in their own file in
 src/safe-vfs, and are required() for use in src/safe-vfs/index.js
+
+A vfsHandler is the only thing that knows what it contains, and so provides
+a method getHandlerFor(path) which checks that the path is for an item
+which it contains, and if so returns a vfsHandler object for that contained
+item. If the item is itself a container, this will typically mean it
+creates a suitable vfsHandler object and returns this, having added it to the
+PathMap. Where it contained item is a file, or a container of its own type
+it can return itself because it knows how to handle FUSE operations on both.
+
+This means that a vfsHandler class implements FUSE operation methods
+which work for both itself as container (e.g. readdir, statfs etc) and on
+any 'leaf' item (e.g. NFS file) which it contains.
+
+For example vfsPublicNamesHandler.getHandlerFor('_publicNames/happybeing')
+will create and return an instance of vfsServicesHandler for the public
+name 'happybeing'. While vfsNfsHandler.getHandlerFor('_public/blog/') and
+vfsNfsHandler.getHandlerFor('_public/blog/index.html') should return itself.
 
 A handler object implements a FUSE operation method for each FUSE operations it
 supports such as readdir(), statfs() etc. (see src/fuse-operations)
