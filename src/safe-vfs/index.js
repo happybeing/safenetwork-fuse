@@ -1,5 +1,25 @@
 /* TODO theWebalyst notes:
 [ ] Implement SafeVfs class and vfsHandler classes according to 'DESIGN' below
+  [ ] start with a vfsNfsHandler for /_public and implement:
+    [ ] mkdir
+    [ ] statfs
+    [ ] getattr
+    [ ] create
+    [ ] open
+    [ ] write
+    [ ] read
+    [ ] unlink
+    [ ] rmdir
+    [ ] write
+    [ ] rename
+    [ ] write
+    [ ] ??? ftruncate
+    [ ] ??? mknod
+    [ ] ??? utimens
+    [ ] write test shell script to create a simple tree
+    [ ] write test shell script to create a hello world website
+  [ ] implement vfsPublicNamesHandler
+  [ ] implement vfsServicesHandler
 [ ] LATER add support for CLI to configure mounting:
     SafeVfs currently hard codes a default set of path mappings, this should
     be replaced by settings from the CLI parameters, so users can choose what
@@ -200,45 +220,9 @@ exports.unmount = (mountPath, cb) => {
   })
 }
 
-// TODO implement handler for each Mutable Data role (public names, services, NFS service)
-/**
- * vfsHandler for _publicNames container
- * @param  {[type]} ??? [description]
- * @return {[type]}      [description]
- */
-async function publicNamesHandler () {
-  try {
-    throw new Error('TODO implement publicNamesHandler')
-  } catch (err) {
-    throw err
-  }
-}
-
-/**
- * vfsHandler for a services container
- * @param  {[type]} ??? [description]
- * @return {[type]}      [description]
- */
-async function servicesHandler () {
-  try {
-    throw new Error('TODO implement servicesHandler')
-  } catch (err) {
-    throw err
-  }
-}
-
-/**
- * vfsHandler for an NFS container
- * @param  {[type]} ??? [description]
- * @return {[type]}      [description]
- */
-async function nfsHandler () {
-  try {
-    throw new Error('TODO implement nfsHandler')
-  } catch (err) {
-    throw err
-  }
-}
+const publicNamesHandlerClass = require('public-names')
+const sevicesHandlerClass = require('services')
+const nfsHandlerClass = require('nfs')
 
 // TODO Path map ???
 const pathMap = {}
@@ -254,20 +238,20 @@ const pathMap = {}
  *   _publicNames/thing.happybeing mount the services container (NFS, mail etc at thing.happybeing
  *
  * @param  {string} mountPath     (optional) subpath of the mount point
- * @param  {string} containerHandler (optional) handler for the container type
+ * @param  {string} containerHandlerClass (optional) handler class of the container type
  * @return {Promise}              which resolves to a vfsHandlerObject
  */
 
-async function mountContainer (safePath, mountPath, containerHandler) {
-  let defaultHandler
+async function mountContainer (safePath, mountPath, containerHandlerClass) {
+  let defaultHandlerClass
   if (safePath === '_publicNames') {
-    defaultHandler = publicNamesHandler
+    defaultHandlerClass = publicNamesHandlerClass
   } else {
-    defaultHandler = nfsHandler
+    defaultHandlerClass = nfsHandlerClass
   }
 
   mountPath = mountPath || safePath
-  containerHandler = containerHandler || defaultHandler
+  containerHandlerClass = containerHandlerClass || defaultHandlerClass
   try {
     throw new Error('TODO implement mountContainer')
   } catch (err) {
