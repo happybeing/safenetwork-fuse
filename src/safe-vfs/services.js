@@ -1,7 +1,7 @@
 /**
  * vfsHandler for a SAFE services container
  */
-class servicesHandler {
+class ServicesHandler {
 /**
  * [constructor description]
  */
@@ -14,4 +14,4 @@ class servicesHandler {
   }
 }
 
-module.exports = servicesHandler
+module.exports = ServicesHandler

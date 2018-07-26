@@ -2,7 +2,7 @@
  * vfsHandler for the _publicNames container
  *
  */
-class publicNamesHandler {
+class PublicNamesHandler {
 /**
  * [constructor description]
  */
@@ -15,4 +15,4 @@ class publicNamesHandler {
   }
 }
 
-module.exports = publicNamesHandler
+module.exports = PublicNamesHandler

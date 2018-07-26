@@ -1,7 +1,7 @@
 /**
  * vfsHandler for an NFS container
  */
-class nfsHandler {
+class NfsHandler {
 /**
  * [constructor description]
  */
@@ -14,4 +14,4 @@ class nfsHandler {
   }
 }
 
-module.exports = nfsHandler
+module.exports = NfsHandler
