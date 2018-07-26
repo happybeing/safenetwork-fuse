@@ -1,6 +1,8 @@
 /* TODO theWebalyst notes:
 [ ] Implement SafeVfs  and vfsHandler classes according to 'DESIGN' below
   [/] refactor mount/unmount from callbacks to async/Promises so SafeVfs and handlers can use Promises
+  [ ] find a way to call my async functions from fuse-operatations (if not have to find a way to
+      call SAFE API which I think is all async now)
   [ ] refactor mount/unmount as methods on SafeVfs class and export instance of that
   [ ] use SafeVfs to hold pathMap and Safenetwork
   [ ] pass safeVfs to each vfsHandler constructor
