@@ -6,7 +6,6 @@ module.exports = (ipfs) => {
   return {
     statfs (path, reply) {
       debug({ path })
-
       ipfs.repo.stat((err, stat) => {
         if (err) {
           err = explain(err, 'Failed to stat repo')

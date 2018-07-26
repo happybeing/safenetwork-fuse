@@ -6,7 +6,6 @@ module.exports = (ipfs) => {
   return {
     write (path, mode, reply) {
       debug({ path })
-
       ipfs.files.write(path, Buffer.from(''), { create: true }, (err) => {
         if (err) {
           err = explain(err, 'Failed to create file')

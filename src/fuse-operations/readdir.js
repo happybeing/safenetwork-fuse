@@ -2,6 +2,10 @@ const Fuse = require('fuse-bindings')
 const explain = require('explain-error')
 const debug = require('debug')('ipfs-fuse:readdir')
 
+async function callSafeApi (safeApi, path) { // TODO testing only
+  console.log('callSafeApi(' + path + ')')
+}
+
 const fakeReadDir = {
   '/': ['one', 'two', 'three'],
   '/one': ['four', 'five', 'happybeing']
@@ -39,6 +43,9 @@ module.exports = (ipfs) => {
   return {
     readdir (path, reply) {
       debug({ path })
+      callSafeApi(ipfs, path).then(() => { // TODO testing only
+        console.log('done callSafeApi on path: ' + path)
+      })
 
       let listing = fakeReadDir[path]
       if (listing)

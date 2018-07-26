@@ -3,6 +3,10 @@
   [/] refactor mount/unmount from callbacks to async/Promises so SafeVfs and handlers can use Promises
   [ ] find a way to call my async functions from fuse-operatations (if not have to find a way to
       call SAFE API which I think is all async now)
+    [ ] refactor safenetworkjs/safenetwork-api.js for some MD access
+      [ ] create a public name
+      [ ] get public names (see listMd)
+      [ ] test from callSafeApi() in fuse-operations/readdir.js
   [ ] refactor mount/unmount as methods on SafeVfs class and export instance of that
   [ ] use SafeVfs to hold pathMap and Safenetwork
   [ ] pass safeVfs to each vfsHandler constructor
@@ -154,8 +158,7 @@ exports.mount = async (safeApi, mountPath, opts) => {
   opts = opts || {}
 
   try {
-  // TODO refactor the following to do async mkdirp before calling Fuse.mount()
-  //      For ex use https://gist.github.com/christophemarois/e30650691cf74b9da2e51e13a01c7f70
+  // TODO remove the following...
   /* OLD callback based code:
       mkdirp(mountPath, (err) => {
         console.log('log:index.js:path()!!!')
