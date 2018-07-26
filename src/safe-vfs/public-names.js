@@ -1,5 +1,6 @@
 /**
  * vfsHandler for the _publicNames container
+ *
  */
 class publicNamesHandler {
 /**

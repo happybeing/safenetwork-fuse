@@ -1,5 +1,9 @@
 /* TODO theWebalyst notes:
-[ ] Implement SafeVfs class and vfsHandler classes according to 'DESIGN' below
+[ ] Implement SafeVfs  and vfsHandler classes according to 'DESIGN' below
+  [/] refactor mount/unmount from callbacks to async/Promises so SafeVfs and handlers can use Promises
+  [ ] refactor mount/unmount as methods on SafeVfs class and export instance of that
+  [ ] use SafeVfs to hold pathMap and Safenetwork
+  [ ] pass safeVfs to each vfsHandler constructor
   [ ] start with a vfsNfsHandler for /_public and implement:
     [ ] mkdir
     [ ] statfs
@@ -38,7 +42,7 @@ documentation including the master architectural diagram for SAFE FUSE.
 
 SafeVfs
 -------
-SafeVfs implements the Path Map containing entries which map a path
+SafeVfs (this file) implements the Path Map containing entries which map a path
 to a vfsHandler object. The Path Map contains:
 - an entry for '/' with an instance of vfsRootHandler
 - a top level container entry for each mount point (e.g. _publicNames, _documents etc.)
@@ -57,11 +61,11 @@ the handler. So if this is FUSE operation readdir() it checks for a readdir()
 method on the vfsHandler object and calls it. If the method isn't present,
 it returns an error.
 
-SafeVfs.newHandler({key, lazyInitialise, {params} })
+mountHandler(safePath, lazyInitialise, {params})
 ----------------------------------------------------
-SafeVfs.newHandler() returns a new vfsHandler object (see below)
-corresponding to the role of the value at the given key (typically a Mutable
-Data object).
+mountHandler() creates a suitable vfsHandler instance and inserts it
+into the Path Map. The class of the handler corresponds to the role of the
+value at the given safePath (typically a Mutable Data object).
 
 The returned handler object will cache any supplied 'params' (such as a key
 within the container which they handle).
@@ -70,9 +74,9 @@ The 'lazyInitialise' flag determines whether to initialise immediately (to
 access a Mutable Data for example), or to return immediately and delay
 initialisation until needed.
 
-SafeVfs.getHandler()
+getHandler()
 --------------------
-SafeVfs.getHandler() checks the map for an entry for a given path. If the entry
+getHandler() checks the map for an entry for a given path. If the entry
 exists, it returns the entry, a vfsHandler object.
 
 If there is no entry matching the path, it calls itself to obtain the handler
@@ -137,14 +141,58 @@ if (handler) {
 
 const Fuse = require('fuse-bindings')
 const debug = require('debug')('ipfs-fuse:index')
-const mkdirp = require('mkdirp')
+// const mkdirp = require('mkdirp')
+const mkdirp = require('mkdirp-promise')
 const Async = require('async')
 const createIpfsFuse = require('../fuse-operations')
 const explain = require('explain-error')
 
-let Safenetwork // Set to safenetworkjs SafenetworkApi on successful mount
+// let safeVfs
+exports.mount = async (safeApi, mountPath, opts) => {
+  opts = opts || {}
 
-exports.mount = (safeApi, mountPath, opts, cb) => {
+  try {
+  // TODO refactor the following to do async mkdirp before calling Fuse.mount()
+  //      For ex use https://gist.github.com/christophemarois/e30650691cf74b9da2e51e13a01c7f70
+  /* OLD callback based code:
+      mkdirp(mountPath, (err) => {
+        console.log('log:index.js:path()!!!')
+        debug('index.js:path()!!!')
+        if (err) {
+          err = explain(err, 'Failed to create mount point')
+          debug(err)
+          return cb(err)
+        }
+
+        cb()
+      })
+  */
+    mkdirp(mountPath)
+    .then(() => {
+      return new Promise((resolve, reject) => {
+        Fuse.mount(mountPath, createIpfsFuse(safeApi), opts.fuse, err => {
+          console.log('log:index.js:path()!!!')
+          debug('index.js:path()!!!')
+          if (err) {
+            err = explain(err, 'Failed to create mount point')
+            debug(err)
+            reject(err)
+          } else {
+            resolve()
+          }
+        })
+      })
+    }).then(() => {
+// ???      Safenetwork = safeApi
+// ???      initialisePathMap()
+    })
+  } catch (err) {
+    console.error('Failed to mount SAFE FUSE volume')
+    throw err
+  }
+}
+
+exports.OLD_mount = (safeApi, mountPath, opts, cb) => {
   if (!cb) {
     cb = opts
     opts = {}
@@ -191,8 +239,8 @@ exports.mount = (safeApi, mountPath, opts, cb) => {
           debug(err)
           return cb(err)
         }
-        Safenetwork = safeApi
-        // TODO await initalisePathMap()
+  // ???      Safenetwork = safeApi
+  // ???      initialisePathMap()
 
         cb(null, {})
       })
@@ -206,7 +254,22 @@ exports.mount = (safeApi, mountPath, opts, cb) => {
   })
 }
 
-exports.unmount = (mountPath, cb) => {
+exports.unmount = async (mountPath) => {
+  return new Promise((resolve, reject) => {
+    return Fuse.unmount(mountPath, err => {
+      if (err) {
+        err = explain(err, 'Failed to unmount SAFE FUSE volume')
+        debug(err)
+        reject(err)
+      } else {
+        // ??? Safenetwork = null
+        resolve()
+      }
+    })
+  })
+}
+
+exports.OLD_unmount = (mountPath, cb) => {
   cb = cb || (() => {})
 
   Fuse.unmount(mountPath, (err) => {
@@ -215,75 +278,60 @@ exports.unmount = (mountPath, cb) => {
       debug(err)
       return cb(err)
     }
-    Safenetwork = null
+    // ??? Safenetwork = null
     cb()
   })
 }
 
-const publicNamesHandlerClass = require('public-names')
-const sevicesHandlerClass = require('services')
-const nfsHandlerClass = require('nfs')
+const RootHandler = require('./root')
+const PublicNamesHandler = require('./public-names')
+const ServicesHandler = require('./services')
+const NfsHandler = require('./nfs')
 
-// TODO Path map ???
-const pathMap = {}
-
-/**
- * Mount SAFE container (Mutable Data)
- *
- * @param  {string} safePath      path starting with a root container
- * Examples:
- *   _publicNames                  mount _publicNames container
- *   _publicNames/happybeing      mount services container for 'happybeing'
- *   _publicNames/www.happybeing  mount www container (NFS for service at www.happybeing)
- *   _publicNames/thing.happybeing mount the services container (NFS, mail etc at thing.happybeing
- *
- * @param  {string} mountPath     (optional) subpath of the mount point
- * @param  {string} containerHandlerClass (optional) handler class of the container type
- * @return {Promise}              which resolves to a vfsHandlerObject
- */
-
-async function mountContainer (safePath, mountPath, containerHandlerClass) {
-  let defaultHandlerClass
-  if (safePath === '_publicNames') {
-    defaultHandlerClass = publicNamesHandlerClass
-  } else {
-    defaultHandlerClass = nfsHandlerClass
+class SafeVfs {
+  constructor () {
+    this.pathMap = {}
   }
 
-  mountPath = mountPath || safePath
-  containerHandlerClass = containerHandlerClass || defaultHandlerClass
-  try {
-    throw new Error('TODO implement mountContainer')
-  } catch (err) {
-    throw err
-  }
-}
+  /**
+   * Mount SAFE container (Mutable Data)
+   *
+   * @param  {string} safePath      path starting with a root container
+   * Examples:
+   *   _publicNames                 mount _publicNames container
+   *   _publicNames/happybeing      mount services container for 'happybeing'
+   *   _publicNames/www.happybeing  mount www container (NFS for service at www.happybeing)
+   *   _publicNames/thing.happybeing mount the services container (NFS, mail etc at thing.happybeing
+   * @param  {string} mountPath     (optional) subpath of the mount point
+   * @param  {string} lazyInitialise(optional) if false, any API init occurs immediately
+   * @param  {string} ContainerHandler (optional) handler class for the container type
+   * @return {Promise}
+   */
 
-// Called after successful mount
-async function initialisePathMap () {
-  mountContainer('_publicNames')
-  try {
-    throw new Error('TODO implement initialisePathMap')
-  } catch (err) {
-    throw err
-  }
-}
+  async mountContainer (safePath, mountPath, lazyInitialise, ContainerHandlerClass) {
+    try {
+      if (this.pathMap[safePath]) {
+        throw new Error('Mount already present at \'' + safePath + '\'')
+      }
 
-/**
- * Get handler object for a FUSE mount path
- *
- * @param {string} path - a path with a mounted container at its root
- *
- * @returns a Promise which resolves to a handler object
- */
+      let DefaultHandlerClass
+      if (safePath === '_publicNames') {
+        DefaultHandlerClass = PublicNamesHandler
+      } else if (safePath === '/') {
+        DefaultHandlerClass = RootHandler
+      } else {
+        DefaultHandlerClass = NfsHandler
+      }
 
-async function fuseHandler (path) {
-  throw new Error('TODO implement SafefuseHandler')
-  try {
-  } catch (err) {
-    throw err
+      mountPath = mountPath || safePath
+      ContainerHandlerClass = ContainerHandlerClass || DefaultHandlerClass
+
+      this.pathMap[safePath] = new ContainerHandlerClass(Safenetwork, safePath, mountPath, lazyInitialise)
+    } catch (err) {
+      throw err
+    }
   }
 }
 
-module.exports.fuseHandler = fuseHandler
-module.exports.mountContainer = mountContainer
+// ??? module.exports.fuseHandler = fuseHandler
+// ??? module.exports.mountContainer = mountContainer

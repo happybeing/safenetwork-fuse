@@ -41,6 +41,7 @@
     "filesize": "^3.6.1",
     "fuse-bindings": "^2.11.2",
     "mkdirp": "^0.5.1",
+    "mkdirp-promise": "^5.0.1",
     "node-ipc": "^9.1.1",
     "string": "^3.3.3",
     "yargs": "^11.0.0"

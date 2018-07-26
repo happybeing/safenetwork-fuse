@@ -47,12 +47,12 @@ try {
     IpfsFuse.mount(Safenetwork, mountPath, {
       ipfs: {},
       fuse: { displayFolder: true, force: true }
-    }, (err) => {
-      if (err) return console.error(err.message)
+    }).then(() => {
       console.log(`Mounted SAFE filesystem on ${mountPath}`)
     })
   })
 } catch (err) {
+  console.error(err.message)
   const msg = 'Failed to mount SAFE FUSE volume'
   console.log(msg)
   explain(err, msg)
@@ -66,8 +66,15 @@ process.on('SIGINT', () => {
 
   destroyed = true
 
-  IpfsFuse.unmount(mountPath, (err) => {
-    if (err) return console.error(err.message)
-    console.log(`Unmounted SAFE filesystem at ${mountPath}`)
-  })
+  try {
+    IpfsFuse.unmount(mountPath).then(() => {
+      console.log(`Unmounted SAFE filesystem at ${mountPath}`)
+    })
+  } catch (err) {
+    console.error(err.message)
+    const msg = 'Failed to mount SAFE FUSE volume'
+    console.log(msg)
+    explain(err, msg)
+    //        throw new Error(err)
+  }
 })
