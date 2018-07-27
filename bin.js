@@ -2,8 +2,8 @@
 
 const Os = require('os')
 const Path = require('path')
-const Safenetwork = require('safenetworkjs').SafenetworkApi
-const IpfsFuse = require('./src/safe-vfs/index.js') // TODO rename IpfsFuse SafeVfs
+const safeJsApi = require('safenetworkjs').SafenetworkApi
+const safeVfs = require('./src/safe-vfs/index.js')
 const explain = require('explain-error')
 const yargs = require('yargs')
 
@@ -43,8 +43,8 @@ if (false) { // TODO can I make this conditional on being run as script?
 // Auth with Safetnetwork
 try {
   console.log('try bootstrap()...')
-  Safenetwork.bootstrap(appConfig, appPermissions, argv).then(app => {
-    IpfsFuse.mount(Safenetwork, mountPath, {
+  safeJsApi.bootstrap(appConfig, appPermissions, argv).then(app => {
+    safeVfs.mount(safeJsApi, mountPath, {
       ipfs: {},
       fuse: { displayFolder: true, force: true }
     }).then(() => {
@@ -67,7 +67,7 @@ process.on('SIGINT', () => {
   destroyed = true
 
   try {
-    IpfsFuse.unmount(mountPath).then(() => {
+    safeVfs.unmount(mountPath).then(() => {
       console.log(`Unmounted SAFE filesystem at ${mountPath}`)
     })
   } catch (err) {

@@ -1,9 +1,44 @@
 const Fuse = require('fuse-bindings')
 const explain = require('explain-error')
-const debug = require('debug')('ipfs-fuse:readdir')
+const debug = require('debug')('safenetwork-fuse:readdir')
 
-async function callSafeApi (safeApi, path) { // TODO testing only
+async function callSafeApi (safeJsApi, path) { // TODO testing only
   console.log('callSafeApi(' + path + ')')
+
+  const typeTag = 15000
+  const md = await safeJsApi.appHandle().mutableData.newRandomPublic(typeTag)
+
+  const initialData = {
+    'random_key_1': JSON.stringify({
+      text: 'Scotland to try Scotch whisky',
+      made: false
+    }),
+    'random_key_2': JSON.stringify({
+      text: 'Patagonia before I\'m too old',
+      made: false
+    })
+  }
+
+  await md.quickSetup(initialData)
+
+  console.log('Created Mutable Data with contents: ')
+  let items = await getItems(md)
+  items.map((key, value) => {
+    console.log(key + ' = ' + value)
+  })
+}
+
+async function getItems (md) {
+  const entries = await md.getEntries()
+  let items = []
+
+  await entries.forEach((key, value) => {
+    if (value.buf.length === 0) return
+
+    const parsedValue = JSON.parse(value.buf)
+    items.push({ key: key, value: parsedValue, version: value.version })
+  })
+  return items
 }
 
 const fakeReadDir = {
@@ -39,11 +74,11 @@ module.exports = (safeVfs) => {
   }
 }
  */
-module.exports = (ipfs) => {
+module.exports = (safeJsApi) => {
   return {
     readdir (path, reply) {
       debug({ path })
-      callSafeApi(ipfs, path).then(() => { // TODO testing only
+      callSafeApi(safeJsApi, path).then(() => { // TODO testing only
         console.log('done callSafeApi on path: ' + path)
       })
 

@@ -1,12 +1,13 @@
 /* TODO theWebalyst notes:
 [ ] Implement SafeVfs and vfsHandler classes according to 'DESIGN' below
   [/] refactor mount/unmount from callbacks to async/Promises so SafeVfs and handlers can use Promises
-  [ ] find a way to call my async functions from fuse-operatations (if not have to find a way to
+  [/] find a way to call my async functions from fuse-operatations (if not have to find a way to
       call SAFE API which I think is all async now)
-    [ ] refactor safenetworkjs/safenetwork-api.js for some MD access
-      [ ] create a public name
-      [ ] get public names (see listMd)
-      [ ] test from callSafeApi() in fuse-operations/readdir.js
+    [/] SafenetworkApi:
+      [/] bootstrap should set app handle on auth
+      [/] need access to app handler e.g. method: safeApp()
+      [/] in safenetwork-fuse change safeApi to safeJsApi
+    [/] test from callSafeApi() in fuse-operations/readdir.js
   [ ] refactor mount/unmount as methods on SafeVfs class and export instance of that
   [ ] use SafeVfs to hold pathMap and Safenetwork
   [ ] pass safeVfs to each vfsHandler constructor
@@ -138,7 +139,7 @@ vfsPublicNames=require('vfsPublicNames')
 
 // and later when adding to the PathMap:
 
-let handler = new vfsPublicNames(safeApi, '_publicNames')
+let handler = new vfsPublicNames(safeJs, '_publicNames')
 if (handler) {
   pathMap.'_publicNames' = handler
 }
@@ -147,7 +148,6 @@ if (handler) {
 
 const Fuse = require('fuse-bindings')
 const debug = require('debug')('ipfs-fuse:index')
-// const mkdirp = require('mkdirp')
 const mkdirp = require('mkdirp-promise')
 const Async = require('async')
 const createIpfsFuse = require('../fuse-operations')

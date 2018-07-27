@@ -13,19 +13,19 @@ const createUnlink = require('./unlink')
 const createUtimens = require('./utimens')
 const createWrite = require('./write')
 
-module.exports = (ipfs) => Object.assign(
-  createCreate(ipfs),
-  createFtruncate(ipfs),
-  createGetattr(ipfs),
-  createMkdir(ipfs),
-  createMknod(ipfs),
-  createOpen(ipfs),
-  createRead(ipfs),
-  createReaddir(ipfs),
-  createRename(ipfs),
-  createRmdir(ipfs),
-  createStatfs(ipfs),
-  createUnlink(ipfs),
-  createUtimens(ipfs),
-  createWrite(ipfs)
+module.exports = (safeJs) => Object.assign(
+  createCreate(safeJs),
+  createFtruncate(safeJs),
+  createGetattr(safeJs),
+  createMkdir(safeJs),
+  createMknod(safeJs),
+  createOpen(safeJs),
+  createRead(safeJs),
+  createReaddir(safeJs),
+  createRename(safeJs),
+  createRmdir(safeJs),
+  createStatfs(safeJs),
+  createUnlink(safeJs),
+  createUtimens(safeJs),
+  createWrite(safeJs)
 )
