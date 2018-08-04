@@ -74,11 +74,11 @@ module.exports = (safeVfs) => {
   }
 }
  */
-module.exports = (safeJsApi) => {
+module.exports = (safeVfs) => {
   return {
     readdir (path, reply) {
       debug({ path })
-      callSafeApi(safeJsApi, path).then(() => { // TODO testing only
+      callSafeApi(safeVfs.safeApi(), path).then(() => { // TODO testing only
         console.log('done callSafeApi on path: ' + path)
       })
 

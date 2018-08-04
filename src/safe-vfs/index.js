@@ -1,4 +1,4 @@
-/* TODO theWebalyst notes:
+__/* TODO theWebalyst notes:
 [ ] Implement SafeVfs and vfsHandler classes according to 'DESIGN' below
   [/] refactor mount/unmount from callbacks to async/Promises so SafeVfs and handlers can use Promises
   [/] find a way to call my async functions from fuse-operatations (if not have to find a way to
@@ -8,10 +8,26 @@
       [/] need access to app handler e.g. method: safeApp()
       [/] in safenetwork-fuse change safeApi to safeJsApi
     [/] test from callSafeApi() in fuse-operations/readdir.js
-  [ ] refactor mount/unmount as methods on SafeVfs class and export instance of that
-  [ ] use SafeVfs to hold pathMap and Safenetwork
-  [ ] pass safeVfs to each vfsHandler constructor
-  [ ] start with a vfsNfsHandler for /_public and implement:
+  [/] refactor mount/unmount as methods on SafeVfs class and export instance of that
+  [/] use SafeVfs to hold pathMap and SAFE Api (instance of SafenetworkApi)
+  [/] pass safeVfs to each vfsHandler constructor
+  [ ] provide FUSE methods on SafeVfs for each of these and call from corresponding fuse-operations impn.
+    [ ] mkdir
+    [ ] statfs
+    [ ] getattr
+    [ ] create
+    [ ] open
+    [ ] write
+    [ ] read
+    [ ] unlink
+    [ ] rmdir
+    [ ] write
+    [ ] rename
+    [ ] write
+    [ ] ??? ftruncate
+    [ ] ??? mknod
+    [ ] ??? utimens
+  [ ] Implement NfsHandler for /_public and implement
     [ ] mkdir
     [ ] statfs
     [ ] getattr
@@ -150,143 +166,8 @@ const Fuse = require('fuse-bindings')
 const debug = require('debug')('ipfs-fuse:index')
 const mkdirp = require('mkdirp-promise')
 const Async = require('async')
-const createIpfsFuse = require('../fuse-operations')
+const createSafeFuse = require('../fuse-operations')
 const explain = require('explain-error')
-
-// let safeVfs
-exports.mount = async (safeApi, mountPath, opts) => {
-  opts = opts || {}
-
-  try {
-  // TODO remove the following...
-  /* OLD callback based code:
-      mkdirp(mountPath, (err) => {
-        console.log('log:index.js:path()!!!')
-        debug('index.js:path()!!!')
-        if (err) {
-          err = explain(err, 'Failed to create mount point')
-          debug(err)
-          return cb(err)
-        }
-
-        cb()
-      })
-  */
-    mkdirp(mountPath)
-    .then(() => {
-      return new Promise((resolve, reject) => {
-        Fuse.mount(mountPath, createIpfsFuse(safeApi), opts.fuse, err => {
-          console.log('log:index.js:path()!!!')
-          debug('index.js:path()!!!')
-          if (err) {
-            err = explain(err, 'Failed to create mount point')
-            debug(err)
-            reject(err)
-          } else {
-            resolve()
-          }
-        })
-      })
-    }).then(() => {
-// ???      Safenetwork = safeApi
-// ???      initialisePathMap()
-    })
-  } catch (err) {
-    console.error('Failed to mount SAFE FUSE volume')
-    throw err
-  }
-}
-
-exports.OLD_mount = (safeApi, mountPath, opts, cb) => {
-  if (!cb) {
-    cb = opts
-    opts = {}
-  }
-
-  opts = opts || {}
-  cb = cb || (() => {})
-
-  Async.auto({
-    path (cb) {
-      mkdirp(mountPath, (err) => {
-        console.log('log:index.js:path()!!!')
-        debug('index.js:path()!!!')
-        if (err) {
-          err = explain(err, 'Failed to create mount point')
-          debug(err)
-          return cb(err)
-        }
-
-        cb()
-      })
-    },
-    ipfs (cb) {
-      console.log('log:index.js:ipfs()!!! - REMOVE THIS')
-      debug('index.js:ipfs()!!!')
-      /* WAS: const ipfs = new IpfsApi(opts.ipfs)
-
-      ipfs.id((err, id) => {
-        if (err) {
-          err = explain(err, 'Failed to connect to SAFE node')
-          debug(err)
-          return cb(err)
-        }
-
-        debug(id)
-        cb(null, ipfs)
-      })
-      */
-    },
-    mount: ['path', (res, cb) => {
-      Fuse.mount(mountPath, createIpfsFuse(safeApi), opts.fuse, (err) => {
-        if (err) {
-          err = explain(err, 'Failed to mount SAFE FUSE volume')
-          debug(err)
-          return cb(err)
-        }
-  // ???      Safenetwork = safeApi
-  // ???      initialisePathMap()
-
-        cb(null, {})
-      })
-    }]
-  }, (err) => {
-    if (err) {
-      debug(err)
-      return cb(err)
-    }
-    cb(null, {})
-  })
-}
-
-exports.unmount = async (mountPath) => {
-  return new Promise((resolve, reject) => {
-    return Fuse.unmount(mountPath, err => {
-      if (err) {
-        err = explain(err, 'Failed to unmount SAFE FUSE volume')
-        debug(err)
-        reject(err)
-      } else {
-        // ??? Safenetwork = null
-        resolve()
-      }
-    })
-  })
-}
-
-exports.OLD_unmount = (mountPath, cb) => {
-  cb = cb || (() => {})
-
-  Fuse.unmount(mountPath, (err) => {
-    if (err) {
-      err = explain(err, 'Failed to unmount SAFE FUSE volume')
-      debug(err)
-      return cb(err)
-    }
-    // ??? Safenetwork = null
-    cb()
-  })
-}
 
 const RootHandler = require('./root')
 const PublicNamesHandler = require('./public-names')
@@ -294,8 +175,85 @@ const ServicesHandler = require('./services')
 const NfsHandler = require('./nfs')
 
 class SafeVfs {
-  constructor () {
-    this.pathMap = {}
+  constructor (safeApi) {
+    this._safeApi = safeApi
+    this._pathMap = {}
+  }
+
+  safeApi () { return this._safeApi }
+
+  async mountFuse (mountPath, opts) {
+    opts = opts || {}
+
+    try {
+    // TODO remove the following...
+    /* OLD callback based code:
+        mkdirp(mountPath, (err) => {
+          console.log('log:index.js:path()!!!')
+          debug('index.js:path()!!!')
+          if (err) {
+            err = explain(err, 'Failed to create mount point')
+            debug(err)
+            return cb(err)
+          }
+
+          cb()
+        })
+    */
+      mkdirp(mountPath)
+      .then(() => {
+        return new Promise((resolve, reject) => {
+          Fuse.mount(mountPath, createSafeFuse(this), opts.fuse, (err) => {
+            console.log('log:index.js:path()!!!')
+            debug('index.js:path()!!!')
+            if (err) {
+              err = explain(err, 'Failed to create mount point')
+              debug(err)
+              reject(err)
+            } else {
+              resolve()
+            }
+          })
+        })
+      }).catch((err) => {
+        console.log('ERROR - DEBUG')
+        console.error('Failed to mount SAFE FUSE volume')
+        throw err
+      }) // .then(() => {
+        // TODO safeVfs.initialisePathMap(/* CLI args? */)
+    } catch (err) {
+      console.error('Failed to mount SAFE FUSE volume')
+      throw err
+    }
+  }
+
+  async unmountFuse (mountPath) {
+    return new Promise((resolve, reject) => {
+      return Fuse.unmount(mountPath, err => {
+        if (err) {
+          err = explain(err, 'Failed to unmount SAFE FUSE volume')
+          debug(err)
+          reject(err)
+        } else {
+          // ??? safeVfs = null
+          resolve()
+        }
+      })
+    })
+  }
+
+  /**
+   * Set up initial mounts by initialising pathMap based on command line args
+   *
+   * @param {???} args  command line args
+   * @return {Promise}
+   */
+  async initialisePathMap (/* CLI args? */) {
+    await this.mountContainer({safePath: '/'}) // Always have a root handler
+
+    // TODO replace the following fixed defaults with CLI configured mounts
+    await this.mountContainer({safePath: '_public'})
+    // await this.mountContainer ({safePath: '_publicNames', PublicNamesHandler)
   }
 
   /**
@@ -313,30 +271,37 @@ class SafeVfs {
    * @return {Promise}
    */
 
-  async mountContainer (safePath, mountPath, lazyInitialise, ContainerHandlerClass) {
+  async mountContainer (params) {
+    let config = {lazyInitialise: true} // Default values
+    config = params
+
+    if (config.safePath === undefined) {
+      throw new Error('Unable to mount container on unspecified mount point')
+    }
+
     try {
-      if (this.pathMap[safePath]) {
-        throw new Error('Mount already present at \'' + safePath + '\'')
+      if (this._pathMap[config.safePath]) {
+        throw new Error('Mount already present at \'' + config.safePath + '\'')
       }
 
       let DefaultHandlerClass
-      if (safePath === '_publicNames') {
+      if (config.safePath === '_publicNames') {
         DefaultHandlerClass = PublicNamesHandler
-      } else if (safePath === '/') {
+      } else if (config.safePath === '/') {
         DefaultHandlerClass = RootHandler
       } else {
         DefaultHandlerClass = NfsHandler
       }
 
-      mountPath = mountPath || safePath
-      ContainerHandlerClass = ContainerHandlerClass || DefaultHandlerClass
+      config.mountPath = config.mountPath || config.safePath
+      config.ContainerHandlerClass = config.ContainerHandlerClass || DefaultHandlerClass
 
-      this.pathMap[safePath] = new ContainerHandlerClass(Safenetwork, safePath, mountPath, lazyInitialise)
+      this._pathMap[config.safePath] = new config.ContainerHandlerClass(this, config.safePath, config.mountPath, config.lazyInitialise)
     } catch (err) {
       throw err
     }
   }
 }
 
-// ??? module.exports.fuseHandler = fuseHandler
-// ??? module.exports.mountContainer = mountContainer
+module.exports = SafeVfs
+module.exports.SafeVfs = SafeVfs

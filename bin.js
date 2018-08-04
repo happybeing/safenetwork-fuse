@@ -3,7 +3,7 @@
 const Os = require('os')
 const Path = require('path')
 const safeJsApi = require('safenetworkjs').SafenetworkApi
-const safeVfs = require('./src/safe-vfs/index.js')
+const SafeVfs = require('./src/safe-vfs')
 const explain = require('explain-error')
 const yargs = require('yargs')
 
@@ -41,14 +41,20 @@ if (false) { // TODO can I make this conditional on being run as script?
 }
 
 // Auth with Safetnetwork
+let safeVfs
 try {
   console.log('try bootstrap()...')
   safeJsApi.bootstrap(appConfig, appPermissions, argv).then(app => {
-    safeVfs.mount(safeJsApi, mountPath, {
+    safeVfs = new SafeVfs(safeJsApi)
+    safeVfs.mountFuse(mountPath, {
       ipfs: {},
       fuse: { displayFolder: true, force: true }
     }).then(() => {
       console.log(`Mounted SAFE filesystem on ${mountPath}`)
+    }).catch((err) => {
+      const msg = 'Failed to mount SAFE FUSE volume'
+      console.log(msg)
+      explain(err, msg)
     })
   })
 } catch (err) {
@@ -67,7 +73,7 @@ process.on('SIGINT', () => {
   destroyed = true
 
   try {
-    safeVfs.unmount(mountPath).then(() => {
+    safeVfs.unmountFuse(mountPath).then(() => {
       console.log(`Unmounted SAFE filesystem at ${mountPath}`)
     })
   } catch (err) {
