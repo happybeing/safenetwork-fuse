@@ -47,10 +47,15 @@ try {
   safeJsApi.bootstrap(appConfig, appPermissions, argv).then(app => {
     safeVfs = new SafeVfs(safeJsApi)
     safeVfs.mountFuse(mountPath, {
-      ipfs: {},
       fuse: { displayFolder: true, force: true }
     }).then(() => {
-      console.log(`Mounted SAFE filesystem on ${mountPath}`)
+      return Promise.all([
+      // TODO replace the following fixed defaults with CLI configured mounts
+      // safeVfs.mountContainer({safePath: '_public'})
+      // this.mountContainer ({safePath: '_publicNames', PublicNamesHandler)
+      ]).then(() => {
+        console.log(`Mounted SAFE filesystem on ${mountPath}`)
+      })
     }).catch((err) => {
       const msg = 'Failed to mount SAFE FUSE volume'
       console.log(msg)

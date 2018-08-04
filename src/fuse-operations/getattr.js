@@ -1,6 +1,6 @@
 const Fuse = require('fuse-bindings')
 const explain = require('explain-error')
-const debug = require('debug')('ipfs-fuse:getattr')
+const debug = require('debug')('safe-fuse:getattr')
 
 // TODO remove this:
 

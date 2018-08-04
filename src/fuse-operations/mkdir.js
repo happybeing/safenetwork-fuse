@@ -1,6 +1,6 @@
 const Fuse = require('fuse-bindings')
 const explain = require('explain-error')
-const debug = require('debug')('ipfs-fuse:mkdir')
+const debug = require('debug')('safe-fuse:mkdir')
 
 module.exports = (ipfs) => {
   return {
