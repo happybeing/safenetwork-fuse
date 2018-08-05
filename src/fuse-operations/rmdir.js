@@ -4,10 +4,10 @@ const debug = require('debug')('safe-fuse:rmdir')
 
 module.exports = (ipfs) => {
   return {
-    rmdir (path, reply) {
-      debug({ path })
+    rmdir (itemPath, reply) {
+      debug({ itemPath })
 
-      ipfs.files.rm(path, { recursive: true }, (err) => {
+      ipfs.files.rm(itemPath, { recursive: true }, (err) => {
         if (err) {
           err = explain(err, 'Failed to delete directory')
           debug(err)

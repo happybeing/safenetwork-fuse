@@ -4,10 +4,10 @@ const debug = require('debug')('safe-fuse:write')
 
 module.exports = (ipfs) => {
   return {
-    write (path, fd, buf, len, pos, reply) {
-      debug({ path })
+    write (itemPath, fd, buf, len, pos, reply) {
+      debug({ itemPath })
 
-      ipfs.files.write(path, buf, { offset: pos, count: len }, (err) => {
+      ipfs.files.write(itemPath, buf, { offset: pos, count: len }, (err) => {
         if (err) {
           err = explain(err, 'Failed to write to file')
           debug(err)

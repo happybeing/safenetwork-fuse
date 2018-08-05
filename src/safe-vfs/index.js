@@ -11,7 +11,9 @@
   [/] refactor mount/unmount as methods on SafeVfs class and export instance of that
   [/] use SafeVfs to hold pathMap and SAFE Api (instance of SafenetworkApi)
   [/] pass safeVfs to each vfsHandler constructor
-  [ ] provide FUSE methods on SafeVfs for each of these and call from corresponding fuse-operations impn.
+  [ ] Implement RootHandler for each of these and call from corresponding fuse-operations impn.
+    [/] readdir
+      [ ] ls ~/SAFE/_public hangs, so begin implementing NfsHandler
     [ ] mkdir
     [ ] statfs
     [ ] getattr
@@ -28,6 +30,7 @@
     [ ] ??? mknod
     [ ] ??? utimens
   [ ] Implement NfsHandler for /_public and implement
+    [ ] readdir
     [ ] mkdir
     [ ] statfs
     [ ] getattr
@@ -162,6 +165,34 @@ if (handler) {
 
 */
 
+/* TODO review this - maybe incorporate parts of it in the above
+
+??? think this through along with SafeVfs.getHandler()
+and NfsHandler.getHandlerFor() - note that the NfsHandler should correspond to
+an NFS container (so able to handle all paths within the container)
+so for _public/something/blah/thing mounted at the NfsHandler.mountPath
+the NfsHandler object handles everything which starts with this._mountPath,
+*and* at _public/something/blah/thing (==> or perhaps have two NfsHandlers in
+such cases - simpler to program and no big deal really)
+
+So one might mount _public/something/blah/thing at /thispath which directly
+creates an NfsHandler with mountPath _public/something/blah/thing, so that handler
+would be found for any itemPath within that mountPath
+
+While an attempt to access _public/something/blah/thing would cause
+the RootHandler to create an NfsHandler with mountPath _public/something/blah/thing
+
+[ ] review the usefulness of getHandlerFor() on the handler objects - I'm not sure it is needed
+  --> I think it is needed where one handler acts as a container for things
+  handled by other handlers (eg where a public names handler mount 'contains'
+    services handlers for each service on a public name)
+--> so here we MUST create a handler based on the root matching on of the
+default SAFE containers (_public, _documents etc), and if that does not
+match throw this:
+*/
+
+const path = require('path')  // Cross platform path handling
+
 const Fuse = require('fuse-bindings')
 const debug = require('debug')('safe-fuse:index')
 const mkdirp = require('mkdirp-promise')
@@ -176,10 +207,19 @@ const ServicesHandler = require('./services')
 class SafeVfs {
   constructor (safeApi) {
     this._safeApi = safeApi
-    this._pathMap = {}
+    this._pathMap = new Map()
   }
 
   safeApi () { return this._safeApi }
+  pathMap () { return this._pathMap }
+
+  pathMapSet (mountPath, handler) {
+    this._pathMap.set(path.normalize(mountPath), handler)
+  }
+
+  pathMapGet (mountPath) {
+    return this._pathMap.get(path.normalize(mountPath))
+  }
 
   async mountFuse (mountPath, opts) {
     opts = opts || {}
@@ -222,7 +262,7 @@ class SafeVfs {
           debug(err)
           reject(err)
         } else {
-          this._pathMap = {}
+          this._pathMap = new Map()
           resolve()
         }
       })
@@ -235,8 +275,27 @@ class SafeVfs {
    * @return {Promise}
    */
   async initialisePathMap () {
-    this._pathMap = {}
-//???    return this.mountContainer({safePath: '/'}) // Always have a root handler
+    this._pathMap = new Map()
+    return this.mountContainer({safePath: '/'}) // Always have a root handler
+  }
+
+  /**
+   * get a suitable handler for an item from the pathMap (adding an entry if necessary)
+   * @param  {stri} itemPath full mount path
+   * @return {[type]}        a VFS handler for the item
+   */
+  getHandler (itemPath) {
+    let handler = this.pathMapGet(itemPath) ||
+      this.getHandler(path.dirname(itemPath))
+
+    if (!handler) {
+      throw new Error('SafeVFS getHandler() failed')
+    }
+
+    // Note: we ask the handler in case it holds containers which
+    // it doesn't handle directly (e.g. PublicNames container might either
+    // return itself or a ServicesContainer depending on the itemPath)
+    return handler.getHandlerFor(itemPath)
   }
 
   /**
@@ -248,38 +307,48 @@ class SafeVfs {
    *   _publicNames/happybeing      mount services container for 'happybeing'
    *   _publicNames/www.happybeing  mount www container (NFS for service at www.happybeing)
    *   _publicNames/thing.happybeing mount the services container (NFS, mail etc at thing.happybeing
-   * @param  {string} mountPath     (optional) subpath of the mount point
-   * @param  {string} lazyInitialise(optional) if false, any API init occurs immediately
-   * @param  {string} ContainerHandler (optional) handler class for the container type
+   * @param  {map} {
+   *    @param {string}   mountPath (optional) subpath of the mount point
+   *    @param  {string}  lazyInitialise (optional) if false, any API init occurs immediately
+   *    @param  {string}  ContainerHandler (optional) handler class for the container type
+   * }
    * @return {Promise}
    */
 
   async mountContainer (params) {
-    let config = {lazyInitialise: true} // Default values
-    config = params
+    params.lazyInitialise = params.lazyInitialise || false // Default values
+    if (!params.mountPath) {
+      params.mountPath = params.safePath
+    }
 
-    if (config.safePath === undefined) {
+    if (params.safePath === undefined) {
       throw new Error('Unable to mount container on unspecified mount point')
     }
 
     try {
-      if (this._pathMap[config.safePath]) {
-        throw new Error('Mount already present at \'' + config.safePath + '\'')
+      if (this.pathMapGet(params.mountPath)) {
+        throw new Error('Mount already present at \'' + params.mountPath + '\'')
       }
 
       let DefaultHandlerClass
-      if (config.safePath === '_publicNames') {
+      if (params.safePath === '_publicNames') {
         DefaultHandlerClass = PublicNamesHandler
-      } else if (config.safePath === '/') {
+      } else if (params.safePath === '/') {
         DefaultHandlerClass = RootHandler
       } else {
         DefaultHandlerClass = NfsHandler
       }
 
-      config.mountPath = config.mountPath || config.safePath
-      config.ContainerHandlerClass = config.ContainerHandlerClass || DefaultHandlerClass
+      let fullMountPath = params.mountPath
+      if (fullMountPath[0] !== path.sep) {
+        fullMountPath = path.sep + fullMountPath
+      }
 
-      this._pathMap[config.safePath] = new config.ContainerHandlerClass(this, config.safePath, config.mountPath, config.lazyInitialise)
+      if (!params.ContainerHandlerClass) {
+        params.ContainerHandlerClass = DefaultHandlerClass
+      }
+
+      this.pathMapSet(fullMountPath, new params.ContainerHandlerClass(this, params.safePath, fullMountPath, params.lazyInitialise))
     } catch (err) {
       throw err
     }

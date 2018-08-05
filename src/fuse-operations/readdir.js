@@ -2,8 +2,8 @@ const Fuse = require('fuse-bindings')
 const explain = require('explain-error')
 const debug = require('debug')('safenetwork-fuse:readdir')
 
-async function callSafeApi (safeJsApi, path) { // TODO testing only
-  console.log('callSafeApi(' + path + ')')
+async function callSafeApi (safeJsApi, itemPath) { // TODO testing only
+  console.log('callSafeApi(' + itemPath + ')')
 
   const typeTag = 15000
   const md = await safeJsApi.appHandle().mutableData.newRandomPublic(typeTag)
@@ -60,12 +60,12 @@ const fakeGetattr = {
  *
 module.exports = (safeVfs) => {
   return {
-    readdir (path, cb) {
-      debug({ path })
+    readdir (itemPath, cb) {
+      debug({ itemPath })
       try {
-        cb(0, await safeVfs.fuseHandler(path).readdir(path))
+        cb(0, await safeVfs.fuseHandler(itemPath).readdir(itemPath))
         catch (err) {
-          err = explain(err, 'Failed to readdir path: ' + path)
+          err = explain(err, 'Failed to readdir itemPath: ' + itemPath)
           debug(err)
           cb(Fuse.EREMOTEIO)
         }
@@ -74,29 +74,39 @@ module.exports = (safeVfs) => {
   }
 }
  */
+
 module.exports = (safeVfs) => {
   return {
-    readdir (path, reply) {
-      debug({ path })
-      callSafeApi(safeVfs.safeApi(), path).then(() => { // TODO testing only
-        console.log('done callSafeApi on path: ' + path)
-      })
+    readdir (itemPath, reply) {
+      try {
+        debug({ itemPath })
+        safeVfs.getHandler(itemPath).readdir(itemPath).then((result) => {
+          reply(0, result)
+        })
 
-      let listing = fakeReadDir[path]
-      if (listing)
-        reply(0, listing)
-      else
+        /* TODO delete this block
+          callSafeApi(safeVfs.safeApi(), itemPath).then(() => { // TODO testing only
+          console.log('done callSafeApi on itemPath: ' + itemPath)
+        })
+
+        let listing = fakeReadDir[itemPath]
+        if (listing)
+          reply(0, listing)
+        else
+          reply(Fuse.EREMOTEIO)
+        */
+        /* TODO delete this block
+        ipfs.files.ls(itemPath, (err, files) => {
+          if (err) {
+            err = explain(err, 'Failed to ls itemPath')
+            debug(err)
+            return reply(Fuse.EREMOTEIO)
+          }
+          reply(0, files.map(f => f.name || f.hash))
+        })*/
+      } catch (err) {
         reply(Fuse.EREMOTEIO)
-
-      /*
-      ipfs.files.ls(path, (err, files) => {
-        if (err) {
-          err = explain(err, 'Failed to ls path')
-          debug(err)
-          return reply(Fuse.EREMOTEIO)
-        }
-        reply(0, files.map(f => f.name || f.hash))
-      })*/
+      }
     }
   }
 }

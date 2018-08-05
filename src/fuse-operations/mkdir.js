@@ -4,10 +4,10 @@ const debug = require('debug')('safe-fuse:mkdir')
 
 module.exports = (ipfs) => {
   return {
-    mkdir (path, mode, reply) {
-      debug({ path, mode })
+    mkdir (itemPath, mode, reply) {
+      debug({ itemPath, mode })
 
-      ipfs.files.mkdir(path, (err) => {
+      ipfs.files.mkdir(itemPath, (err) => {
         if (err) {
           err = explain(err, 'Failed to create directory')
           debug(err)

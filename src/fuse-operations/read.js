@@ -4,12 +4,12 @@ const debug = require('debug')('safe-fuse:read')
 
 module.exports = (ipfs) => {
   return {
-    read (path, fd, buf, len, pos, reply) {
-      debug({ path, fd, len, pos })
+    read (itemPath, fd, buf, len, pos, reply) {
+      debug({ itemPath, fd, len, pos })
 
-      ipfs.files.read(path, { offset: pos, count: len }, (err, part) => {
+      ipfs.files.read(itemPath, { offset: pos, count: len }, (err, part) => {
         if (err) {
-          err = explain(err, 'Failed to read path')
+          err = explain(err, 'Failed to read itemPath')
           debug(err)
           return reply(Fuse.EREMOTEIO)
         }

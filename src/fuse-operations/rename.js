@@ -9,7 +9,7 @@ module.exports = (ipfs) => {
 
       ipfs.files.mv([src, dest], (err) => {
         if (err) {
-          err = explain(err, 'Failed to mv path')
+          err = explain(err, 'Failed to mv itemPath')
           debug(err)
           return reply(Fuse.EREMOTEIO)
         }

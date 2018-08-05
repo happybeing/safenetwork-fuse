@@ -4,10 +4,10 @@ const debug = require('debug')('safe-fuse:mknod')
 
 module.exports = (ipfs) => {
   return {
-    mknod (path, mode, dev, reply) {
-      debug({ path })
+    mknod (itemPath, mode, dev, reply) {
+      debug({ itemPath })
 
-      ipfs.files.write(path, Buffer.from(''), { create: true }, (err) => {
+      ipfs.files.write(itemPath, Buffer.from(''), { create: true }, (err) => {
         if (err) {
           err = explain(err, 'Failed to create device node')
           debug(err)

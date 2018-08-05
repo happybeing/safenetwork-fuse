@@ -4,10 +4,10 @@ const debug = require('debug')('safe-fuse:unlink')
 
 module.exports = (ipfs) => {
   return {
-    unlink (path, reply) {
-      debug({ path })
+    unlink (itemPath, reply) {
+      debug({ itemPath })
 
-      ipfs.files.rm(path, (err) => {
+      ipfs.files.rm(itemPath, (err) => {
         if (err) {
           err = explain(err, 'Failed to delete file')
           debug(err)

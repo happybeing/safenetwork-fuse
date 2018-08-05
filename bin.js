@@ -50,9 +50,9 @@ try {
       fuse: { displayFolder: true, force: true }
     }).then(() => {
       return Promise.all([
-      // TODO replace the following fixed defaults with CLI configured mounts
-      // safeVfs.mountContainer({safePath: '_public'})
-      // this.mountContainer ({safePath: '_publicNames', PublicNamesHandler)
+        // TODO replace the following fixed defaults with CLI configured mounts
+        safeVfs.mountContainer({safePath: '_public'})
+        // this.mountContainer ({safePath: '_publicNames', PublicNamesHandler)
       ]).then(() => {
         console.log(`Mounted SAFE filesystem on ${mountPath}`)
       })

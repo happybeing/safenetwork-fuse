@@ -4,33 +4,35 @@ const debug = require('debug')('safe-fuse:getattr')
 
 // TODO remove this:
 
-const isFolder = function (path) {
-  return path.substr(-1) === '/'
+const isFolder = function (itemPath) {
+  return itemPath.substr(-1) === '/'
 }
 
 const fakeReadDir = {
-  '/': ['one', 'two', 'three'],
-  '/one': ['four', 'five', 'happybeing']
+  '/': ['_public', 'two', 'three'],
+  '/_public': ['four', 'five', 'happybeing']
 }
 
 const fakeGetattr = {
   '/': 'directory',
-  '/one': 'directory',
+  '/_public': 'directory',
   '/two': 'file',
   '/three': 'file',
-  '/one/four': 'file',
-  '/one/five': 'file',
-  '/one/happybeing': 'file'
+  '/_public/four': 'file',
+  '/_public/five': 'file',
+  '/_public/happybeing': 'file'
 }
 
 module.exports = (ipfs) => {
   const now = Date.now()
 
   return {
-    getattr (path, reply) {
-      debug({ path })
+    getattr (itemPath, reply) {
+      debug({ itemPath })
 
-      result = fakeGetattr[path]
+      let result = fakeGetattr[itemPath]
+      if (!result && itemPath.indexOf('DEBUG') === 0)
+        result = 'file'
 
 if (result) {
       // TODO stop FAKING IT:
@@ -49,11 +51,11 @@ if (result) {
   reply(Fuse.ENOENT)
 }
 if (false){
-      ipfs.files.stat(path, (err, stat) => {
+      ipfs.files.stat(itemPath, (err, stat) => {
 
         if (err) {
           if (err.message === 'file does not exist') return reply(Fuse.ENOENT)
-          err = explain(err, 'Failed to stat path')
+          err = explain(err, 'Failed to stat itemPath')
           debug(err)
           return reply(Fuse.EREMOTEIO)
         }

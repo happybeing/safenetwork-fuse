@@ -4,8 +4,8 @@ const debug = require('debug')('safe-fuse:statfs')
 
 module.exports = (ipfs) => {
   return {
-    statfs (path, reply) {
-      debug({ path })
+    statfs (itemPath, reply) {
+      debug({ itemPath })
       ipfs.repo.stat((err, stat) => {
         if (err) {
           err = explain(err, 'Failed to stat repo')
@@ -14,7 +14,7 @@ module.exports = (ipfs) => {
         }
 
         // TODO: I have no idea what I'm doing.
-        // https://github.com/mafintosh/fuse-bindings#opsstatfspath-cb
+        // https://github.com/mafintosh/fuse-bindings#opsstatfsitemPath-cb
         // https://github.com/mafintosh/fuse-bindings/blob/032ed16e234f7379fbf421c12afef592ab2a292d/fuse-bindings.cc#L771-L783
         // http://man7.org/linux/man-pages/man2/statfs.2.html
         const data = {

@@ -3,8 +3,8 @@ const debug = require('debug')('safe-fuse:open')
 
 module.exports = (ipfs, fds) => {
   return {
-    open (path, flags, reply) {
-      debug({ path, flags })
+    open (itemPath, flags, reply) {
+      debug({ itemPath, flags })
       reply(0, 42)
     }
   }

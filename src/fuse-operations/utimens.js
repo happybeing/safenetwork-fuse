@@ -4,12 +4,12 @@ const debug = require('debug')('safe-fuse:utimens')
 
 module.exports = (ipfs) => {
   return {
-    utimens (path, atime, mtime, reply) {
-      debug({ path })
+    utimens (itemPath, atime, mtime, reply) {
+      debug({ itemPath })
 
-      ipfs.files.stat(path, (err) => {
+      ipfs.files.stat(itemPath, (err) => {
         if (err && err.message === 'file does not exist') {
-          ipfs.files.write(path, Buffer.from(''), { create: true }, (err) => {
+          ipfs.files.write(itemPath, Buffer.from(''), { create: true }, (err) => {
             if (err) {
               err = explain(err, 'Failed to create file')
               debug(err)

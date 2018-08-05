@@ -4,11 +4,11 @@ const debug = require('debug')('safe-fuse:ftruncate')
 
 module.exports = (ipfs) => {
   return {
-    ftruncate (path, fd, size, reply) {
-      debug({ path })
+    ftruncate (itemPath, fd, size, reply) {
+      debug({ itemPath })
 
       if (size === 0) {
-        ipfs.files.write(path, Buffer.from(''), { truncate: true }, (err) => {
+        ipfs.files.write(itemPath, Buffer.from(''), { truncate: true }, (err) => {
           if (err) {
             err = explain(err, 'Failed to truncate file')
             debug(err)

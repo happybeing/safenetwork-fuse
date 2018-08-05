@@ -43,6 +43,7 @@
     "mkdirp": "^0.5.1",
     "mkdirp-promise": "^5.0.1",
     "node-ipc": "^9.1.1",
+    "path": "^0.12.7",
     "string": "^3.3.3",
     "yargs": "^11.0.0"
   },
