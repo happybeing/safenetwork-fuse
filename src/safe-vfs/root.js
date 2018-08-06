@@ -1,5 +1,6 @@
 const path = require('path')  // Cross platform path handling
 
+const debug = require('debug')('safe-vfs:root')
 const NfsHandler = require('./nfs')
 const PublicNamesHandler = require('./public-names')
 
@@ -67,9 +68,9 @@ class RootHandler {
       }
 
       // RootHandler::getHanlerFor() is only called if there is no SAFE
-      // container mounted that matches the root of itemPath, so we take
-      // that as the SAFE container to be mounted, using itself as the
-      // mountPath
+      // VFS pathMap entry that matches the start of itemPath. When this
+      // happens this attempts to mount the SAFE container which corresponds
+      // to the itemPath.
 
       let itemRoot = path.sep + itemPath.split(path.sep)[0]
       let HandlerClass = ContainerHandlerClasses[itemRoot]
@@ -107,6 +108,22 @@ class RootHandler {
     })
     return listing
   }
+
+  async mkdir (itemPath) { debug('TODO mkdir(' + itemPath + ') not implemented'); return {} }
+  async statfs (itemPath) { debug('TODO statfs(' + itemPath + ') not implemented'); return {} }
+  async getattr (itemPath) { debug('TODO getattr(' + itemPath + ') not implemented'); return {} }
+  async create (itemPath) { debug('TODO create(' + itemPath + ') not implemented'); return {} }
+  async open (itemPath) { debug('TODO open(' + itemPath + ') not implemented'); return {} }
+  async write (itemPath) { debug('TODO write(' + itemPath + ') not implemented'); return {} }
+  async read (itemPath) { debug('TODO read(' + itemPath + ') not implemented'); return {} }
+  async unlink (itemPath) { debug('TODO unlink(' + itemPath + ') not implemented'); return {} }
+  async rmdir (itemPath) { debug('TODO rmdir(' + itemPath + ') not implemented'); return {} }
+  async write (itemPath) { debug('TODO write(' + itemPath + ') not implemented'); return {} }
+  async rename (itemPath) { debug('TODO rename(' + itemPath + ') not implemented'); return {} }
+  async write (itemPath) { debug('TODO write(' + itemPath + ') not implemented'); return {} }
+  async ftruncate (itemPath) { debug('TODO ftruncate(' + itemPath + ') not implemented'); return {} }
+  async mknod (itemPath) { debug('TODO mknod(' + itemPath + ') not implemented'); return {} }
+  async utimens (itemPath) { debug('TODO utimens(' + itemPath + ') not implemented'); return {} }
 }
 
 module.exports = RootHandler

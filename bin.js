@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
+const debug = require('debug')('app:bin')
 const Os = require('os')
-const Path = require('path')
+const path = require('path')
 const safeJsApi = require('safenetworkjs').SafenetworkApi
 const SafeVfs = require('./src/safe-vfs')
 const explain = require('explain-error')
@@ -14,7 +15,7 @@ const argv = yargs
   .argv
 
 const mountPath = process.platform !== 'win32'
-  ? Path.join(Os.homedir(), 'SAFE')
+  ? path.join(Os.homedir(), 'SAFE')
   : 'I:\\'
 
 // TODO: parameterise these? or separate out?
@@ -43,7 +44,7 @@ if (false) { // TODO can I make this conditional on being run as script?
 // Auth with Safetnetwork
 let safeVfs
 try {
-  console.log('try bootstrap()...')
+  debug('try bootstrap()...')
   safeJsApi.bootstrap(appConfig, appPermissions, argv).then(app => {
     safeVfs = new SafeVfs(safeJsApi)
     safeVfs.mountFuse(mountPath, {
@@ -54,18 +55,18 @@ try {
         safeVfs.mountContainer({safePath: '_public'})
         // this.mountContainer ({safePath: '_publicNames', PublicNamesHandler)
       ]).then(() => {
-        console.log(`Mounted SAFE filesystem on ${mountPath}`)
+        debug(`Mounted SAFE filesystem on ${mountPath}`)
       })
     }).catch((err) => {
       const msg = 'Failed to mount SAFE FUSE volume'
-      console.log(msg)
+      debug(msg)
       explain(err, msg)
     })
   })
 } catch (err) {
   console.error(err.message)
   const msg = 'Failed to mount SAFE FUSE volume'
-  console.log(msg)
+  debug(msg)
   explain(err, msg)
   //        throw new Error(err)
 }
@@ -79,12 +80,12 @@ process.on('SIGINT', () => {
 
   try {
     safeVfs.unmountFuse(mountPath).then(() => {
-      console.log(`Unmounted SAFE filesystem at ${mountPath}`)
+      debug(`Unmounted SAFE filesystem at ${mountPath}`)
     })
   } catch (err) {
     console.error(err.message)
     const msg = 'Failed to mount SAFE FUSE volume'
-    console.log(msg)
+    debug(msg)
     explain(err, msg)
     //        throw new Error(err)
   }

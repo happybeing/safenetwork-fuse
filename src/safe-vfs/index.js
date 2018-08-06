@@ -23,9 +23,7 @@
     [ ] read
     [ ] unlink
     [ ] rmdir
-    [ ] write
     [ ] rename
-    [ ] write
     [ ] ??? ftruncate
     [ ] ??? mknod
     [ ] ??? utimens
@@ -40,9 +38,7 @@
     [ ] read
     [ ] unlink
     [ ] rmdir
-    [ ] write
     [ ] rename
-    [ ] write
     [ ] ??? ftruncate
     [ ] ??? mknod
     [ ] ??? utimens
@@ -194,7 +190,7 @@ match throw this:
 const path = require('path')  // Cross platform path handling
 
 const Fuse = require('fuse-bindings')
-const debug = require('debug')('safe-fuse:index')
+const debug = require('debug')('safe-vfs:index')
 const mkdirp = require('mkdirp-promise')
 const createSafeFuse = require('../fuse-operations')
 const explain = require('explain-error')
@@ -231,8 +227,7 @@ class SafeVfs {
         .then(() => {
           return new Promise((resolve, reject) => {
             Fuse.mount(mountPath, createSafeFuse(this), opts.fuse, (err) => {
-              console.log('log:index.js:path()!!!')
-              debug('index.js:path()!!!')
+              debug('Fuse.mount() at ' + mountPath)
               if (err) {
                 err = explain(err, 'Failed to create mount point')
                 debug(err)
@@ -244,12 +239,11 @@ class SafeVfs {
           })
         })
       }).catch((err) => {
-        console.log('ERROR - DEBUG')
-        console.error('Failed to mount SAFE FUSE volume')
+        debug('ERROR - failed to mount SAFE FUSE volume')
         throw err
       })
     } catch (err) {
-      console.error('Failed to mount SAFE FUSE volume')
+      debug('ERROR - failed to mount SAFE FUSE volume')
       throw err
     }
   }

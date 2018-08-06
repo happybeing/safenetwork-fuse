@@ -25,6 +25,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE. */
 
+const debug = require('debug')('safe-fuse:cli')
+
 const fs = require('fs')
 const ipc = require('node-ipc')
 const path = require('path')
@@ -34,7 +36,7 @@ const Safe = require('@maidsafe/safe-node-app')
 ipc.config.silent = true
 
 Safe.bootstrap = async (appInfo, argv) => {
-  console.log('\nSafe.bootstrap() with appInfo: ' + JSON.stringify(appInfo))
+  debug('\nSafe.bootstrap() with appInfo: ' + JSON.stringify(appInfo))
   const options = {
     libPath: getLibPath()
   }
@@ -74,13 +76,13 @@ async function authorise (pid, appInfo, options) {
 }
 
 async function ipcReceive (id) {
-  console.log('ipcReceive(' + id + ')')
+  debug('ipcReceive(' + id + ')')
   return new Promise((resolve) => {
     ipc.config.id = id
 
     ipc.serve(() => {
       ipc.server.on('auth-uri', (data) => {
-        console.log('on(auth-uri) handling data.message: ' + data.message)
+        debug('on(auth-uri) handling data.message: ' + data.message)
         resolve(data.message)
         ipc.server.stop()
       })
@@ -91,14 +93,14 @@ async function ipcReceive (id) {
 }
 
 async function ipcSend (id, data) {
-  console.log('ipcSend(' + id + ', ' + data + ')')
+  debug('ipcSend(' + id + ', ' + data + ')')
 
   return new Promise((resolve) => {
     ipc.config.id = id + '-cli'
 
     ipc.connectTo(id, () => {
       ipc.of[id].on('connect', () => {
-        console.log('on(connect)')
+        debug('on(connect)')
         ipc.of[id].emit('auth-uri', { id: ipc.config.id, message: data })
 
         resolve()
@@ -126,13 +128,13 @@ function getLibPath () {
       const dir = path.join(root, location)
 
       if (fs.existsSync(dir)) {
-        console.log('getLibPath() returning: ', dir)
+        debug('getLibPath() returning: ', dir)
         return dir
       }
     }
   }
 
-  console.log('No library directory found.')
+  debug('No library directory found.')
   throw Error('No library directory found.')
 }
 
