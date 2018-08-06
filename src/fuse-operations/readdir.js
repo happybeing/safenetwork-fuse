@@ -1,9 +1,9 @@
 const Fuse = require('fuse-bindings')
 const explain = require('explain-error')
-const debug = require('debug')('safenetwork-fuse:readdir')
+const debug = require('debug')('safe-fuse-op:readdir')
 
 async function callSafeApi (safeJsApi, itemPath) { // TODO testing only
-  console.log('callSafeApi(' + itemPath + ')')
+  debug('callSafeApi(' + itemPath + ')')
 
   const typeTag = 15000
   const md = await safeJsApi.appHandle().mutableData.newRandomPublic(typeTag)
@@ -21,10 +21,10 @@ async function callSafeApi (safeJsApi, itemPath) { // TODO testing only
 
   await md.quickSetup(initialData)
 
-  console.log('Created Mutable Data with contents: ')
+  debug('Created Mutable Data with contents: ')
   let items = await getItems(md)
   items.map((key, value) => {
-    console.log(key + ' = ' + value)
+    debug(key + ' = ' + value)
   })
 }
 
@@ -86,7 +86,7 @@ module.exports = (safeVfs) => {
 
         /* TODO delete this block
           callSafeApi(safeVfs.safeApi(), itemPath).then(() => { // TODO testing only
-          console.log('done callSafeApi on itemPath: ' + itemPath)
+          debug('done callSafeApi on itemPath: ' + itemPath)
         })
 
         let listing = fakeReadDir[itemPath]

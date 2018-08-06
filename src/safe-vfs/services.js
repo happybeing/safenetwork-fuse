@@ -1,6 +1,6 @@
 const path = require('path')  // Cross platform path handling
 
-const debug = require('debug')('safe-vfs:services')
+const debug = require('debug')('safe-fuse-vfs:services')
 
 /**
  * vfsHandler for a SAFE services container

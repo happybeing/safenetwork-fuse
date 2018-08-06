@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const debug = require('debug')('app:bin')
+const debug = require('debug')('safe-fuse:bin')
 const Os = require('os')
 const path = require('path')
 const safeJsApi = require('safenetworkjs').SafenetworkApi

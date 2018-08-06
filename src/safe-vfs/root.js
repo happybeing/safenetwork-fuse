@@ -1,6 +1,6 @@
 const path = require('path')  // Cross platform path handling
 
-const debug = require('debug')('safe-vfs:root')
+const debug = require('debug')('safe-fuse-vfs:root')
 const NfsHandler = require('./nfs')
 const PublicNamesHandler = require('./public-names')
 
@@ -85,7 +85,7 @@ class RootHandler {
         throw new Error('failed to create VFS handler for path: ' + itemPath)
       }
     } catch (err) {
-      console.error('RootHandler error - ' + err.message)
+      debug('ERROR - ' + err.message)
       throw err
     }
   }
