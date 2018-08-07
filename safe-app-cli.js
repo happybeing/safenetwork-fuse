@@ -35,8 +35,9 @@ const Safe = require('@maidsafe/safe-node-app')
 // No stdout from node-ipc
 ipc.config.silent = true
 
+// TODO switch to use safentworkjs SafenetworkApi.bootstrap()
 Safe.bootstrap = async (appInfo, argv) => {
-  debug('\nSafe.bootstrap() with appInfo: ' + JSON.stringify(appInfo))
+  debug('Safe.bootstrap() with appInfo: ' + JSON.stringify(appInfo))
   const options = {
     libPath: getLibPath()
   }

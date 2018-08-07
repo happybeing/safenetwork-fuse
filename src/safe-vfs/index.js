@@ -12,6 +12,8 @@
   [/] use SafeVfs to hold pathMap and SAFE Api (instance of SafenetworkApi)
   [/] pass safeVfs to each vfsHandler constructor
   [ ] Implement RootHandler for each of these and call from corresponding fuse-operations impn.
+    [/] finish off NfsContainer in SafenetworkJs
+--->[ ] wire up RootHandler / NfsHandler to create/use SafenetworkJs container classes
     [/] readdir
       [ ] ls ~/SAFE/_public hangs, so begin implementing NfsHandler
     [ ] mkdir
@@ -295,16 +297,16 @@ class SafeVfs {
   /**
    * Mount SAFE container (Mutable Data)
    *
-   * @param  {string} safePath      path starting with a root container
+   * @param  {String} safePath      path starting with a root container
    * Examples:
    *   _publicNames                 mount _publicNames container
    *   _publicNames/happybeing      mount services container for 'happybeing'
    *   _publicNames/www.happybeing  mount www container (NFS for service at www.happybeing)
    *   _publicNames/thing.happybeing mount the services container (NFS, mail etc at thing.happybeing
    * @param  {map} {
-   *    @param {string}   mountPath (optional) subpath of the mount point
-   *    @param  {string}  lazyInitialise (optional) if false, any API init occurs immediately
-   *    @param  {string}  ContainerHandler (optional) handler class for the container type
+   *    @param {String}   mountPath (optional) subpath of the mount point
+   *    @param  {String}  lazyInitialise (optional) if false, any API init occurs immediately
+   *    @param  {String}  ContainerHandler (optional) handler class for the container type
    * }
    * @return {Promise}
    */
