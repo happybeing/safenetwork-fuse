@@ -2,27 +2,12 @@ const path = require('path')  // Cross platform path handling
 
 const debug = require('debug')('safe-fuse-vfs:nfs')
 
-const fakeReadDir = {
-  '/': ['_public', 'two', 'three'],
-  '/_public': ['four', 'five', 'happybeing']
-}
-
-const fakeGetattr = {
-  '/': 'directory',
-  '/_public': 'directory',
-  '/two': 'file',
-  '/three': 'file',
-  '/_public/four': 'file',
-  '/_public/five': 'file',
-  '/_public/happybeing': 'file'
-}
-
 /**
  * vfsHandler for an NFS container
  *
  * This handler is created to handle operations on a mountPath for
  * which there is a SAFE NFS MutableData (MD) container. That MD container
- * will appear at the mountPath, with the keys MD used as relative paths
+ * will appear at the mountPath, with the keys in that used as relative paths
  * from the mountPath.
  *
  * So if the mountPath is /thing and an MD entry exists with key
@@ -59,6 +44,30 @@ class NfsHandler {
     this._safePath = safePath
     this._safePath = safePath
     this._lazyInitialise = lazyInitialise
+    if (!lazyInitialise) this.nfs() // Force init now
+  }
+
+  // NfsContainer wrapper for file operations on a Mutable Data (using SAFE 'NFS' emulation)
+  nfs () {
+    if (this._nfs !== undefined) return this._nfs
+    let promise = new Promise((resolve, reject) => {
+      let nfsContainer
+      try { // First try and 'mount' existing share
+        nfsContainer = this._safeVfs.safeJs().getNfsContainer(this._safePath, false)
+      } catch (err) {
+        // If that fails try creating it
+        if (!nfsContainer) {
+          let isPublic = this._safeVfs.safeJs().isPublicContainer(this.safePath.split('/')[0])
+          nfsContainer = this._safeVfs.safeJs().getNfsContainer(this._safePath, true, isPublic)
+        }
+      }
+      if (nfsContainer) resolve(nfsContainer)
+      reject(new Error('NfsHandler failed to mount container at ' + this._safePath))
+    })
+    promise.then((nfs) => {
+      this._nfs = nfs
+      return nfs
+    })
   }
 
   getHandlerFor (itemPath) {
@@ -72,20 +81,20 @@ class NfsHandler {
   }
 
   // Fuse operations:
-  async readdir (itemPath) { debug('readdir(' + itemPath + ')'); return fakeReadDir[itemPath] }
-  async mkdir (itemPath) { debug('TODO mkdir(' + itemPath + ') not implemented'); return {} }
-  async statfs (itemPath) { debug('TODO statfs(' + itemPath + ') not implemented'); return {} }
-  async getattr (itemPath) { debug('TODO getattr(' + itemPath + ') not implemented'); return {} }
-  async create (itemPath) { debug('TODO create(' + itemPath + ') not implemented'); return {} }
-  async open (itemPath) { debug('TODO open(' + itemPath + ') not implemented'); return {} }
-  async write (itemPath) { debug('TODO write(' + itemPath + ') not implemented'); return {} }
-  async read (itemPath) { debug('TODO read(' + itemPath + ') not implemented'); return {} }
-  async unlink (itemPath) { debug('TODO unlink(' + itemPath + ') not implemented'); return {} }
-  async rmdir (itemPath) { debug('TODO rmdir(' + itemPath + ') not implemented'); return {} }
-  async rename (itemPath) { debug('TODO rename(' + itemPath + ') not implemented'); return {} }
-  async ftruncate (itemPath) { debug('TODO ftruncate(' + itemPath + ') not implemented'); return {} }
-  async mknod (itemPath) { debug('TODO mknod(' + itemPath + ') not implemented'); return {} }
-  async utimens (itemPath) { debug('TODO utimens(' + itemPath + ') not implemented'); return {} }
+  async readdir (itemPath) { debug('NfsHandler readdir(' + itemPath + ')'); return this.nfs().readdir(itemPath) }
+  async mkdir (itemPath) { debug('TODO NfsHandler  mkdir(' + itemPath + ') not implemented'); return {} }
+  async statfs (itemPath) { debug('TODO NfsHandler  statfs(' + itemPath + ') not implemented'); return {} }
+  async getattr (itemPath) { debug('TODO NfsHandler  getattr(' + itemPath + ') not implemented'); return {} }
+  async create (itemPath) { debug('TODO NfsHandler  create(' + itemPath + ') not implemented'); return {} }
+  async open (itemPath) { debug('TODO NfsHandler  open(' + itemPath + ') not implemented'); return {} }
+  async write (itemPath) { debug('TODO NfsHandler  write(' + itemPath + ') not implemented'); return {} }
+  async read (itemPath) { debug('TODO NfsHandler  read(' + itemPath + ') not implemented'); return {} }
+  async unlink (itemPath) { debug('TODO NfsHandler  unlink(' + itemPath + ') not implemented'); return {} }
+  async rmdir (itemPath) { debug('TODO NfsHandler  rmdir(' + itemPath + ') not implemented'); return {} }
+  async rename (itemPath) { debug('TODO NfsHandler  rename(' + itemPath + ') not implemented'); return {} }
+  async ftruncate (itemPath) { debug('TODO NfsHandler  ftruncate(' + itemPath + ') not implemented'); return {} }
+  async mknod (itemPath) { debug('TODO NfsHandler  mknod(' + itemPath + ') not implemented'); return {} }
+  async utimens (itemPath) { debug('TODO NfsHandler  utimens(' + itemPath + ') not implemented'); return {} }
 }
 
 module.exports = NfsHandler

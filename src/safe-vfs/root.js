@@ -118,9 +118,7 @@ class RootHandler {
   async read (itemPath) { debug('TODO read(' + itemPath + ') not implemented'); return {} }
   async unlink (itemPath) { debug('TODO unlink(' + itemPath + ') not implemented'); return {} }
   async rmdir (itemPath) { debug('TODO rmdir(' + itemPath + ') not implemented'); return {} }
-  async write (itemPath) { debug('TODO write(' + itemPath + ') not implemented'); return {} }
   async rename (itemPath) { debug('TODO rename(' + itemPath + ') not implemented'); return {} }
-  async write (itemPath) { debug('TODO write(' + itemPath + ') not implemented'); return {} }
   async ftruncate (itemPath) { debug('TODO ftruncate(' + itemPath + ') not implemented'); return {} }
   async mknod (itemPath) { debug('TODO mknod(' + itemPath + ') not implemented'); return {} }
   async utimens (itemPath) { debug('TODO utimens(' + itemPath + ') not implemented'); return {} }

@@ -203,12 +203,12 @@ const PublicNamesHandler = require('./public-names')
 const ServicesHandler = require('./services')
 
 class SafeVfs {
-  constructor (safeApi) {
-    this._safeApi = safeApi
+  constructor (safeJsApi) {
+    this._safeJs = safeJsApi
     this._pathMap = new Map()
   }
 
-  safeApi () { return this._safeApi }
+  safeJs () { return this._safeJs }
   pathMap () { return this._pathMap }
 
   pathMapSet (mountPath, handler) {
