@@ -25,27 +25,21 @@ let appConfig = {
   vendor: 'theWebalyst'
 }
 
-const appPermissions = {
+const appContainers = {
   // TODO is this right for solid service container (ie solid.<safepublicid>)
   _public: ['Read', 'Insert', 'Update', 'Delete'], // request to insert into `_public` container
   _publicNames: ['Read', 'Insert', 'Update', 'Delete'] // TODO maybe reduce defaults later
 }
 
-// TODO try without this in case bootstraps 'just works' when not built
-if (false) { // TODO can I make this conditional on being run as script?
-  const authCmd = '/home/mrh/src/safe/safe-cli-boilerplate/dist/mock/safecmd'
-  const authScript = '/snapshot/safe-cli-boilerplate/safecmd.js'
-  appConfig.customExecPath = [
-    authCmd, authScript,
-    '--pid', String(process.pid), // get this from process.pid
-    '--uri']
+const containerOpts = {
+  own_container: false
 }
 
 // Auth with Safetnetwork
 let safeVfs
 try {
   debug('try bootstrap()...')
-  safeJsApi.bootstrap(appConfig, appPermissions, argv).then(app => {
+  safeJsApi.bootstrap(appConfig, appContainers, containerOpts, argv).then(app => {
     safeVfs = new SafeVfs(safeJsApi)
     safeVfs.mountFuse(mountPath, {
       fuse: { displayFolder: true, force: true }

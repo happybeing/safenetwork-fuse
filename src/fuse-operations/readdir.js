@@ -105,6 +105,8 @@ module.exports = (safeVfs) => {
           reply(0, files.map(f => f.name || f.hash))
         })*/
       } catch (err) {
+        let e = explain(err, 'Failed to readdir: ' + itemPath)
+        debug(e)
         reply(Fuse.EREMOTEIO)
       }
     }

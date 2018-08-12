@@ -13,8 +13,11 @@
   [/] pass safeVfs to each vfsHandler constructor
   [ ] Implement RootHandler for each of these and call from corresponding fuse-operations impn.
     [/] finish off NfsContainer in SafenetworkJs
---->[ ] wire up RootHandler / NfsHandler to create/use SafenetworkJs container classes
-      [ ] fix creation of NfsContainer so it is given a root (or other parent) container if available
+    [/] wire up RootHandler / NfsHandler to create/use SafenetworkJs container classes
+--->  [ ] fix SAFE API error auth.getContainer('_public') - 'Container not found'
+          [ ] post query to forum
+          [ ] check with Benno
+      [?] fix creation of NfsContainer so it is given a root (or other parent) container if available
           this is done by SafeVfs mountContainer()
     [ ] fix up inconsistencies in the design comments below, and in each of the handler files
     [/] readdir
@@ -71,7 +74,7 @@ SafeVfs
 -------
 SafeVfs (this file) implements the Path Map containing entries which map a path
 to a vfsHandler object. The Path Map contains:
-- an entry for '' with an instance of vfsRootHandler
+- an entry for '/' with an instance of VFS RootHandler
 - a top level container entry for each mount point (e.g. _publicNames, _documents etc.)
 - zero or sub-path entries that are also containers
 - provides a getHandler() to get the vfsHandler for a given path (see next)
@@ -109,7 +112,7 @@ exists, it returns the entry, a vfsHandler object.
 If there is no entry matching the path, it calls itself to obtain the handler
 object for the parent path. This recursion continues, and will 'unroll' once
 a handler is found (which may ultimately be the root handler object for SAFE
-path '').
+path '/').
 
 Once it obtains a handler object for a parent path, it calls getHandlerFor()
 on that object, to obtain a handler for the contained item and returns that.
@@ -190,7 +193,7 @@ which can affect the other such as delete or rename. Where there is no
 parent for an NfsContainer it can ignore any effects that would in other
 cases affect the parent.
 
-The RootHandler for '' is what mounts the root containers (i.e. _public,
+The RootHandler for '/' is what mounts the root containers (i.e. _public,
 _documents, _publicNames etc). When doing so it creates an instance of
 RootHandler for each mounted container, adding this to the pathMap.
 TODO check the above is what I've done
@@ -208,19 +211,19 @@ if and when they are mounted.
 
 Each such mount (of a root container MD, or an NFS file container MD) creates
 an entry in the mountPath map containing an instance of either RootHandler
-or NfsHandler. So there is an instance of RootHandler for the empty path ''
+or NfsHandler. So there is an instance of RootHandler for the root path '/'
 and for each path which is the name of a root container, such as '_public',
 '_documents' etc.
 TEMP NOTE:
 pathMap                                           handler                               container(s)
 path                      safePath
-''                                                RootHandler('')                       n/a
-'_public'                 _public                 RootHandler('_public')                PublicContainer
-'_music'                  _music                  RootHandler('_music')                 PrivateContainer
-'_public/happy/www-root'  _public/happy/www-root  NfsHandler('_public/happy/www-root')  PublicContainer
-'some/folder'             _public/happy/www-root  NfsHandler('_public/happy/www-root')  same instance as above
-'_publicNames'            _publicNames            PublicNamesHandler('_publicNames')    PublicNamesContainer
-'_publicNames/happy'      _publicNames/happy      ServicesHandler_publicNames/happy
+'/'                                                RootHandler('/')                       n/a
+'/_public'                 _public                 RootHandler('/_public')                PublicContainer
+'/_music'                  _music                  RootHandler('/_music')                 PrivateContainer
+'/_public/happy/www-root'  _public/happy/www-root  NfsHandler('/_public/happy/www-root')  PublicContainer
+'/some/folder'             _public/happy/www-root  NfsHandler('/_public/happy/www-root')  same instance as above
+'/_publicNames'            _publicNames            RootHandler('/_publicNames')           PublicNamesContainer
+'/_publicNames/happy'      _publicNames/happy      ServicesHandler('_publicNames/happy')  ServicesContainer
 
 TODO ??? Consider having on class for NfsHandler/PublicNamesHandler/ServicesHandler
 Maybe RootHandler too). I think what creates
@@ -245,7 +248,7 @@ a corresponding RootContainer object (e.g. PublicContainer for _public,
 PrivateContainer for _documents or _music etc, PublicNamesContainer and so on).
 
 For example, when the NFS folder _public/happybeing/www-root is mounted, in
-addition to the file system root handler for path '', the pathMap will contain
+addition to the file system root handler for path '/', the pathMap will contain
 a handler entry for both the path '_public' (a RootHandler) and for
 '_public/happybeing/www-root' (an NfsHandler). The RootHandler will
 hold an instance of PublicContainer, the NfsHandler an instance of
@@ -344,7 +347,7 @@ class SafeVfs {
    */
   async initialisePathMap () {
     this._pathMap = new Map()
-    return this.mountContainer({safePath: ''}) // Always have a root handler
+    return this.mountContainer({safePath: '/'}) // Always have a root handler
   }
 
   /**
@@ -396,7 +399,7 @@ class SafeVfs {
       }
 
       let DefaultHandlerClass
-      if (params.safePath === '' || this.safeJs().rootContainerNames.indexOf(params.safePath) !== -1) {
+      if (params.safePath === '/' || this.safeJs().rootContainerNames.indexOf(params.safePath) !== -1) {
         DefaultHandlerClass = RootHandler
       } else {
         DefaultHandlerClass = NfsHandler
