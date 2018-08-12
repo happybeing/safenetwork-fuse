@@ -1,3 +1,7 @@
+// TODO I don't think this class is needed because the
+// RootHandler can be used with a PublicNamesContainer class
+// to handle public name specifics
+
 const path = require('path')  // Cross platform path handling
 
 const debug = require('debug')('safe-fuse-vfs:dns')
@@ -20,6 +24,7 @@ class PublicNamesHandler {
     this._safePath = safePath
     this._safePath = safePath
     this._lazyInitialise = lazyInitialise
+    throw new Error('PublicNamesHandler not needed see TODO at line one')
   }
 
   getHandlerFor (itemPath) {}

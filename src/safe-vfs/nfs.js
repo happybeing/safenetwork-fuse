@@ -61,8 +61,11 @@ class NfsHandler {
           nfsContainer = this._safeVfs.safeJs().getNfsContainer(this._safePath, true, isPublic)
         }
       }
-      if (nfsContainer) resolve(nfsContainer)
-      reject(new Error('NfsHandler failed to mount container at ' + this._safePath))
+      if (nfsContainer) {
+        resolve(nfsContainer)
+      } else {
+        reject(new Error('NfsHandler failed to mount container at ' + this._safePath))
+      }
     })
     promise.then((nfs) => {
       this._nfs = nfs

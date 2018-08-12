@@ -14,6 +14,9 @@
   [ ] Implement RootHandler for each of these and call from corresponding fuse-operations impn.
     [/] finish off NfsContainer in SafenetworkJs
 --->[ ] wire up RootHandler / NfsHandler to create/use SafenetworkJs container classes
+      [ ] fix creation of NfsContainer so it is given a root (or other parent) container if available
+          this is done by SafeVfs mountContainer()
+    [ ] fix up inconsistencies in the design comments below, and in each of the handler files
     [/] readdir
       [ ] ls ~/SAFE/_public hangs, so begin implementing NfsHandler
     [ ] mkdir
@@ -68,7 +71,7 @@ SafeVfs
 -------
 SafeVfs (this file) implements the Path Map containing entries which map a path
 to a vfsHandler object. The Path Map contains:
-- an entry for '/' with an instance of vfsRootHandler
+- an entry for '' with an instance of vfsRootHandler
 - a top level container entry for each mount point (e.g. _publicNames, _documents etc.)
 - zero or sub-path entries that are also containers
 - provides a getHandler() to get the vfsHandler for a given path (see next)
@@ -105,7 +108,8 @@ exists, it returns the entry, a vfsHandler object.
 
 If there is no entry matching the path, it calls itself to obtain the handler
 object for the parent path. This recursion continues, and will 'unroll' once
-a handler is found (which may ultimately be the root handler object for '/').
+a handler is found (which may ultimately be the root handler object for SAFE
+path '').
 
 Once it obtains a handler object for a parent path, it calls getHandlerFor()
 on that object, to obtain a handler for the contained item and returns that.
@@ -161,32 +165,98 @@ if (handler) {
   pathMap.'_publicNames' = handler
 }
 
-*/
+How Handler Classes and SafenetworkJs Container Classes Work
+------------------------------------------------------------
+The following explains how the RootHandler / RootContainer classes work and
+that the NfsHandler class works with either an NfsContainer to
+allow mounting of an NFS emulation MD, or a ServicesContainer to
+allow mounting of a services MD. Note that these MDs can be mounted either
+within the path of a mounted parent container, or stand-alone without a
+parent.
 
-/* TODO review this - maybe incorporate parts of it in the above
+SafenetworkJs container classes include root containers (PublicContainer,
+PrivateContainer, PublicNamesContainer and NFS containers (NfsContainer and
+ServicesContainer). Each is a wrapper around a Mutable Data object, and
+provides a simplified way to perform common operations on the MD and
+its contents.
 
-??? think this through along with SafeVfs.getHandler()
-and NfsHandler.getHandlerFor() - note that the NfsHandler should correspond to
-an NFS container (so able to handle all paths within the container)
-so for _public/something/blah/thing mounted at the NfsHandler.mountPath
-the NfsHandler object handles everything which starts with this._mountPath,
-*and* at _public/something/blah/thing (==> or perhaps have two NfsHandlers in
-such cases - simpler to program and no big deal really)
+When a SafenetworkJs container is created, it can either be stand-alone
+or it can be a container within a parent. For example, an NfsContainer would
+normally have as its parent, either a PublicContainer (for _public), a
+PrivateContainer (for _documents, _music etc) or a ServicesContainer
+(for a www service entry). In those cases the NfsContainer and its parent
+collaborate to ensure each is updated appropriately for FUSE operations on one
+which can affect the other such as delete or rename. Where there is no
+parent for an NfsContainer it can ignore any effects that would in other
+cases affect the parent.
 
-So one might mount _public/something/blah/thing at /thispath which directly
-creates an NfsHandler with mountPath _public/something/blah/thing, so that handler
-would be found for any itemPath within that mountPath
+The RootHandler for '' is what mounts the root containers (i.e. _public,
+_documents, _publicNames etc). When doing so it creates an instance of
+RootHandler for each mounted container, adding this to the pathMap.
+TODO check the above is what I've done
 
-While an attempt to access _public/something/blah/thing would cause
-the RootHandler to create an NfsHandler with mountPath _public/something/blah/thing
+A RootHandler for a root container holds a SafenetworkJs container object
+to handle operations on the container.
+??? how do I create the NfsHandler for an such as _public/happybeing/www-root?
+??? do I need one, if the root container (_public) knows how to perform
+operations on it? Perhaps if just finds/creates the container and calls the
+operation on that?
 
-[ ] review the usefulness of getHandlerFor() on the handler objects - I'm not sure it is needed
-  --> I think it is needed where one handler acts as a container for things
-  handled by other handlers (eg where a public names handler mount 'contains'
-    services handlers for each service on a public name)
---> so here we MUST create a handler based on the root matching on of the
-default SAFE containers (_public, _documents etc), and if that does not
-match throw this:
+A NfsHandler is created for each mounted root container, and is what
+creates the NFS container objects for any entries of the root container
+if and when they are mounted.
+
+Each such mount (of a root container MD, or an NFS file container MD) creates
+an entry in the mountPath map containing an instance of either RootHandler
+or NfsHandler. So there is an instance of RootHandler for the empty path ''
+and for each path which is the name of a root container, such as '_public',
+'_documents' etc.
+TEMP NOTE:
+pathMap                                           handler                               container(s)
+path                      safePath
+''                                                RootHandler('')                       n/a
+'_public'                 _public                 RootHandler('_public')                PublicContainer
+'_music'                  _music                  RootHandler('_music')                 PrivateContainer
+'_public/happy/www-root'  _public/happy/www-root  NfsHandler('_public/happy/www-root')  PublicContainer
+'some/folder'             _public/happy/www-root  NfsHandler('_public/happy/www-root')  same instance as above
+'_publicNames'            _publicNames            PublicNamesHandler('_publicNames')    PublicNamesContainer
+'_publicNames/happy'      _publicNames/happy      ServicesHandler_publicNames/happy
+
+TODO ??? Consider having on class for NfsHandler/PublicNamesHandler/ServicesHandler
+Maybe RootHandler too). I think what creates
+them just needs to know which container class to obtain with safeJs.getRootContainer,
+safeJs.getServicesContainer or safeJs.getNfsContainer. That can all be handled
+with a type parameter. After that I think all they do is call the container, and
+possibly convert the response for FUSE. ==> I guess that's the only case where I
+might need separate classes - to convert different container responses for FUSE.
+  TODO [ ] Start with just NfsHandler and see how if it can do everything.
+
+CAUTION!
+So 'root' in this context means an instance of RootHandler which is either:
+- *the* handler for the root of the mounted file system (i.e. what appears at the mount
+point on the host file system) and which mounts root containers
+- or the handler for a mounted root container (e.g. _public) which can appear
+at any path within the mount point on the host system (so _public could apear
+at '<mount-point>/_public' or '<mount-point>/any/path' etc).
+
+The former root handler doesnt own a container object directly, it just
+creates instances of the second type, where each root handler object holds
+a corresponding RootContainer object (e.g. PublicContainer for _public,
+PrivateContainer for _documents or _music etc, PublicNamesContainer and so on).
+
+For example, when the NFS folder _public/happybeing/www-root is mounted, in
+addition to the file system root handler for path '', the pathMap will contain
+a handler entry for both the path '_public' (a RootHandler) and for
+'_public/happybeing/www-root' (an NfsHandler). The RootHandler will
+hold an instance of PublicContainer, the NfsHandler an instance of
+NfsContainer, and the two containers will know about each other
+in order to co-ordinate file operations which affect each other.
+
+Note: this scheme also provides to mounting a RootHandler for a
+ServicesContainer at an arbitrary path, although typically this
+would appear under the mounted path of the corresponding public
+name, which in turn would normally appear under _publicNames.
+
 */
 
 const path = require('path')  // Cross platform path handling
@@ -199,6 +269,8 @@ const explain = require('explain-error')
 
 const RootHandler = require('./root')
 const NfsHandler = require('./nfs')
+// TODO Not sure if these are needed, or if I can have one handler
+// for these and NfsHandler...
 const PublicNamesHandler = require('./public-names')
 const ServicesHandler = require('./services')
 
@@ -272,7 +344,7 @@ class SafeVfs {
    */
   async initialisePathMap () {
     this._pathMap = new Map()
-    return this.mountContainer({safePath: '/'}) // Always have a root handler
+    return this.mountContainer({safePath: ''}) // Always have a root handler
   }
 
   /**
@@ -297,18 +369,18 @@ class SafeVfs {
   /**
    * Mount SAFE container (Mutable Data)
    *
-   * @param  {String} safePath      path starting with a root container
-   * Examples:
+   * @param  {map} {
+   *    @param  {String} safePath      path starting with a root container
+   *    Examples:
    *   _publicNames                 mount _publicNames container
    *   _publicNames/happybeing      mount services container for 'happybeing'
    *   _publicNames/www.happybeing  mount www container (NFS for service at www.happybeing)
    *   _publicNames/thing.happybeing mount the services container (NFS, mail etc at thing.happybeing
-   * @param  {map} {
    *    @param {String}   mountPath (optional) subpath of the mount point
    *    @param  {String}  lazyInitialise (optional) if false, any API init occurs immediately
    *    @param  {String}  ContainerHandler (optional) handler class for the container type
    * }
-   * @return {Promise}
+   * @return {Promise}    the handler object for newly mounted container
    */
 
   async mountContainer (params) {
@@ -317,19 +389,14 @@ class SafeVfs {
       params.mountPath = params.safePath
     }
 
-    if (params.safePath === undefined) {
-      throw new Error('Unable to mount container on unspecified mount point')
-    }
-
+    let handler
     try {
       if (this.pathMapGet(params.mountPath)) {
         throw new Error('Mount already present at \'' + params.mountPath + '\'')
       }
 
       let DefaultHandlerClass
-      if (params.safePath === '_publicNames') {
-        DefaultHandlerClass = PublicNamesHandler
-      } else if (params.safePath === '/') {
+      if (params.safePath === '' || this.safeJs().rootContainerNames.indexOf(params.safePath) !== -1) {
         DefaultHandlerClass = RootHandler
       } else {
         DefaultHandlerClass = NfsHandler
@@ -344,7 +411,9 @@ class SafeVfs {
         params.ContainerHandlerClass = DefaultHandlerClass
       }
 
-      this.pathMapSet(fullMountPath, new params.ContainerHandlerClass(this, params.safePath, fullMountPath, params.lazyInitialise))
+      handler = new params.ContainerHandlerClass(this, params.safePath, fullMountPath, params.lazyInitialise)
+      this.pathMapSet(fullMountPath, handler)
+      return handler
     } catch (err) {
       throw err
     }
