@@ -11,17 +11,26 @@
   [/] refactor mount/unmount as methods on SafeVfs class and export instance of that
   [/] use SafeVfs to hold pathMap and SAFE Api (instance of SafenetworkApi)
   [/] pass safeVfs to each vfsHandler constructor
-  [ ] Implement RootHandler for each of these and call from corresponding fuse-operations impn.
+->[ ] Implement RootHandler for each of these and call from corresponding fuse-operations impn.
     [/] finish off NfsContainer in SafenetworkJs
     [/] wire up RootHandler / NfsHandler to create/use SafenetworkJs container classes
---->  [ ] fix SAFE API error auth.getContainer('_public') - 'Container not found'
-          [ ] post query to forum
-          [ ] check with Benno
+    [x] fix SAFE API error auth.getContainer('_public') - 'Container not found'
+        -> It just stopped, so maybe was a Peruse state issue.
       [?] fix creation of NfsContainer so it is given a root (or other parent) container if available
           this is done by SafeVfs mountContainer()
     [ ] fix up inconsistencies in the design comments below, and in each of the handler files
+      Note that RootHandler now caters for both '/' and for root containers (_public, _publicNames etc)
+      and that NfsHandler is used for NFS emulation MDs which will appear as part of the file
+      system under _public for NFS shares, and _publicNames for services. E.g under _publicNames
+      'ls' would list any public names, and under each public name any services might show
+      as 'www@blog' 'email@messages', and under a service that has an NFS container, the files
+      in that container (i.e. `ls _publicNames/happybeing/www@blog` would list the files and
+      folders of the blog website safe://blog.happybeing).
     [/] readdir
-      [ ] ls ~/SAFE/_public hangs, so begin implementing NfsHandler
+      [/] ls ~/SAFE/_public hangs, so begin implementing NfsHandler
+      [/] ls ~/SAFE/_public
+      [ ] ls ~/SAFE/_public/something
+      [ ] ls -l
     [ ] mkdir
     [ ] statfs
     [ ] getattr
@@ -35,7 +44,7 @@
     [ ] ??? ftruncate
     [ ] ??? mknod
     [ ] ??? utimens
-  [ ] Implement NfsHandler for /_public and implement
+  [ ] Implement NfsHandler for containers within /_public and implement
     [ ] readdir
     [ ] mkdir
     [ ] statfs
@@ -52,14 +61,15 @@
     [ ] ??? utimens
     [ ] write test shell script to create a simple tree
     [ ] write test shell script to create a hello world website
-  [ ] implement vfsPublicNamesHandler
-  [ ] implement vfsServicesHandler
+  [ ] implement for PublicNames
+  [ ] implement for Services
 [ ] LATER add support for CLI to configure mounting:
     SafeVfs currently hard codes a default set of path mappings, this should
     be replaced by settings from the CLI parameters, so users can choose what
     to mount and where.
-[ ] LATER Async: looks like I could replace with Promises (https://caolan.github.io/async/docs.html#auto)
+[/] LATER Async: looks like I could replace with Promises (https://caolan.github.io/async/docs.html#auto)
   -> tried but didn't work so leave for later.
+  -> tried again, now works :-)
 
 SAFE-VFS - DESIGN (July 2018)
 =================
