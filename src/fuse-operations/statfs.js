@@ -1,6 +1,6 @@
 const Fuse = require('fuse-bindings')
 const explain = require('explain-error')
-const debug = require('debug')('safe-fuse-op:statfs')
+const debug = require('debug')('safe-fuse:ops:statfs')
 
 module.exports = (safeVfs) => {
   return {

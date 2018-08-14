@@ -1,5 +1,5 @@
 // const Fuse = require('fuse-bindings')
-const debug = require('debug')('safe-fuse-op:open')
+const debug = require('debug')('safe-fuse:ops:open')
 
 module.exports = (ipfs, fds) => {
   return {

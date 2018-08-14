@@ -1,6 +1,6 @@
 const Fuse = require('fuse-bindings')
 const explain = require('explain-error')
-const debug = require('debug')('safe-fuse-op:write')
+const debug = require('debug')('safe-fuse:ops:write')
 
 module.exports = (ipfs) => {
   return {

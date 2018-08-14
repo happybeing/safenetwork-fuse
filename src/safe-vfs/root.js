@@ -171,7 +171,7 @@ class RootHandler {
       return this._container
     }
 
-    this._safeVfs.safeJs().getRootContainer(rootContainerName).then((container) => {
+    this._safeVfs.safeJs().getSafeContainer(rootContainerName).then((container) => {
       if (container) {
         this._container = container
         return container
@@ -182,7 +182,7 @@ class RootHandler {
   // Fuse operations:
   async readdir (itemPath) {
     debug('RootHandler readdir(' + itemPath + ')')
-    return this.getContainer(itemPath).readdir(itemPath)
+    return this.getContainer(itemPath).readdir(itemPath).catch((e) => {debug(e.message)})
   }
 
   async mkdir (itemPath) { debug('TODO mkdir(' + itemPath + ') not implemented'); return {} }

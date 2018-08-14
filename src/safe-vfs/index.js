@@ -1,4 +1,5 @@
 /* TODO theWebalyst notes:
+[ ] implement JSDocs or similar across the code
 [ ] Implement SafeVfs and vfsHandler classes according to 'DESIGN' below
   [/] refactor mount/unmount from callbacks to async/Promises so SafeVfs and handlers can use Promises
   [/] find a way to call my async functions from fuse-operatations (if not have to find a way to
@@ -347,6 +348,8 @@ class SafeVfs {
           resolve()
         }
       })
+    }).catch((error) => {
+      debug(error.message)
     })
   }
 
