@@ -23,8 +23,32 @@ const fakeGetattr = {
   '/_public/happybeing': 'file'
 }
 
-module.exports = (ipfs) => {
-  const now = Date.now()
+module.exports = (safeVfs) => {
+  return {
+    getattr (itemPath, reply) {
+      try {
+        debug({ itemPath })
+        let handler = safeVfs.getHandler(itemPath)
+        handler.getattr(itemPath).then((result) => {
+          reply(0, {
+            mtime: result.modified,
+            atime: result.accessed,
+            ctime: result.created,
+            nlink: 1,
+            size: result.size,
+            // https://github.com/TooTallNate/stat-mode/blob/master/index.js
+            mode: (result.isFile ? 33188 : 16877),
+            uid: process.getuid ? process.getuid() : 0,
+            gid: process.getgid ? process.getgid() : 0
+          })
+        })
+      } catch (err) {
+        let e = explain(err, 'Failed to getattr: ' + itemPath)
+        debug(e)
+        reply(Fuse.ENOENT)
+      }
+    }
+  }
 
   return {
     getattr (itemPath, reply) {

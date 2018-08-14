@@ -187,7 +187,12 @@ class RootHandler {
 
   async mkdir (itemPath) { debug('TODO mkdir(' + itemPath + ') not implemented'); return {} }
   async statfs (itemPath) { debug('TODO statfs(' + itemPath + ') not implemented'); return {} }
-  async getattr (itemPath) { debug('TODO getattr(' + itemPath + ') not implemented'); return {} }
+
+  async getattr (itemPath) {
+    debug('RootHandler getattr(' + itemPath + ')')
+    return this.getContainer(itemPath).getattr(itemPath).catch((e) => {debug(e.message)})
+  }
+
   async create (itemPath) { debug('TODO create(' + itemPath + ') not implemented'); return {} }
   async open (itemPath) { debug('TODO open(' + itemPath + ') not implemented'); return {} }
   async write (itemPath) { debug('TODO write(' + itemPath + ') not implemented'); return {} }
