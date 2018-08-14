@@ -1,6 +1,6 @@
 const path = require('path')  // Cross platform path handling
 
-const debug = require('debug')('safe-fuse-vfs:root')
+const debug = require('debug')('safe-fuse:vfs:root')
 const NfsHandler = require('./nfs')
 const PublicNamesHandler = require('./public-names')
 

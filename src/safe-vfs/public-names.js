@@ -4,7 +4,7 @@
 
 const path = require('path')  // Cross platform path handling
 
-const debug = require('debug')('safe-fuse-vfs:dns')
+const debug = require('debug')('safe-fuse:vfs:dns')
 
 /**
  * vfsHandler for the _publicNames container

@@ -276,7 +276,7 @@ name, which in turn would normally appear under _publicNames.
 const path = require('path')  // Cross platform path handling
 
 const Fuse = require('fuse-bindings')
-const debug = require('debug')('safe-fuse-vfs:index')
+const debug = require('debug')('safe-fuse:vfs:index')
 const mkdirp = require('mkdirp-promise')
 const createSafeFuse = require('../fuse-operations')
 const explain = require('explain-error')
