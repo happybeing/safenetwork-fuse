@@ -1,4 +1,5 @@
 const path = require('path')  // Cross platform path handling
+const SafeJs = require('safenetworkjs')
 
 const debug = require('debug')('safe-fuse:vfs:root')
 const NfsHandler = require('./nfs')
@@ -76,7 +77,11 @@ class RootHandler {
    * @param  {string} itemPath mounted path
    * @return {VfsHandler}      handler for itemPath (can be this)
    */
+// BUG here or in getHandler() need to catch attempts to handler item in
+// the root '/' which are not mountable or in the pathMap. So we dont
+// pass them on to root handler. It should only be called for '/'
   getHandlerFor (itemPath) {
+    debug('getHandlerFor(%s) - safePath: %s, mountPath: %s', itemPath, this._safePath, this._mountPath)
     try {
       if (this._mountPath === itemPath) {
         return this // The handler for itemPath
@@ -88,9 +93,11 @@ class RootHandler {
       }
 
       if (this._mountPath !== '/') {
-        // If this RootHandler is not for '/', there should already be an
-        // entry in the pathMap so we should not reach here
-        throw new Error('unexpected failure - ')
+        // If this RootHandler is not for '/' we will only get here if
+        // there is no entry in the pathMap that's a better match than
+        // us. We will have a root container, so assume it is for us
+        return this
+        // was: throw new Error('unexpected failure')
       }
 
       // This is the RootHandler for '/', so getHandlerFor() will only called
@@ -109,7 +116,8 @@ class RootHandler {
         throw new Error('failed to create VFS handler for path: ' + itemPath)
       }
     } catch (err) {
-      debug('ERROR - ' + err.message)
+      debug('RootHandler ERROR: ' + err.message)
+      debug('{ safePath: %s, mountPath: %s %s}', this._safePath, this._mountPath, (this._container ? ', ' + this._container._name : ''))
       throw err
     }
   }
@@ -131,10 +139,27 @@ class RootHandler {
    * @return {[type]}          a SafenetworkJs container
    */
   getContainer (itemPath) {
-    if (this._container) return this._container
+    let rootContainerName = '/' + itemPath.split('/')[1]
+    if (this._container) {
+      // Root containers hold items which all start with '/'
+      if (itemPath.indexOf(rootContainerName) !== 0) {
+        throw new Error('file does not exist')
+      }
+      return this._container
+    }
 
-    let rootContainerName = path.sep + itemPath.split(path.sep)[1]
-    if (this._mountPath === '/') {
+    // This handler's container is not mounted yet so attempt to mount it
+    if (this._mountPath !== '/') {
+      // This RootHandler is for a SAFE root container
+      if (this._lazyInitialise) {
+        // Make it on demand (lazy)
+        return this.initContainer(rootContainerName)
+      } else {
+        // Either itemPath should not be handled here (so a bug elsewhere)
+        // or perhaps the constructor has not finished creating containers
+        throw new Error('getContainer() - no container object ready for ' + itemPath)
+      }
+    } else {
       throw new Error('WOOPS why is this being called. TODO I don\'t think this code is needed')
       // The RootHandler for '/' will auto mount a SAFE root container
       // If we get here, the container of the item is not mounted yet
@@ -144,16 +169,6 @@ class RootHandler {
           return handler.getContainer(itemPath)
         }
       })
-    } else {
-      // This RootHandler is for a SAFE root container
-      if (this._lazyInitialise) {
-        // Make it on demand (lazy)
-        return this.initContainer(rootContainerName)
-      } else {
-        // Either itemPath should not be handled here (so a but elsewhere)
-        // or perhaps the constructor has not finished creating containers
-        throw new Error('getContainer() - no container object ready for ' + itemPath)
-      }
     }
 
     throw new Error('getContainer() failed for path: ' + itemPath)
@@ -181,16 +196,16 @@ class RootHandler {
 
   // Fuse operations:
   async readdir (itemPath) {
-    debug('RootHandler readdir(' + itemPath + ')')
-    return this.getContainer(itemPath).readdir(itemPath).catch((e) => {debug(e.message)})
+    debug('RootHandler for %s mounted at %s readdir(%s)', this._safePath, this._mountPath, itemPath)
+    return this.getContainer(itemPath).readdir(itemPath).catch((e) => { debug(e.message); throw new Error('file does not exist') })
   }
 
   async mkdir (itemPath) { debug('TODO mkdir(' + itemPath + ') not implemented'); return {} }
   async statfs (itemPath) { debug('TODO statfs(' + itemPath + ') not implemented'); return {} }
 
   async getattr (itemPath) {
-    debug('RootHandler getattr(' + itemPath + ')')
-    return this.getContainer(itemPath).getattr(itemPath).catch((e) => {debug(e.message)})
+    debug('RootHandler for %s mounted at %s readdir(%s)', this._safePath, this._mountPath, itemPath)
+    return this.getContainer(itemPath).getattr(itemPath).catch((e) => { debug(e.message); throw new Error('file does not exist') })
   }
 
   async create (itemPath) { debug('TODO create(' + itemPath + ') not implemented'); return {} }
@@ -232,12 +247,30 @@ class RootContainer {
         listing.push(key)
       }
     })
+    debug('listing: %o', listing)
     return listing
   }
 
   async mkdir (itemPath) { debug('TODO RootContainer mkdir(' + itemPath + ') not implemented'); return {} }
   async statfs (itemPath) { debug('TODO RootContainer statfs(' + itemPath + ') not implemented'); return {} }
-  async getattr (itemPath) { debug('TODO RootContainer getattr(' + itemPath + ') not implemented'); return {} }
+
+  async getattr (itemPath) {
+    debug('RootContainer getattr(' + itemPath + ')')
+    if (itemPath !== '/') throw new Error('Error - RootContainer should only handle the root path: \'/\'')
+    const now = Date.now()
+    return {
+      // Default values (for '/') compatible with SafeContainer.itemAttributes()
+      // TODO improve this if SAFE accounts ever have suitable values for size etc:
+      modified: now,
+      accessed: now,
+      created: now,
+      size: 0,
+      version: -1,
+      'isFile': false,
+      entryType: SafeJs.fakeContainer
+    }
+  }
+
   async create (itemPath) { debug('TODO RootContainer create(' + itemPath + ') not implemented'); return {} }
   async open (itemPath) { debug('TODO RootContainer open(' + itemPath + ') not implemented'); return {} }
   async write (itemPath) { debug('TODO RootContainer write(' + itemPath + ') not implemented'); return {} }

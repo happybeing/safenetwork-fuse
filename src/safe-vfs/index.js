@@ -181,15 +181,14 @@ if (handler) {
 
 How Handler Classes and SafenetworkJs Container Classes Work
 ------------------------------------------------------------
-The following explains how the RootHandler / RootContainer classes work and
-that the NfsHandler class works with either an NfsContainer to
-allow mounting of an NFS emulation MD, or a ServicesContainer to
-allow mounting of a services MD. Note that these MDs can be mounted either
-within the path of a mounted parent container, or stand-alone without a
-parent.
+The following explains how the VFS RootHandler / RootContainer and
+SafenetworkJs SafeContainer classes work allow mounting of an NFS emulation
+MD, or a ServicesContainer to allow mounting of a services MD. Note that
+these MDs can be mounted either within the path of a mounted parent
+container, or stand-alone without a parent.
 
-SafenetworkJs container classes include root containers (PublicContainer,
-PrivateContainer, PublicNamesContainer and NFS containers (NfsContainer and
+SafenetworkJs container classes include root containers (SafeContainer,
+PublicNamesContainer and NFS containers (NfsContainer and
 ServicesContainer). Each is a wrapper around a Mutable Data object, and
 provides a simplified way to perform common operations on the MD and
 its contents.
@@ -236,11 +235,10 @@ path                      safePath
 '/_publicNames'            _publicNames            RootHandler('/_publicNames')           PublicNamesContainer
 '/_publicNames/happy'      _publicNames/happy      ServicesHandler('_publicNames/happy')  ServicesContainer
 
-TODO ??? Consider having on class for NfsHandler/PublicNamesHandler/ServicesHandler
+TODO ??? Consider having one class for NfsHandler/PublicNamesHandler/ServicesHandler
 Maybe RootHandler too). I think what creates
-them just needs to know which container class to obtain with safeJs.getRootContainer,
-safeJs.getServicesContainer or safeJs.getNfsContainer. That can all be handled
-with a type parameter. After that I think all they do is call the container, and
+them just needs to know which container class to obtain with safeJs.getSafeContainer.
+After that I think all they do is call the container, and
 possibly convert the response for FUSE. ==> I guess that's the only case where I
 might need separate classes - to convert different container responses for FUSE.
   TODO [ ] Start with just NfsHandler and see how if it can do everything.
@@ -255,7 +253,7 @@ at '<mount-point>/_public' or '<mount-point>/any/path' etc).
 
 The former root handler doesnt own a container object directly, it just
 creates instances of the second type, where each root handler object holds
-a corresponding RootContainer object (e.g. PublicContainer for _public,
+a corresponding SafeContainer object (e.g. PublicContainer for _public,
 PrivateContainer for _documents or _music etc, PublicNamesContainer and so on).
 
 For example, when the NFS folder _public/happybeing/www-root is mounted, in
@@ -369,6 +367,7 @@ class SafeVfs {
    * @return {[type]}        a VFS handler for the item
    */
   getHandler (itemPath) {
+    debug('getHandler(%s)', itemPath)
     let handler = this.pathMapGet(itemPath) ||
       this.getHandler(path.dirname(itemPath))
 

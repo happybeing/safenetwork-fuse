@@ -2,27 +2,6 @@ const Fuse = require('fuse-bindings')
 const explain = require('explain-error')
 const debug = require('debug')('safe-fuse:ops:getattr')
 
-// TODO remove this:
-
-const isFolder = function (itemPath) {
-  return itemPath.substr(-1) === '/'
-}
-
-const fakeReadDir = {
-  '/': ['_public', 'two', 'three'],
-  '/_public': ['four', 'five', 'happybeing']
-}
-
-const fakeGetattr = {
-  '/': 'directory',
-  '/_public': 'directory',
-  '/two': 'file',
-  '/three': 'file',
-  '/_public/four': 'file',
-  '/_public/five': 'file',
-  '/_public/happybeing': 'file'
-}
-
 module.exports = (safeVfs) => {
   return {
     getattr (itemPath, reply) {
@@ -41,11 +20,15 @@ module.exports = (safeVfs) => {
             uid: process.getuid ? process.getuid() : 0,
             gid: process.getgid ? process.getgid() : 0
           })
+        }).catch((e) => {
+          if (e.message === 'file does not exist') return reply(Fuse.ENOENT)
+          debug(e.message)
+          reply(Fuse.EREMOTEIO)
         })
       } catch (err) {
         let e = explain(err, 'Failed to getattr: ' + itemPath)
         debug(e)
-        reply(Fuse.ENOENT)
+        reply(Fuse.EREMOTEIO)
       }
     }
   }

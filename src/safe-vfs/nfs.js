@@ -74,7 +74,7 @@ class NfsHandler {
   }
 
   getHandlerFor (itemPath) {
-    debug('getHandlerFor(%o) - safePath: %o, mountPath: %o', itemPath, this._safePath, this._mountPath)
+    debug('getHandlerFor(%s) - safePath: %s, mountPath: %s', itemPath, this._safePath, this._mountPath)
     let directory = path.dirname(itemPath)
     if (directory === path.dirname(this._mountPath)) {
       return this
