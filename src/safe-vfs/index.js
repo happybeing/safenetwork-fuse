@@ -19,6 +19,22 @@
         -> It just stopped, so maybe was a Peruse state issue.
       [?] fix creation of NfsContainer so it is given a root (or other parent) container if available
           this is done by SafeVfs mountContainer()
+--->[ ] I think RootHandler can be just one generic handler class, and all the MD specifics can
+        be in the container classes (RootContainer and the SafenetworkJs containers). So the handler
+        will ask the container if it can handle the itemPath (handler.getContainer()) or if a new
+        container needs to be mounted:
+        - If the former, getContainer() returns *this* handler's container.
+        - If the latter, the parent container creates and returns new container to handle the
+        itemPath and the handler auto-mounts this in the pathMap, and returns the child to
+        handle to FUSE op. Subsequently the new handler and its container will be used.
+        [ ] add feature to SafeContainer so handler can receive a child container if needed
+        [ ] move any needed features of NfsHandler into SafeContainer (in SafenetworkJs)
+        [ ] change getContainer() to use the new functionality of SafeContainer to add handler
+            for NfsContainer when accessed
+        [ ] test with _public and ensure it can successfully list both the folders and the files
+            in any Nfs containers referenced by _public
+        [ ] rename RootHandler to PathHandler or something (now only need one class)
+        [ ] delete nfs.js
     [ ] fix up inconsistencies in the design comments below, and in each of the handler files
       Note that RootHandler now caters for both '/' and for root containers (_public, _publicNames etc)
       and that NfsHandler is used for NFS emulation MDs which will appear as part of the file
