@@ -84,20 +84,20 @@ class NfsHandler {
   }
 
   // Fuse operations:
-  async readdir (itemPath) { debug('NfsHandler readdir(' + itemPath + ')'); return this.nfs().readdir(itemPath) }
-  async mkdir (itemPath) { debug('TODO NfsHandler  mkdir(' + itemPath + ') not implemented'); return {} }
-  async statfs (itemPath) { debug('TODO NfsHandler  statfs(' + itemPath + ') not implemented'); return {} }
-  async getattr (itemPath) { debug('TODO NfsHandler  getattr(' + itemPath + ') not implemented'); return {} }
-  async create (itemPath) { debug('TODO NfsHandler  create(' + itemPath + ') not implemented'); return {} }
-  async open (itemPath) { debug('TODO NfsHandler  open(' + itemPath + ') not implemented'); return {} }
-  async write (itemPath) { debug('TODO NfsHandler  write(' + itemPath + ') not implemented'); return {} }
-  async read (itemPath) { debug('TODO NfsHandler  read(' + itemPath + ') not implemented'); return {} }
-  async unlink (itemPath) { debug('TODO NfsHandler  unlink(' + itemPath + ') not implemented'); return {} }
-  async rmdir (itemPath) { debug('TODO NfsHandler  rmdir(' + itemPath + ') not implemented'); return {} }
-  async rename (itemPath) { debug('TODO NfsHandler  rename(' + itemPath + ') not implemented'); return {} }
-  async ftruncate (itemPath) { debug('TODO NfsHandler  ftruncate(' + itemPath + ') not implemented'); return {} }
-  async mknod (itemPath) { debug('TODO NfsHandler  mknod(' + itemPath + ') not implemented'); return {} }
-  async utimens (itemPath) { debug('TODO NfsHandler  utimens(' + itemPath + ') not implemented'); return {} }
+  async readdir (itemPath) { debug('PublicContainer readdir(' + itemPath + ')'); return this.nfs().listFolder(itemPath).catch((e) => { debug(e.message) }) }
+  async mkdir (itemPath) { debug('TODO PublicContainer mkdir(' + itemPath + ') not implemented'); return {} }
+  async statfs (itemPath) { debug('PublicContainer statfs(' + itemPath + ')'); return this.nfs().itemInfo(itemPath).catch((e) => { debug(e.message) }) }
+  async getattr (itemPath) { debug('PublicContainer getattr(' + itemPath + ')'); return this.nfs().itemAttributes(itemPath).catch((e) => { debug(e.message) }) }
+  async create (itemPath) { debug('TODO PublicContainer create(' + itemPath + ') not implemented'); return {} }
+  async open (itemPath) { debug('TODO PublicContainer open(' + itemPath + ') not implemented'); return {} }
+  async write (itemPath) { debug('TODO PublicContainer write(' + itemPath + ') not implemented'); return {} }
+  async read (itemPath) { debug('TODO PublicContainer read(' + itemPath + ') not implemented'); return {} }
+  async unlink (itemPath) { debug('TODO PublicContainer unlink(' + itemPath + ') not implemented'); return {} }
+  async rmdir (itemPath) { debug('TODO PublicContainer rmdir(' + itemPath + ') not implemented'); return {} }
+  async rename (itemPath) { debug('TODO PublicContainer rename(' + itemPath + ') not implemented'); return {} }
+  async ftruncate (itemPath) { debug('TODO PublicContainer ftruncate(' + itemPath + ') not implemented'); return {} }
+  async mknod (itemPath) { debug('TODO PublicContainer mknod(' + itemPath + ') not implemented'); return {} }
+  async utimens (itemPath) { debug('TODO PublicContainer utimens(' + itemPath + ') not implemented'); return {} }
 }
 
 module.exports = NfsHandler

@@ -197,7 +197,7 @@ class RootHandler {
   // Fuse operations:
   async readdir (itemPath) {
     debug('RootHandler for %s mounted at %s readdir(%s)', this._safePath, this._mountPath, itemPath)
-    return this.getContainer(itemPath).readdir(itemPath).catch((e) => { debug(e.message); throw new Error('file does not exist') })
+    return this.getContainer(itemPath).listFolder(itemPath).catch((e) => { debug(e.message); throw new Error('file does not exist') })
   }
 
   async mkdir (itemPath) { debug('TODO mkdir(' + itemPath + ') not implemented'); return {} }
@@ -205,7 +205,7 @@ class RootHandler {
 
   async getattr (itemPath) {
     debug('RootHandler for %s mounted at %s readdir(%s)', this._safePath, this._mountPath, itemPath)
-    return this.getContainer(itemPath).getattr(itemPath).catch((e) => { debug(e.message); throw new Error('file does not exist') })
+    return this.getContainer(itemPath).itemAttributes(itemPath).catch((e) => { debug(e.message); throw new Error('file does not exist') })
   }
 
   async create (itemPath) { debug('TODO create(' + itemPath + ') not implemented'); return {} }
@@ -225,6 +225,12 @@ class RootHandler {
  *
  * This handler supports operations on '/' as reflected
  * in the VFS Path Map
+ *
+ * Although this is a stand-alone class it implements the same FS methods as
+ * SafenetworkJs base container class SafeContainer. This means that the FUSE
+ * operations of any handler can call the same FS implementation on this
+ * and any of the classes based on SafeContainer (see SafenetworkJs container
+ * classes).
  */
 class RootContainer {
   constructor (rootHandler) {
@@ -236,7 +242,7 @@ class RootContainer {
   }
 
   // Fuse operations:
-  async readdir (itemPath) {
+  async listFolder (itemPath) {
     debug('RootContainer readdir(' + itemPath + ')')
     if (itemPath !== '/') throw new Error('Error - RootContainer should only handle the root path: \'/\'')
 
@@ -251,10 +257,7 @@ class RootContainer {
     return listing
   }
 
-  async mkdir (itemPath) { debug('TODO RootContainer mkdir(' + itemPath + ') not implemented'); return {} }
-  async statfs (itemPath) { debug('TODO RootContainer statfs(' + itemPath + ') not implemented'); return {} }
-
-  async getattr (itemPath) {
+  async itemAttributes (itemPath) {
     debug('RootContainer getattr(' + itemPath + ')')
     if (itemPath !== '/') throw new Error('Error - RootContainer should only handle the root path: \'/\'')
     const now = Date.now()
@@ -270,17 +273,6 @@ class RootContainer {
       entryType: SafeJs.fakeContainer
     }
   }
-
-  async create (itemPath) { debug('TODO RootContainer create(' + itemPath + ') not implemented'); return {} }
-  async open (itemPath) { debug('TODO RootContainer open(' + itemPath + ') not implemented'); return {} }
-  async write (itemPath) { debug('TODO RootContainer write(' + itemPath + ') not implemented'); return {} }
-  async read (itemPath) { debug('TODO RootContainer read(' + itemPath + ') not implemented'); return {} }
-  async unlink (itemPath) { debug('TODO RootContainer unlink(' + itemPath + ') not implemented'); return {} }
-  async rmdir (itemPath) { debug('TODO RootContainer rmdir(' + itemPath + ') not implemented'); return {} }
-  async rename (itemPath) { debug('TODO RootContainer rename(' + itemPath + ') not implemented'); return {} }
-  async ftruncate (itemPath) { debug('TODO RootContainer ftruncate(' + itemPath + ') not implemented'); return {} }
-  async mknod (itemPath) { debug('TODO RootContainer mknod(' + itemPath + ') not implemented'); return {} }
-  async utimens (itemPath) { debug('TODO RootContainer utimens(' + itemPath + ') not implemented'); return {} }
 }
 
 module.exports = RootHandler
