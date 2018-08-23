@@ -20,14 +20,19 @@
       [?] fix creation of NfsContainer so it is given a root (or other parent) container if available
           this is done by SafeVfs mountContainer()
 --->[ ] I think RootHandler can be just one generic handler class, and all the MD specifics can
-        be in the container classes (RootContainer and the SafenetworkJs containers). So the handler
-        will ask the container if it can handle the itemPath (handler.getContainer()) or if a new
-        container needs to be mounted:
-        - If the former, getContainer() returns *this* handler's container.
-        - If the latter, the parent container creates and returns new container to handle the
-        itemPath and the handler auto-mounts this in the pathMap, and returns the child to
-        handle to FUSE op. Subsequently the new handler and its container will be used.
-        [ ] add feature to SafeContainer so handler can receive a child container if needed
+        be in the container classes (RootContainer and the SafenetworkJs containers).
+        [ ] modify the SafeContainer FS methods to call 'this.getContainerFor()' so that
+        the container getContainerFor() method returns 'this' or the appropriate child
+        container, creating it if needed. So these handlers don't know anything about
+        child containers, and anyone can call a FS method (listFolder etc) without
+        worrying whether the container doing the work is the container, a child or
+        even a grandchild container. So if you have a container for _public you
+        just call listFolder() and it may be handled by the _public MD wrapper, or
+        a child container wrapping an NFS container MD.
+        The FUSE handlers are now *only* needed for explicit mounts. SafeContainer and
+        extending classes handle the internal structures (e.g. creating child NFS containers
+        within a PublicContainer, or ServicesContainers within PublicNamesContainer etc)
+        [ ] modify SafeContainer to support a map of child containers
         [ ] move any needed features of NfsHandler into SafeContainer (in SafenetworkJs)
         [ ] change getContainer() to use the new functionality of SafeContainer to add handler
             for NfsContainer when accessed
