@@ -21,8 +21,8 @@ module.exports = (safeVfs) => {
             gid: process.getgid ? process.getgid() : 0
           })
         }).catch((e) => {
-          if (e.message === 'file does not exist') return reply(Fuse.ENOENT)
           debug(e.message)
+          if (e.message === 'file does not exist') return reply(Fuse.ENOENT)
           reply(Fuse.EREMOTEIO)
         })
       } catch (err) {

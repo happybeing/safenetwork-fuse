@@ -77,7 +77,7 @@ class RootHandler {
    * @param  {string} itemPath mounted path
    * @return {VfsHandler}      handler for itemPath (can be this)
    */
-// BUG here or in getHandler() need to catch attempts to handler item in
+// BUG here or in getHandler() need to catch attempts to handle item in
 // the root '/' which are not mountable or in the pathMap. So we dont
 // pass them on to root handler. It should only be called for '/'
   getHandlerFor (itemPath) {
@@ -194,18 +194,26 @@ class RootHandler {
     })
   }
 
+  pruneMountPath (itemPath) {
+    let containerPath = itemPath
+    if (itemPath.indexOf(this._mountPath) === 0) containerPath = itemPath.substring(this._mountPath.length)
+    return containerPath
+  }
+
   // Fuse operations:
   async readdir (itemPath) {
-    debug('RootHandler for %s mounted at %s readdir(%s)', this._safePath, this._mountPath, itemPath)
-    return this.getContainer(itemPath).listFolder(itemPath).catch((e) => { debug(e.message); throw new Error('file does not exist') })
+    debug('RootHandler for %s mounted at %s readdir(\'%s\')', this._safePath, this._mountPath, itemPath)
+    let containerItem = this.pruneMountPath(itemPath)
+    return this.getContainer(itemPath).listFolder(containerItem).catch((e) => { debug(e.message); throw new Error('file does not exist') })
   }
 
   async mkdir (itemPath) { debug('TODO mkdir(' + itemPath + ') not implemented'); return {} }
   async statfs (itemPath) { debug('TODO statfs(' + itemPath + ') not implemented'); return {} }
 
   async getattr (itemPath) {
-    debug('RootHandler for %s mounted at %s readdir(%s)', this._safePath, this._mountPath, itemPath)
-    return this.getContainer(itemPath).itemAttributes(itemPath).catch((e) => { debug(e.message); throw new Error('file does not exist') })
+    debug('RootHandler for %s mounted at %s getattr(\'%s\')', this._safePath, this._mountPath, itemPath)
+    let containerItem = this.pruneMountPath(itemPath)
+    return this.getContainer(itemPath).itemAttributes(containerItem).catch((e) => { debug(e.message); throw new Error('file does not exist') })
   }
 
   async create (itemPath) { debug('TODO create(' + itemPath + ') not implemented'); return {} }
@@ -221,7 +229,7 @@ class RootHandler {
 }
 
 /**
- * A special handler object for the root ('/')
+ * A special container for the root ('/') which mimics SafeContainer
  *
  * This handler supports operations on '/' as reflected
  * in the VFS Path Map
@@ -244,7 +252,7 @@ class RootContainer {
   // Fuse operations:
   async listFolder (itemPath) {
     debug('RootContainer readdir(' + itemPath + ')')
-    if (itemPath !== '/') throw new Error('Error - RootContainer should only handle the root path: \'/\'')
+    if (itemPath !== '') throw new Error('RootContainer - item not found: ' + itemPath)
 
     let listing = []
     this.vfs.pathMap().forEach((value, key, pathMap) => {
@@ -259,7 +267,7 @@ class RootContainer {
 
   async itemAttributes (itemPath) {
     debug('RootContainer getattr(' + itemPath + ')')
-    if (itemPath !== '/') throw new Error('Error - RootContainer should only handle the root path: \'/\'')
+    if (itemPath !== '') throw new Error('RootContainer - item not found: ' + itemPath)
     const now = Date.now()
     return {
       // Default values (for '/') compatible with SafeContainer.itemAttributes()

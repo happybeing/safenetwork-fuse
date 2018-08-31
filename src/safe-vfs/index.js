@@ -396,6 +396,8 @@ class SafeVfs {
       throw new Error('SafeVFS getHandler() failed')
     }
 
+    // TODO review this comment and call because the SafenetworkJs container
+    //      classes now handle nesting directly, so handlers can be simpler:
     // Note: we ask the handler in case it holds containers which
     // it doesn't handle directly (e.g. PublicNames container might either
     // return itself or a ServicesContainer depending on the itemPath)
