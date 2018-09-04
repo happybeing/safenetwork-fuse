@@ -197,6 +197,7 @@ class RootHandler {
   pruneMountPath (itemPath) {
     let containerPath = itemPath
     if (itemPath.indexOf(this._mountPath) === 0) containerPath = itemPath.substring(this._mountPath.length)
+    if (containerPath[0] === '/') containerPath = containerPath.substring(1)
     return containerPath
   }
 
@@ -208,7 +209,27 @@ class RootHandler {
   }
 
   async mkdir (itemPath) { debug('TODO mkdir(' + itemPath + ') not implemented'); return {} }
-  async statfs (itemPath) { debug('TODO statfs(' + itemPath + ') not implemented'); return {} }
+
+  async statfs (itemPath) {
+    debug('RootHandler for %s mounted at %s statfs(\'%s\')', this._safePath, this._mountPath, itemPath)
+
+    // FUSE statfs expects Uint32Values as follows:
+    //
+    // TODO consider how to relate these to SAFE account storage
+    return {            // Meaning according to http://man7.org/linux/man-pages/man2/statfs.2.html
+      bsize: 1000000,   // Optimal transfer block size
+      frsize: 1000000,  // Fragment size (since Linux 2.6)
+      blocks: 1000000,  // Total data blocks in filesystem
+      bfree: 1000000,   // Free blocks in filesystem
+      bavail: 1000000,  // Free blocks available to unprivileged user
+      files: 1000000,   // Total file nodes in filesystem
+      ffree: 1000000,   // Free file nodes in filesystem
+      favail: 1000000,  // ?
+      fsid: 1000000,    // Filesystem ID
+      flag: 1000000,    // Mount flags of filesystem (since Linux 2.6.36)
+      namemax: 1000000  // Maximum length of filenames
+    }
+  }
 
   async getattr (itemPath) {
     debug('RootHandler for %s mounted at %s getattr(\'%s\')', this._safePath, this._mountPath, itemPath)
