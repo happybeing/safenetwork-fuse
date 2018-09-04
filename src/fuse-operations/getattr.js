@@ -1,12 +1,12 @@
 const Fuse = require('fuse-bindings')
 const explain = require('explain-error')
-const debug = require('debug')('safe-fuse:ops:getattr')
+const debug = require('debug')('safe-fuse:ops')
 
 module.exports = (safeVfs) => {
   return {
     getattr (itemPath, reply) {
       try {
-        debug({ itemPath })
+        debug('getattr(\'%s\')', itemPath)
         let handler = safeVfs.getHandler(itemPath)
         handler.getattr(itemPath).then((result) => {
           reply(0, {
@@ -35,7 +35,7 @@ module.exports = (safeVfs) => {
 
   return {
     getattr (itemPath, reply) {
-      debug({ itemPath })
+      debug('getattr(\'%s\')', itemPath)
 
       let result = fakeGetattr[itemPath]
       if (!result && itemPath.indexOf('DEBUG') === 0)

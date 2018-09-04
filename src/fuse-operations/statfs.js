@@ -1,17 +1,25 @@
 const Fuse = require('fuse-bindings')
 const explain = require('explain-error')
-const debug = require('debug')('safe-fuse:ops:statfs')
+const debug = require('debug')('safe-fuse:ops')
+
+/* statfs - get filesystem statistics
+Refs:
+  http://man7.org/linux/man-pages/man2/statfs.2.html
+  http://www.tutorialspoint.com/unix_system_calls/statfs.htm
+*/
 
 module.exports = (safeVfs) => {
   return {
     statfs (itemPath, reply) {
       try {
-        debug({ itemPath })
+        debug('statfs(\'%s\')', itemPath)
         safeVfs.getHandler(itemPath).statfs(itemPath).then((stat) => {
-          // TODO: Review this cost "I have no idea what I'm doing" - IPFS coder
+          // TODO: Review this cos "I have no idea what I'm doing" - IPFS coder
           // https://github.com/mafintosh/fuse-bindings#opsstatfsitemPath-cb
           // https://github.com/mafintosh/fuse-bindings/blob/032ed16e234f7379fbf421c12afef592ab2a292d/fuse-bindings.cc#L771-L783
           // http://man7.org/linux/man-pages/man2/statfs.2.html
+
+          // In FUSE these are all Uint32Value
           const data = {
             bsize: 8, // TODO: Because 8 bits in a byte right?
             frsize: 0, // TODO: No idea...
@@ -45,7 +53,7 @@ module.exports = (safeVfs) => {
     }
 
     /* TODO delete the IPFS version:
-    debug({ itemPath })
+    debug('statfs(\'%s\')', itemPath)
     ipfs.repo.stat((err, stat) => {
       if (err) {
         err = explain(err, 'Failed to stat repo')

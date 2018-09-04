@@ -1,11 +1,11 @@
 const Fuse = require('fuse-bindings')
 const explain = require('explain-error')
-const debug = require('debug')('safe-fuse:ops:unlink')
+const debug = require('debug')('safe-fuse:ops')
 
 module.exports = (ipfs) => {
   return {
     unlink (itemPath, reply) {
-      debug({ itemPath })
+      debug('unlink(\'%s\')', itemPath)
 
       ipfs.files.rm(itemPath, (err) => {
         if (err) {

@@ -1,11 +1,11 @@
 const Fuse = require('fuse-bindings')
 const explain = require('explain-error')
-const debug = require('debug')('safe-fuse:ops:rmdir')
+const debug = require('debug')('safe-fuse:ops')
 
 module.exports = (ipfs) => {
   return {
     rmdir (itemPath, reply) {
-      debug({ itemPath })
+      debug('rmdir(\'%s\')', itemPath)
 
       ipfs.files.rm(itemPath, { recursive: true }, (err) => {
         if (err) {

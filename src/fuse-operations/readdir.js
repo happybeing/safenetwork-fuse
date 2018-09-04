@@ -1,12 +1,12 @@
 const Fuse = require('fuse-bindings')
 const explain = require('explain-error')
-const debug = require('debug')('safe-fuse:ops:readdir')
+const debug = require('debug')('safe-fuse:ops')
 
 module.exports = (safeVfs) => {
   return {
     readdir (itemPath, reply) {
       try {
-        debug({ itemPath })
+        debug('readdir(\'%s\')', itemPath)
         safeVfs.getHandler(itemPath).readdir(itemPath).then((result) => {
           reply(0, result)
         })

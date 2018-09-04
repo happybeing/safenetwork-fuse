@@ -1,11 +1,11 @@
 const Fuse = require('fuse-bindings')
 const explain = require('explain-error')
-const debug = require('debug')('safe-fuse:ops:mknod')
+const debug = require('debug')('safe-fuse:ops')
 
 module.exports = (ipfs) => {
   return {
     mknod (itemPath, mode, dev, reply) {
-      debug({ itemPath })
+      debug('mknod(\'%s\', %s, %s)', itemPath, mode, dev)
 
       ipfs.files.write(itemPath, Buffer.from(''), { create: true }, (err) => {
         if (err) {

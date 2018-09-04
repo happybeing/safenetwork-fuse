@@ -1,11 +1,11 @@
 const Fuse = require('fuse-bindings')
 const explain = require('explain-error')
-const debug = require('debug')('safe-fuse:ops:create')
+const debug = require('debug')('safe-fuse:ops')
 
 module.exports = (ipfs) => {
   return {
     write (itemPath, mode, reply) {
-      debug({ itemPath })
+      debug('create(\'%s\', %s)', itemPath, mode)
       ipfs.files.write(itemPath, Buffer.from(''), { create: true }, (err) => {
         if (err) {
           err = explain(err, 'Failed to create file')

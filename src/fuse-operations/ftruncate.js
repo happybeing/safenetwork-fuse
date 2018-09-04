@@ -1,11 +1,11 @@
 const Fuse = require('fuse-bindings')
 const explain = require('explain-error')
-const debug = require('debug')('safe-fuse:ops:ftruncate')
+const debug = require('debug')('safe-fuse:ops')
 
 module.exports = (ipfs) => {
   return {
     ftruncate (itemPath, fd, size, reply) {
-      debug({ itemPath })
+      debug('ftruncate(\'%s\', %s, %n)', itemPath, fd, size)
 
       if (size === 0) {
         ipfs.files.write(itemPath, Buffer.from(''), { truncate: true }, (err) => {
