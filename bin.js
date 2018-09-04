@@ -39,8 +39,11 @@ const containerOpts = {
 let safeVfs
 try {
   debug('try bootstrap()...')
-  safeJsApi.bootstrap(appConfig, appContainers, containerOpts, argv).then(app => {
+  safeJsApi.bootstrap(appConfig, appContainers, containerOpts, argv).then(async (app) => {
     safeVfs = new SafeVfs(safeJsApi)
+    // TODO remove this temp code chasing getContainer() issue:
+    safeJsApi._publicMdata = await safeJsApi.auth.getContainer('_public')
+
     safeVfs.mountFuse(mountPath, {
       fuse: { displayFolder: true, force: true }
     }).then(() => {
