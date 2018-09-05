@@ -42,6 +42,7 @@ try {
   safeJsApi.bootstrap(appConfig, appContainers, containerOpts, argv).then(async (app) => {
     safeVfs = new SafeVfs(safeJsApi)
     // TODO remove this temp code chasing getContainer() issue: https://forum.safedev.org/t/any-probs-with-apha-2-core-error-routing-client-error-requested-data-not-found/1951/8?u=happybeing
+    // SOLVED: I was using live network (Peruse --live) but had NODE_ENV=dev set for the app!
     safeJsApi._publicMdata = await safeJsApi.auth.getContainer('_public')
 
     safeVfs.mountFuse(mountPath, {
