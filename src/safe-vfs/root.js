@@ -6,15 +6,15 @@ const NfsHandler = require('./nfs')
 const PublicNamesHandler = require('./public-names')
 
 /**
- * VFS RootHandler handles root ('/') and each mounted root container MD
+ * VFS RootHandler the root ('/') container, and containers mounted at the root
  *
- * The RootHandler for '/' is always mounted to that it can act as the fallback
+ * A RootHandler for '/' is always mounted to that it can act as the fallback
  * if a handler has not been created for a given item path. In that case it
  * will attempt to create a suitable handler based on the itemPath. This
  * acts like an automount for paths not yet known to the SafeVfs object's
  * pathMap.
  *
- * The RootHandler for '/' creates RootHandler objects for the SAFE root
+ * The RootHandler for '/' creates RootHandler objects for the default SAFE
  * containers (_public, _publicNames, _documents etc) if they don't
  * yet exist in the VFS pathMap, and does so based on the itemPath
  * rather than the mountPath which the other handlers use.
