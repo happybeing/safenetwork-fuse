@@ -194,11 +194,30 @@ class RootHandler {
     })
   }
 
+  // FUSE Helpers:
   pruneMountPath (itemPath) {
     let containerPath = itemPath
     if (itemPath.indexOf(this._mountPath) === 0) containerPath = itemPath.substring(this._mountPath.length)
     if (containerPath[0] === '/') containerPath = containerPath.substring(1)
     return containerPath
+  }
+
+  /*
+  Fuse ref: https://github.com/mafintosh/fuse-bindings#opsopenpath-flags-cb
+
+  From: /usr/include/x86_64-linux-gnu/bits/fcntl-linux.h
+  #define O_ACCMODE 0003
+  #define O_RDONLY  00
+  #define O_WRONLY  01
+  #define O_RDWR    02
+  */
+  fuseToNfsFlags (flags) {
+    flags = flags & 3
+    if (flags === 0) return this._safeVfs.safeJs().safeApi.CONSTANTS.NFS_FILE_MODE_READ
+    if (flags === 1) return this._safeVfs.safeJs().safeApi.CONSTANTS.NFS_FILE_MODE_WRITE
+
+    return (this._safeVfs.safeJs().safeApi.CONSTANTS.NFS_FILE_MODE_WRITE |
+            this._safeVfs.safeJs().safeApi.CONSTANTS.NFS_FILE_MODE_READ)
   }
 
   // Fuse operations:
@@ -237,10 +256,21 @@ class RootHandler {
     return this.getContainer(itemPath).itemAttributes(containerItem).catch((e) => { debug(e.message); throw new Error('file does not exist') })
   }
 
+  async open (itemPath, flags) {
+    debug('RootHandler for %s mounted at %s open(\'%s\')', this._safePath, this._mountPath, itemPath)
+    let containerItem = this.pruneMountPath(itemPath)
+    let nfsFlags = this.fuseToNfsFlags(flags)
+    return this.getContainer(itemPath).openFile(containerItem, nfsFlags).catch((e) => { debug(e.message); throw new Error('file does not exist') })
+  }
+
+  async read (itemPath, fd, buf, len, pos) {
+    debug('RootHandler for %s mounted at %s read(\'%s\')', this._safePath, this._mountPath, itemPath)
+    let containerItem = this.pruneMountPath(itemPath)
+    return this.getContainer(itemPath).readFileBuf(containerItem, fd, buf, pos, len).catch((e) => { debug(e.message); throw new Error('file does not exist') })
+  }
+
   async create (itemPath) { debug('TODO create(' + itemPath + ') not implemented'); return {} }
-  async open (itemPath) { debug('TODO open(' + itemPath + ') not implemented'); return {} }
   async write (itemPath) { debug('TODO write(' + itemPath + ') not implemented'); return {} }
-  async read (itemPath) { debug('TODO read(' + itemPath + ') not implemented'); return {} }
   async unlink (itemPath) { debug('TODO unlink(' + itemPath + ') not implemented'); return {} }
   async rmdir (itemPath) { debug('TODO rmdir(' + itemPath + ') not implemented'); return {} }
   async rename (itemPath) { debug('TODO rename(' + itemPath + ') not implemented'); return {} }
@@ -267,7 +297,7 @@ class RootContainer {
 
     // Helpers
     this.vfs = this._handler._safeVfs
-    this.safeJs = this._handler._safeVfs.safeJs()
+    this.safeJs = this._handler._safeJs
   }
 
   // Fuse operations:
@@ -298,8 +328,8 @@ class RootContainer {
       created: now,
       size: 0,
       version: -1,
-      'isFile': false,
-      entryType: SafeJs.fakeContainer
+      'isFile': false
+      // TODO entryType: SafeJs.fakeContainer
     }
   }
 }
