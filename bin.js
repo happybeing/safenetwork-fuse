@@ -39,23 +39,28 @@ const containerOpts = {
 let safeVfs
 try {
   debug('try bootstrap()...')
-  safeJsApi.bootstrap(appConfig, appContainers, containerOpts, argv).then(async (app) => {
+  safeJsApi.bootstrap(appConfig, appContainers, containerOpts, argv)
+  .then(async (app) => {
     safeVfs = new SafeVfs(safeJsApi)
-    safeVfs.mountFuse(mountPath, {
-      fuse: { displayFolder: true, force: true }
-    }).then(() => {
-      return Promise.all([
-        // TODO replace the following fixed defaults with CLI configured mounts
-        safeVfs.mountContainer({safePath: '_public'})
-        // this.mountContainer ({safePath: '_publicNames', PublicNamesHandler)
-      ]).then(() => {
-        debug(`Mounted SAFE filesystem on ${mountPath}`)
-      })
-    }).catch((err) => {
+    safeVfs.mountFuse(mountPath, { fuse: { displayFolder: true, force: true } })
+    .then(_ => Promise.all([
+      // TODO replace the following fixed defaults with CLI configured mounts
+      safeVfs.mountContainer({safePath: '_public'}) /*,
+      safeVfs.mountContainer({safePath: '_publicNames'}) */
+    ]))
+    .then(_ => {
+      debug(`Mounted SAFE filesystem on ${mountPath}`)
+    })
+    .catch((err) => {
       const msg = 'Failed to mount SAFE FUSE volume'
       debug(msg)
       explain(err, msg)
     })
+  })
+  .catch((err) => {
+    const msg = 'Failed to mount SAFE FUSE volume'
+    debug(msg)
+    explain(err, msg)
   })
 } catch (err) {
   console.error(err.message)
