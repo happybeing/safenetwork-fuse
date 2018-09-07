@@ -1,9 +1,6 @@
 const path = require('path')  // Cross platform path handling
-const SafeJs = require('safenetworkjs')
 
 const debug = require('debug')('safe-fuse:vfs:root')
-const NfsHandler = require('./nfs')
-const PublicNamesHandler = require('./public-names')
 
 /**
  * VFS RootHandler the root ('/') container, and containers mounted at the root
@@ -302,7 +299,7 @@ class RootContainer {
 
   // Fuse operations:
   async listFolder (itemPath) {
-    debug('RootContainer readdir(' + itemPath + ')')
+    debug('RootContainer listFolder(' + itemPath + ')')
     if (itemPath !== '') throw new Error('RootContainer - item not found: ' + itemPath)
 
     let listing = []
@@ -317,7 +314,7 @@ class RootContainer {
   }
 
   async itemAttributes (itemPath) {
-    debug('RootContainer getattr(' + itemPath + ')')
+    debug('RootContainer itemAttributes(' + itemPath + ')')
     if (itemPath !== '') throw new Error('RootContainer - item not found: ' + itemPath)
     const now = Date.now()
     return {

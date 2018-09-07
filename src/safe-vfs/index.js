@@ -17,7 +17,7 @@
     [/] wire up RootHandler / NfsHandler to create/use SafenetworkJs container classes
     [x] fix SAFE API error auth.getContainer('_public') - 'Container not found'
         -> It just stopped, so maybe was a Peruse state issue.
-      [?] fix creation of NfsContainer so it is given a root (or other parent) container if available
+      [?] fix creation of NfsContainer so it is given a default (or other parent) container if available
           this is done by SafeVfs mountContainer()
 --->[ ] I think RootHandler can be just one generic handler class, and all the MD specifics can
         be in the container classes (RootContainer and the SafenetworkJs containers).
@@ -41,7 +41,7 @@
         [ ] rename RootHandler to PathHandler or something (now only need one class)
         [ ] delete nfs.js
     [ ] fix up inconsistencies in the design comments below, and in each of the handler files
-      Note that RootHandler now caters for both '/' and for root containers (_public, _publicNames etc)
+      Note that RootHandler now caters for both '/' and for the default containers (_public, _publicNames etc)
       and that NfsHandler is used for NFS emulation MDs which will appear as part of the file
       system under _public for NFS shares, and _publicNames for services. E.g under _publicNames
       'ls' would list any public names, and under each public name any services might show
@@ -208,7 +208,7 @@ MD, or a ServicesContainer to allow mounting of a services MD. Note that
 these MDs can be mounted either within the path of a mounted parent
 container, or stand-alone without a parent.
 
-SafenetworkJs container classes include root containers (SafeContainer,
+SafenetworkJs container classes include default containers (SafeContainer,
 PublicNamesContainer and NFS containers (NfsContainer and
 ServicesContainer). Each is a wrapper around a Mutable Data object, and
 provides a simplified way to perform common operations on the MD and
@@ -224,26 +224,26 @@ which can affect the other such as delete or rename. Where there is no
 parent for an NfsContainer it can ignore any effects that would in other
 cases affect the parent.
 
-The RootHandler for '/' is what mounts the root containers (i.e. _public,
+The RootHandler for '/' is what mounts the default containers (i.e. _public,
 _documents, _publicNames etc). When doing so it creates an instance of
 RootHandler for each mounted container, adding this to the pathMap.
 TODO check the above is what I've done
 
-A RootHandler for a root container holds a SafenetworkJs container object
+A RootHandler for a default container holds a SafenetworkJs container object
 to handle operations on the container.
 ??? how do I create the NfsHandler for an such as _public/happybeing/www-root?
-??? do I need one, if the root container (_public) knows how to perform
+??? do I need one, if the default container (_public) knows how to perform
 operations on it? Perhaps if just finds/creates the container and calls the
 operation on that?
 
-A NfsHandler is created for each mounted root container, and is what
-creates the NFS container objects for any entries of the root container
+A NfsHandler is created for each mounted default container, and is what
+creates the NFS container objects for any entries of the default container
 if and when they are mounted.
 
-Each such mount (of a root container MD, or an NFS file container MD) creates
+Each such mount (of a default container MD, or an NFS file container MD) creates
 an entry in the mountPath map containing an instance of either RootHandler
 or NfsHandler. So there is an instance of RootHandler for the root path '/'
-and for each path which is the name of a root container, such as '_public',
+and for each path which is the name of a default container, such as '_public',
 '_documents' etc.
 TEMP NOTE:
 pathMap                                           handler                               container(s)
@@ -267,8 +267,8 @@ might need separate classes - to convert different container responses for FUSE.
 CAUTION!
 So 'root' in this context means an instance of RootHandler which is either:
 - *the* handler for the root of the mounted file system (i.e. what appears at the mount
-point on the host file system) and which mounts root containers
-- or the handler for a mounted root container (e.g. _public) which can appear
+point on the host file system) and which mounts default containers
+- or the handler for a mounted default container (e.g. _public) which can appear
 at any path within the mount point on the host system (so _public could apear
 at '<mount-point>/_public' or '<mount-point>/any/path' etc).
 
@@ -301,11 +301,6 @@ const createSafeFuse = require('../fuse-operations')
 const explain = require('explain-error')
 
 const RootHandler = require('./root')
-const NfsHandler = require('./nfs')
-// TODO Not sure if these are needed, or if I can have one handler
-// for these and NfsHandler...
-const PublicNamesHandler = require('./public-names')
-const ServicesHandler = require('./services')
 
 class SafeVfs {
   constructor (safeJsApi) {
@@ -408,7 +403,7 @@ class SafeVfs {
    * Mount SAFE container (Mutable Data)
    *
    * @param  {map} {
-   *    @param  {String} safePath      path starting with a root container
+   *    @param  {String} safePath      path starting with a default container
    *    Examples:
    *   _publicNames                 mount _publicNames container
    *   _publicNames/happybeing      mount services container for 'happybeing'
@@ -434,7 +429,7 @@ class SafeVfs {
       }
 
       let DefaultHandlerClass
-      if (params.safePath === '/' || this.safeJs().rootContainerNames.indexOf(params.safePath) !== -1) {
+      if (params.safePath === '/' || this.safeJs().defaultContainerNames.indexOf(params.safePath) !== -1) {
         DefaultHandlerClass = RootHandler
       } else {
         DefaultHandlerClass = NfsHandler
