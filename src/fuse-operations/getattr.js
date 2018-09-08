@@ -2,6 +2,13 @@ const Fuse = require('fuse-bindings')
 const explain = require('explain-error')
 const debug = require('debug')('safe-fuse:ops')
 
+// Useful refs:
+//
+// This one omits 'blocks' which is needed (at least for directories):
+//  - https://github.com/mafintosh/fuse-bindings#opsgetattrpath-cb
+// This shows FUSE code retrieving the returned values:
+// TODO review settings from the following ref including: blocks, perm, dev, ino, nlink, rdev, blksize
+//  - https://github.com/mafintosh/fuse-bindings/blob/032ed16e234f7379fbf421c12afef592ab2a292d/fuse-bindings.cc#L749-L769
 module.exports = (safeVfs) => {
   return {
     getattr (itemPath, reply) {
@@ -14,7 +21,9 @@ module.exports = (safeVfs) => {
             atime: result.accessed,
             ctime: result.created,
             nlink: 1,
-            size: result.size,
+            size: result.size,    // bytes
+            // blocks: result.size, // TODO
+            // perm: ?,             // TODO also: dev, ino, nlink, rdev, blksize
             // https://github.com/TooTallNate/stat-mode/blob/master/index.js
             mode: (result.isFile ? 33188 : 16877),
             uid: process.getuid ? process.getuid() : 0,
@@ -33,53 +42,25 @@ module.exports = (safeVfs) => {
     }
   }
 
-  return {
-    getattr (itemPath, reply) {
-      debug('getattr(\'%s\')', itemPath)
-
-      let result = fakeGetattr[itemPath]
-      if (!result && itemPath.indexOf('DEBUG') === 0)
-        result = 'file'
-
-if (result) {
-      // TODO stop FAKING IT:
-      reply(0, {
-        mtime: now,
-        atime: now,
-        ctime: now,
-        nlink: 1,
-        size: 1234,
-        // https://github.com/TooTallNate/stat-mode/blob/master/index.js
-        mode: result == 'directory' ? 16877 : 33188,
-        uid: process.getuid ? process.getuid() : 0,
-        gid: process.getgid ? process.getgid() : 0
-      })
-} else {
-  reply(Fuse.ENOENT)
-}
-if (false){
-      ipfs.files.stat(itemPath, (err, stat) => {
-
-        if (err) {
-          if (err.message === 'file does not exist') return reply(Fuse.ENOENT)
-          err = explain(err, 'Failed to stat itemPath')
-          debug(err)
-          return reply(Fuse.EREMOTEIO)
-        }
-
-        reply(0, {
-          mtime: now,
-          atime: now,
-          ctime: now,
-          nlink: 1,
-          size: stat.size,
-          // https://github.com/TooTallNate/stat-mode/blob/master/index.js
-          mode: stat.type === 'directory' ? 16877 : 33188,
-          uid: process.getuid ? process.getuid() : 0,
-          gid: process.getgid ? process.getgid() : 0
-        })
-      })
-}
-    }
-  }
+      // ipfs.files.stat(itemPath, (err, stat) => {
+      //
+      //   if (err) {
+      //     if (err.message === 'file does not exist') return reply(Fuse.ENOENT)
+      //     err = explain(err, 'Failed to stat itemPath')
+      //     debug(err)
+      //     return reply(Fuse.EREMOTEIO)
+      //   }
+      //
+      //   reply(0, {
+      //     mtime: now,
+      //     atime: now,
+      //     ctime: now,
+      //     nlink: 1,
+      //     size: stat.size,
+      //     // https://github.com/TooTallNate/stat-mode/blob/master/index.js
+      //     mode: stat.type === 'directory' ? 16877 : 33188,
+      //     uid: process.getuid ? process.getuid() : 0,
+      //     gid: process.getgid ? process.getgid() : 0
+      //   })
+      // })
 }
