@@ -49,42 +49,23 @@
       in that container (i.e. `ls _publicNames/happybeing/www@blog` would list the files and
       folders of the blog website safe://blog.happybeing).
     [/] readdir
-      [/] ls ~/SAFE/_public hangs, so begin implementing NfsHandler
-      [/] ls ~/SAFE/_public
-      [ ] ls ~/SAFE/_public/something
-      [ ] ls -l
+    [/] open
+    [/] read
+    [/] getattr
+    [/] statfs
     [ ] mkdir
-    [ ] statfs
-    [ ] getattr
-    [ ] create
-    [ ] open
     [ ] write
-    [ ] read
+    [ ] create
     [ ] unlink
-    [ ] rmdir
     [ ] rename
+    [ ] rmdir
+    [ ] getattr - work out additional return settings: blocks, perm, dev, ino, nlink, rdev, blksize
+    [ ] statfs - review settings
     [ ] ??? ftruncate
     [ ] ??? mknod
     [ ] ??? utimens
-  [ ] Implement NfsHandler for containers within /_public and implement
-    [ ] readdir
-    [ ] mkdir
-    [ ] statfs
-    [ ] getattr
-    [ ] create
-    [ ] open
-    [ ] write
-    [ ] read
-    [ ] unlink
-    [ ] rmdir
-    [ ] rename
-    [ ] ??? ftruncate
-    [ ] ??? mknod
-    [ ] ??? utimens
-    [ ] write test shell script to create a simple tree
-    [ ] write test shell script to create a hello world website
-  [ ] implement for PublicNames
-  [ ] implement for Services
+  [/] implement for PublicNames
+  [/] implement for Services
 [ ] LATER add support for CLI to configure mounting:
     SafeVfs currently hard codes a default set of path mappings, this should
     be replaced by settings from the CLI parameters, so users can choose what
