@@ -27,7 +27,12 @@ let appConfig = {
 
 const appContainers = {
   // TODO is this right for solid service container (ie solid.<safepublicid>)
-  _public: ['Read', 'Insert', 'Update', 'Delete'], // request to insert into `_public` container
+  _public: ['Read', 'Insert', 'Update', 'Delete'], // TODO maybe reduce defaults later
+  // _documents: ['Read', 'Insert', 'Update', 'Delete'], // TODO maybe reduce defaults later
+  // _downloads: ['Read', 'Insert', 'Update', 'Delete'], // TODO maybe reduce defaults later
+  // _music: ['Read', 'Insert', 'Update', 'Delete'], // TODO maybe reduce defaults later
+  // _pictures: ['Read', 'Insert', 'Update', 'Delete'], // TODO maybe reduce defaults later
+  // _videos: ['Read', 'Insert', 'Update', 'Delete'], // TODO maybe reduce defaults later
   _publicNames: ['Read', 'Insert', 'Update', 'Delete'] // TODO maybe reduce defaults later
 }
 
@@ -46,6 +51,11 @@ try {
     .then(_ => Promise.all([
       // TODO replace the following fixed defaults with CLI configured mounts
       safeVfs.mountContainer({safePath: '_public'}),
+      // safeVfs.mountContainer({safePath: '_documents'}),
+      // safeVfs.mountContainer({safePath: '_downloads'}),
+      // safeVfs.mountContainer({safePath: '_music'}),
+      // safeVfs.mountContainer({safePath: '_pictures'}),
+      // safeVfs.mountContainer({safePath: '_videos'}),
       safeVfs.mountContainer({safePath: '_publicNames'})
     ]))
     .then(_ => {
