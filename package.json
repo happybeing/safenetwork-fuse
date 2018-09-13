@@ -1,6 +1,6 @@
 {
   "name": "safenetwork-fuse",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "Mount SAFE Network as a FUSE volume",
   "main": "bin.js",
   "scripts": {
