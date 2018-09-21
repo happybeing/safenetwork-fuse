@@ -81,6 +81,11 @@ If your distro doesn't have `libfuse-dev` try:
     sudo apt-get install libfuse2 xdg-utils
 ```
 
+On Arch based distros try `fuse2`:
+```
+    sudo apt-get install fuse2 xdg-utils
+```
+
 ### 3.2 Windows
 
 Windows has not yet been tested but it should build. If you want to try it out see the development section below.
@@ -94,9 +99,9 @@ Start the SAFE Browser and log into your SAFE account.
 
 ## 5. Mount Your SAFE Drive
 
-1. Assuming you are in the SAFE FUSE directory type: `./mount-fuse`
-2. SAFE Browser should come to the front asking you to authorise SAFE FUSE to access your files, so click 'Authorise'.
-3. Your SAFE Drive should now be mounted and you can test this as follows
+a) Assuming you are in the SAFE FUSE directory type: `./mount-fuse`
+b) SAFE Browser should come to the front asking you to authorise SAFE FUSE to access your files, so click 'Authorise'.
+c) Your SAFE Drive should now be mounted and you can test this as follows
 
 ### 5.1 Testing on Linux
 
@@ -122,7 +127,7 @@ On Linux, type:
 ```
     umount ~/SAFE
 ```
-    
+
 
 If this fails, make sure you don't have any command line shells or the file manager open on a SAFE path.
 
@@ -154,7 +159,7 @@ SAFE FUSE is a command line application based on [safe-cli-boilerplate](https://
 It is written in NodeJS using the `fuse-bindings` and `safenetworkjs` libraries, and packaged as a stand-alone executable for Windows, Mac OS and Linux. Limitations on the packaging scheme mean that some files are placed next to the executable.
 
 ## Get the source
-If you are not yet familiar with developing for SAFE Network, or have not previously used the 'mock' SAFE Browser to develop and test your code, please run through the [SAFE Network Nodejs](https://hub.safedev.org/platform/nodejs/) Tutorial *before* proceeding. Doing so should ensure you have all the pre-requisites and help you understand anything not made explicit in the instructions below.
+If you are not yet familiar with developing for SAFE Network, or have not previously used the 'mock' network to develop and test your code, please run through the [SAFE Network Nodejs Tutorial](https://hub.safedev.org/platform/nodejs/) *before* proceeding. Doing so should ensure you have all the pre-requisites and help you understand anything not made explicit in the instructions below.
 
 ### a) Clone safenetworkjs:
 Remember to fork on github and then clone your fork if you intend to work on the code. The following just clones the main repo:
@@ -245,8 +250,6 @@ Before submitting your code please consider using `Standard.js` formatting. You 
 [![js-standard-style](https://cdn.rawgit.com/feross/standard/master/badge.svg)](https://github.com/standard/standard)
 
 # LICENSE
-This project is made available under the [GPL-3.0 LICENSE](https://opensource.org/licenses/GPL-3.0) except for individual files which contain their own license so long as that file license is compatible with GPL-3.0. 
+This project is made available under the [GPL-3.0 LICENSE](https://opensource.org/licenses/GPL-3.0) except for individual files which contain their own license so long as that file license is compatible with GPL-3.0.
 
 The responsibility for checking this licensing is valid and that your use of this code complies lies with any person and organisation making any use of it.
-
-See also
