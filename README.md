@@ -6,7 +6,7 @@ SAFE FUSE lets you access your SAFE Network storage as if it is on your local dr
 
 **NOTE:** only Linux is supported so far, but feel free to build for Windows or Mac and report back.
 
-By executing the `mount-fuse` command you can mount a virtual drive on your computer with the following features.
+By executing the `mount-safe` command you can mount a virtual drive on your computer with the following features.
 
 ### Files (read only access)
 - browse your SAFE public files as a directory under `~/SAFE/_public`
@@ -99,8 +99,10 @@ Start the SAFE Browser and log into your SAFE account.
 
 ## 5. Mount Your SAFE Drive
 
-a) Assuming you are in the SAFE FUSE directory type: `./mount-fuse`
+a) Assuming you are in the SAFE FUSE directory type: `./mount-safe`
+
 b) SAFE Browser should come to the front asking you to authorise SAFE FUSE to access your files, so click 'Authorise'.
+
 c) Your SAFE Drive should now be mounted and you can test this as follows
 
 ### 5.1 Testing on Linux
@@ -143,10 +145,10 @@ Before doing this, please try and capture some debugging output by mounting your
 
 On Linux, capture debugging information as follows:
 ```
-    DEBUG=safe* ./mount-fuse 2>&1 | tee debug.txt
+    DEBUG=safe* ./mount-safe 2>&1 | tee debug.txt
 ```
 
-This will create a file `debug.txt` next to the executable with useful logging including any error messages you see on the console. So once you trigger the error, stop the process with `pkill mount-fuse` (in another window), and then upload the `debug.txt` file with the report as a [New issue](http://github.com/theWebalyst/safenetwork-fuse/issues).
+This will create a file `debug.txt` next to the executable with useful logging including any error messages you see on the console. So once you trigger the error, stop the process with `pkill mount-safe` (in another window), and then upload the `debug.txt` file with the report as a [New issue](http://github.com/theWebalyst/safenetwork-fuse/issues).
 
 
 # Development
@@ -176,7 +178,7 @@ Remember to fork on github and then clone your fork if you intend to work on the
 ```
 git clone https://github.com/theWebalyst/safenetwork-fuse
 cd safenetwork-fuse
-npm install
+NODE_ENV=dev npm install
 npm link safenetworkjs
 ```
 NOTE: any time you do `npm install` inside `safenetwork-fuse/` you need to redo the `npm link safenetworkjs` to ensure it finds your copy of `safenetworkjs`
@@ -185,7 +187,7 @@ NOTE: any time you do `npm install` inside `safenetwork-fuse/` you need to redo 
 ```
 sudo apt-get install libfuse-dev libfuse2 xdg-utils
 ```
-NOTE: you only need one of either `libfuse-dev` or `libfuse2`, and one will fail to install depending on which linux distro you have. So as long as one of them is installed your're good.
+NOTE: you only need one of either `libfuse-dev` or `libfuse2`, and one may fail to install depending on which linux distro you have. So as long as one of them is installed your're good.
 
 ## Build for mock network
 
@@ -205,7 +207,7 @@ In the browser, create an account on the mock network.
 
 In your development terminal, in your build directory type:
 ```
-NODE_ENV=dev DEBUG=safe* ./dist/mock/mount-fuse
+NODE_ENV=dev DEBUG=safe* ./dist/mock/mount-safe
 ```
 You should see output to the terminal, and assuming no errors you can access your SAFE drive (at ~/SAFE on Linux).
 
@@ -229,8 +231,15 @@ DEBUG=safe-fuse*,safenetworkjs* node --inspect-brk bin.js 2>&1 | tee debug.txt
 Build an executable for the host OS only, the default (output in ./dist/prod):
 
 ```
-export NODE_ENV=
+unset NODE_ENV
 npm run build
+```
+
+To test your build, start the SAFE Browser, login to your account and in another console:
+
+```
+unset NODE_ENV
+./dist/prod/mount-safe
 ```
 
 ## Problems Building?
