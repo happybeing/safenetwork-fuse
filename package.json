@@ -2,25 +2,19 @@
   "name": "safenetwork-fuse",
   "version": "0.1.0",
   "description": "Mount SAFE Network as a FUSE volume",
-  "main": "bin.js",
+  "main": "index.js",
   "scripts": {
     "start": "node bin",
-    "build": "mkdir -p ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/prod/*.* ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && pkg . -t host -o ./dist/prod/mount-safe",
-    "buildall": "mkdir -p ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/prod/*.* ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && pkg . -t linux,macos,win -o ./dist/prod/mount-safe",
-    "build-mock": "mkdir -p ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/mock/*.* ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && pkg . -t host -o ./dist/mock/mount-safe",
-    "buildall-mock": "mkdir -p ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/mock/*.* ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && pkg . -t linux,macos,win -o ./dist/mock/mount-safe",
     "testbuild": "pkg . -d -t node8-linux-x64 -o ./dist/mock/mount-safe",
-    "testbuild1": "pkg bin.js -d -t node8-linux-x64 -o ./dist/mock/mount-safe",
-    "testbuild2": "pkg . -d -t host -o ./dist/mock/mount-safe",
-    "testbuild3": "pkg ./src/bin.js -d -t host -o ./dist/mock/mount-safe",
-    "testbuild-doesnt-package-assets": "pkg -d -t host -o ./dist/mock/mount-safe bin.js",
-    "tw-docs": "cp -R /home/mrh/Notebooks/Notes/computers-Project_SAFE/SAFE-App-Ideas/SAFE-App_Drive_\\(FUSE\\)/SAFE-FUSE_Design_\\(repo\\) ./docs/zim-wiki/"
+    "build": "mkdir -p ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/prod/*.* ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && pkg -t host -o ./dist/prod/mount-safe index.js",
+    "buildall": "mkdir -p ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/prod/*.* ./dist/prod/node_modules/@maidsafe/safe-node-app/src/native/prod/ && pkg -t linux,macos,win -o ./dist/prod/mount-safe index.js",
+    "build-mock": "mkdir -p ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/mock/*.* ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && pkg -t host -o ./dist/mock/mount-safe index.js",
+    "buildall-mock": "mkdir -p ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && cp -R node_modules/@maidsafe/safe-node-app/src/native/mock/*.* ./dist/mock/node_modules/@maidsafe/safe-node-app/src/native/mock/ && pkg -t linux,macos,win -o ./dist/mock/mount-safe index.js"
   },
   "pkg": {
     "assets": [
       "node_modules/@maidsafe/safe-node-app/src/native/prod/*.*",
-      "node_modules/@maidsafe/safe-node-app/src/native/mock/*.*",
-      "node_modules/fuse-bindings/prebuilds/**/*.*"
+      "node_modules/@maidsafe/safe-node-app/src/native/mock/*.*"
     ]
   },
   "bin": {
