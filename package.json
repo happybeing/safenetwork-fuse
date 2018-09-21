@@ -38,18 +38,19 @@
     "@maidsafe/safe-node-app": "^0.8.1",
     "async": "^2.6.0",
     "debug": "^3.1.0",
+    "explain-error": "^1.0.4",
     "filesize": "^3.6.1",
     "fuse-bindings": "^2.11.2",
+    "ipfs-api": "^22.3.0",
     "mkdirp": "^0.5.1",
     "mkdirp-promise": "^5.0.1",
     "node-ipc": "^9.1.1",
     "path": "^0.12.7",
+    "safenetworkjs": "github:theWebalyst/safenetworkjs",
     "string": "^3.3.3",
     "yargs": "^11.1.0"
   },
   "devDependencies": {
-    "explain-error": "^1.0.4",
-    "ipfs-api": "^22.3.0",
     "pkg": "^4.3.4",
     "standard": "^11.0.0"
   },
