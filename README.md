@@ -83,7 +83,7 @@ If your distro doesn't have `libfuse-dev` try:
 
 On Arch based distros try `fuse2`:
 ```
-    sudo apt-get install fuse2 xdg-utils
+    sudo pacman -S fuse2 xdg-utils
 ```
 
 ### 3.2 Windows
