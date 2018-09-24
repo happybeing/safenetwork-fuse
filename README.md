@@ -69,21 +69,26 @@ Latest downloads: [releases](https://github.com/theWebalyst/safenetwork-fuse/tre
 
 We test mainly on Ubuntu 18 for now but SAFE FUSE has been tried successfully on other distros, so if you succeed (or not) on another distro please create an issue to report your findings and we'll add a note below.
 
-In addition to Ubuntu 18, we have reports of success on Arch.
+In addition to Ubuntu 18, we have reports of success on Arch, Debian 9 and Fedora 28.
 
-To install dependencies on Ubuntu:
+To install dependencies on Ubuntu / Debian:
 ```
     sudo apt-get install libfuse-dev xdg-utils
 ```
 
-If your distro doesn't have `libfuse-dev` try:
+On Fedora:
 ```
-    sudo apt-get install libfuse2 xdg-utils
+    sudo apt-get install fuse fuse-devel xdg-utils
 ```
 
 On Arch based distros try `fuse2`:
 ```
     sudo pacman -S fuse2 xdg-utils
+```
+
+If your distro doesn't work with the above libraries or doesn't have them, try and submit an issue with the results:
+```
+    sudo apt-get install libfuse2 xdg-utils
 ```
 
 ### 3.2 Windows
