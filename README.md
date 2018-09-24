@@ -86,7 +86,7 @@ On Arch based distros try `fuse2`:
     sudo pacman -S fuse2 xdg-utils
 ```
 
-If your distro doesn't work with the above libraries or doesn't have them, try and submit an issue with the results:
+If your distro doesn't work with the above libraries or doesn't have them, try `libfuse2` and submit an issue with the results:
 ```
     sudo apt-get install libfuse2 xdg-utils
 ```
