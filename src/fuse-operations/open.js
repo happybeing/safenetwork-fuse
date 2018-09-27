@@ -8,11 +8,9 @@ module.exports = (safeVfs) => {
       try {
         debug('open(\'%s\', %s)', itemPath, flags)
 
-        safeVfs.getHandler(itemPath).open(itemPath, flags).then((file) => {
+        // (https://github.com/mafintosh/fuse-bindings#opsopenpath-flags-cb)
+        safeVfs.getHandler(itemPath).open(itemPath, flags).then((fd) => {
           debug('open success')
-          // (https://github.com/mafintosh/fuse-bindings#opsopenpath-flags-cb)
-          // IPFS FUSE returned a file descriptor value of 42 which I guess is a joke
-          let fd = 1234 // TODO Consider using file descriptors in SafenetworkJs (see TODOs there)
           reply(0, fd)
         })
       } catch (err) {
@@ -21,9 +19,5 @@ module.exports = (safeVfs) => {
         reply(Fuse.EREMOTEIO)
       }
     }
-    // open (itemPath, flags, reply) {
-    //   debug({ itemPath, flags })
-    //   reply(0, 42)
-    // }
   }
 }
