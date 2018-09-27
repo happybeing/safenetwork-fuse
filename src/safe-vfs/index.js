@@ -1,4 +1,15 @@
 /* TODO theWebalyst notes:
+Useful FUSE refs:
+* libfuse (reference implementation) http://libfuse.github.io/doxygen/index.html
+* fuse manpage (8 - system manager) http://man7.org/linux/man-pages/man8/mount.fuse.8.html
+* fuse manpage (4 - coding API) http://man7.org/linux/man-pages/man4/fuse.4.html
+* fuse manpage (3 - how to implement with examples) https://man.openbsd.org/fuse_main.3
+* CPAN/Perl FUSE https://metacpan.org/pod/Fuse (For the Perl FUSE module but with interesting info)
+
+NOTES:
+  multithreading: fuse-bindings appears to block until each operation returns
+  See https://github.com/mafintosh/fuse-bindings/issues/9#issue-105540561
+
 [ ] implement JSDocs or similar across the code
 [ ] Implement SafeVfs and vfsHandler classes according to 'DESIGN' below
   [/] refactor mount/unmount from callbacks to async/Promises so SafeVfs and handlers can use Promises
