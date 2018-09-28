@@ -169,7 +169,7 @@ It is written in NodeJS using the `fuse-bindings` and `safenetworkjs` libraries,
 If you are not yet familiar with developing for SAFE Network, or have not previously used the 'mock' network to develop and test your code, please run through the [SAFE Network Nodejs Tutorial](https://hub.safedev.org/platform/nodejs/) *before* proceeding. Doing so should ensure you have all the pre-requisites and help you understand anything not made explicit in the instructions below.
 
 ### a) Clone safenetworkjs:
-Remember to fork on github and then clone your fork if you intend to work on the code. The following just clones the main repo:
+You need [Yarn](https://yarnpkg.com/) to run this project. Remember to fork on github and then clone your fork if you intend to work on the code. The following just clones the main repo:
 
 ```
 git clone https://github.com/theWebalyst/safenetworkjs
