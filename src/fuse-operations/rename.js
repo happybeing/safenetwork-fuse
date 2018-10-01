@@ -5,6 +5,8 @@ const debug = require('debug')('safe-fuse:ops:rename')
 module.exports = (ipfs) => {
   return {
     rename (src, dest, reply) {
+      debug('TODO: implement fuse operation: rename'); return reply(Fuse.EREMOTEIO)
+
       debug({ src, dest })
 
       ipfs.files.mv([src, dest], (err) => {

@@ -5,6 +5,8 @@ const debug = require('debug')('safe-fuse:ops')
 module.exports = (ipfs) => {
   return {
     ftruncate (itemPath, fd, size, reply) {
+      debug('TODO: implement fuse operation: ftruncate'); return reply(Fuse.EREMOTEIO)
+
       debug('ftruncate(\'%s\', %s, %n)', itemPath, fd, size)
 
       if (size === 0) {
