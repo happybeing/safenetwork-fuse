@@ -14,7 +14,7 @@ module.exports = (safeVfs) => {
           reply(bytes)
         })
       } catch (err) {
-        let e = explain(err, 'Failed to read: ' + itemPath)
+        let e = explain(err, 'Failed to read file: ' + itemPath)
         debug(e)
         reply(Fuse.EREMOTEIO)
       }
