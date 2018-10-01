@@ -5,6 +5,8 @@ const debug = require('debug')('safe-fuse:ops:mkdir')
 module.exports = (ipfs) => {
   return {
     mkdir (itemPath, mode, reply) {
+      debug('TODO: implement fuse operation: mkdir'); return reply(Fuse.EREMOTEIO)
+
       debug({ itemPath, mode })
 
       ipfs.files.mkdir(itemPath, (err) => {
