@@ -266,8 +266,19 @@ class RootHandler {
     return this.getContainer(itemPath).readFileBuf(containerItem, fd, buf, pos, len).catch((e) => { debug(e.message); throw new Error('file does not exist') })
   }
 
-  async create (itemPath) { debug('TODO create(' + itemPath + ') not implemented'); return {} }
-  async write (itemPath) { debug('TODO write(' + itemPath + ') not implemented'); return {} }
+  async create (itemPath, flags) {
+    debug('RootHandler for %s mounted at %s create(\'%s\')', this._safePath, this._mountPath, itemPath)
+    let containerItem = this.pruneMountPath(itemPath)
+    let nfsFlags = this.fuseToNfsFlags(flags)
+    return this.getContainer(itemPath).createFile(containerItem, nfsFlags).catch((e) => { debug(e.message); throw new Error('file create failed') })
+  }
+
+  async write (itemPath, fd, buf, len, pos) {
+    debug('RootHandler for %s mounted at %s write(\'%s\', %s, buf, %s, %s)', this._safePath, this._mountPath, itemPath, fd, len, pos)
+    let containerItem = this.pruneMountPath(itemPath)
+    return this.getContainer(itemPath).writeFileBuf(containerItem, fd, buf, len).catch((e) => { debug(e.message); throw new Error('file write failed') })
+  }
+
   async unlink (itemPath) { debug('TODO unlink(' + itemPath + ') not implemented'); return {} }
   async rmdir (itemPath) { debug('TODO rmdir(' + itemPath + ') not implemented'); return {} }
   async rename (itemPath) { debug('TODO rename(' + itemPath + ') not implemented'); return {} }
