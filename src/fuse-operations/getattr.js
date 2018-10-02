@@ -1,5 +1,5 @@
 const Fuse = require('fuse-bindings')
-const explain = require('explain-error')
+const SafeJsApi = require('safenetworkjs')
 const debug = require('debug')('safe-fuse:ops')
 
 // Useful refs:
@@ -16,6 +16,12 @@ module.exports = (safeVfs) => {
         debug('getattr(\'%s\')', itemPath)
         let handler = safeVfs.getHandler(itemPath)
         handler.getattr(itemPath).then((result) => {
+          // TODO implement more specific error handling like this on all fuse-ops
+          if (result && result.entryType === SafeJsApi.containerTypeCodes.notFound) {
+            reply(Fuse.ENOENT)
+            return
+          }
+
           reply(0, {
             mtime: result.modified,
             atime: result.accessed,
@@ -30,13 +36,12 @@ module.exports = (safeVfs) => {
             gid: process.getgid ? process.getgid() : 0
           })
         }).catch((e) => {
-          debug(e.message)
-          if (e.message === 'file does not exist') return reply(Fuse.ENOENT)
+          debug(e.message + ' - for itemPath:' + itemPath)
           reply(Fuse.EREMOTEIO)
         })
       } catch (err) {
-        let e = explain(err, 'Failed to getattr: ' + itemPath)
-        debug(e)
+        debug('Failed to getattr: ' + itemPath)
+        debug(err)
         reply(Fuse.EREMOTEIO)
       }
     }

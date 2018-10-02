@@ -2,8 +2,9 @@ const Fuse = require('fuse-bindings')
 const explain = require('explain-error')
 const debug = require('debug')('safe-fuse:ops')
 
-module.exports = (ipfs) => {
+module.exports = (safeVfs) => {
   return {
+    write (itemPath, fd, buf, len, pos, reply) {
       try {
         debug('write(\'%s\', %s, buf, %s, %s)', itemPath, fd, len, pos)
 
@@ -29,6 +30,6 @@ module.exports = (ipfs) => {
   //       }
   //       reply(len)
   //     })
-  //   }
+    }
   }
 }

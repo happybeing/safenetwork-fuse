@@ -1,4 +1,5 @@
 const path = require('path')  // Cross platform path handling
+const SafeJsApi = require('safenetworkjs')
 
 const debug = require('debug')('safe-fuse:vfs:root')
 
@@ -269,8 +270,8 @@ class RootHandler {
   async create (itemPath, flags) {
     debug('RootHandler for %s mounted at %s create(\'%s\')', this._safePath, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
-    let nfsFlags = this.fuseToNfsFlags(flags)
-    return this.getContainer(itemPath).createFile(containerItem, nfsFlags).catch((e) => { debug(e.message); throw new Error('file create failed') })
+//    let nfsFlags = this.fuseToNfsFlags(flags)
+    return this.getContainer(itemPath).createFile(containerItem).catch((e) => { debug(e.message); throw new Error('file create failed') })
   }
 
   async write (itemPath, fd, buf, len, pos) {
@@ -326,7 +327,11 @@ class RootContainer {
 
   async itemAttributes (itemPath) {
     debug('RootContainer itemAttributes(' + itemPath + ')')
-    if (itemPath !== '') throw new Error('RootContainer - item not found: ' + itemPath)
+    if (itemPath !== '') {
+      debug('RootContainer - item not found: ' + itemPath)
+      return { entryType: SafeJsApi.containerTypeCodes.notFound }
+    }
+
     const now = Date.now()
     return {
       // Default values (for '/') compatible with SafeContainer.itemAttributes()
