@@ -6,11 +6,11 @@ module.exports = (safeVfs) => {
   return {
     open (itemPath, flags, reply) {
       try {
-        debug('open(\'%s\', %s)', itemPath, flags)
+        debug('open(\'%s\', 0x%s)', itemPath, Number(flags).toString(16))
 
         // (https://github.com/mafintosh/fuse-bindings#opsopenpath-flags-cb)
         safeVfs.getHandler(itemPath).open(itemPath, flags).then((fd) => {
-          debug('open success')
+          debug('open returning fd: %s', fd)
           reply(0, fd)
         })
       } catch (err) {
