@@ -40,6 +40,10 @@ const containerOpts = {
   own_container: false
 }
 
+let mountFailedMessage = 'Failed to un-mount SAFE FUSE volume'
+mountFailedMessage += (process.platform !== 'win32' ? '\n\nType \'sudo umount ~/SAFE\' and try again.'
+        : '') // TODO insert in advice for Windows here
+
 // Auth with Safetnetwork
 let safeVfs
 
@@ -69,22 +73,15 @@ try {
       debug(`Mounted SAFE filesystem on ${mountPath}`)
     })
     .catch((err) => {
-      const msg = 'Failed to mount SAFE FUSE volume'
-      debug(err, msg)
-      explain(err, msg)
+      debug(err, mountFailedMessage)
     })
   })
   .catch((err) => {
-    const msg = 'Failed to mount SAFE FUSE volume'
-    debug(err, msg)
-    explain(err, msg)
+    debug(err, mountFailedMessage)
   })
 } catch (err) {
   console.error(err.message)
-  const msg = 'Failed to mount SAFE FUSE volume'
-  debug(err, msg)
-  explain(err, msg)
-  //        throw new Error(err)
+  debug(err, mountFailedMessage)
 }
 
 // Original
@@ -108,22 +105,15 @@ try {
 //       debug(`Mounted SAFE filesystem on ${mountPath}`)
 //     })
 //     .catch((err) => {
-//       const msg = 'Failed to mount SAFE FUSE volume'
-//       debug(msg)
-//       explain(err, msg)
+//       debug(err, mountFailedMessage)
 //     })
 //   })
 //   .catch((err) => {
-//     const msg = 'Failed to mount SAFE FUSE volume'
-//     debug(msg)
-//     explain(err, msg)
+//     debug(err, mountFailedMessage)
 //   })
 // } catch (err) {
 //   console.error(err.message)
-//   const msg = 'Failed to mount SAFE FUSE volume'
-//   debug(msg)
-//   explain(err, msg)
-//   //        throw new Error(err)
+//   debug(err, mountFailedMessage)
 // }
 
 let destroyed = false
@@ -139,9 +129,10 @@ process.on('SIGINT', () => {
     })
   } catch (err) {
     console.error(err.message)
-    const msg = 'Failed to mount SAFE FUSE volume'
+    let msg = 'Failed to un-mount SAFE FUSE volume'
+    msg += (process.platform !== 'win32' ? '\n\nType \'sudo umount ~/SAFE\' and try again.'
+            : '') // TODO insert in advice for Windows here
     debug(msg)
     explain(err, msg)
-    //        throw new Error(err)
   }
 })
