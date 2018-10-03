@@ -14,6 +14,10 @@ const createUnlink = require('./unlink')
 const createUtimens = require('./utimens')
 const createWrite = require('./write')
 
+// For stubs
+const Fuse = require('fuse-bindings')
+const debug = require('debug')('safe-fuse:stub')
+
 module.exports = (safeJs) => Object.assign(
   createCreate(safeJs),
   createFtruncate(safeJs),
@@ -29,5 +33,86 @@ module.exports = (safeJs) => Object.assign(
   createStatfs(safeJs),
   createUnlink(safeJs),
   createUtimens(safeJs),
-  createWrite(safeJs)
+  createWrite(safeJs),
+  // Stubs
+  { init (reply) {
+    debug('TODO: implement fuse operation: init()')
+    return reply(0)
+  }},
+  { access: function (itemPath, mode, reply) {
+    debug('TODO: implement fuse operation: access(%s)', itemPath)
+    return reply(0)
+  }},
+  // { fgetattr (itemPath, fd, reply) {
+  //   debug('TODO: implement fuse operation: fgetattr(%s, %s)', itemPath, fd)
+  //   return reply(0)
+  // }},
+  { flush (itemPath, fd, reply) {
+    debug('TODO: implement fuse operation: flush(%s, fd)', itemPath, fd)
+    return reply(0)
+  }},
+  { fsunc (itemPath, fd, datasync, reply) {
+    debug('TODO: implement fuse operation: fsync(%s, %s, datasync)', itemPath, fd)
+    return reply(0)
+  }},
+  { fsyncdir (itemPath, fd, datasync, reply) {
+    debug('TODO: implement fuse operation: fsyncdir(%s, %s)', itemPath, fd)
+    return reply(0)
+  }},
+  { truncate (itemPath, size, reply) {
+    debug('TODO: implement fuse operation: truncate(%s, %s)', itemPath, size)
+    return reply(0)
+  }},
+  { readlink (itemPath, reply) {
+    debug('TODO: implement fuse operation: readlink (%s)', itemPath)
+    return reply(Fuse.ENOENT)
+  }},
+  { chown (itemPath, uid, gid, reply) {
+    debug('TODO: implement fuse operation: chown(%s, %s, %s)', itemPath, uid, gid)
+    return reply(0)
+  }},
+  { chmod (itemPath, mode, reply) {
+    debug('TODO: implement fuse operation: chmod(%s, %s)', itemPath, mode)
+    return reply(0)
+  }},
+  { setxattr (itemPath, name, buffer, length, offset, flags, reply) {
+    debug('TODO: implement fuse operation: setxattr(%s, %s, buffer, %s, %s, %s)', itemPath, name, length, offset, flags)
+    return reply(0)
+  }},
+  { getxattr (itemPath, name, buffer, length, offset, reply) {
+    debug('TODO: implement fuse operation: getxattr(%s, %s, buffer, %s, %s)', itemPath, name, length, offset)
+    return reply(0)
+  }},
+  { listxattr (itemPath, buffer, length, reply) {
+    debug('TODO: implement fuse operation: listxattr(%s, %s, %s)', itemPath, buffer, length)
+    return reply(0)
+  }},
+  { removexattr (itemPath, name, reply) {
+    debug('TODO: implement fuse operation: removexattr(%s, %s)', itemPath, name)
+    return reply(0)
+  }},
+  { opendir (itemPath, flags, reply) {
+    debug('TODO: implement fuse operation: opendir(%s, 0x%s)', itemPath, flags.toString(16))
+    return reply(0)
+  }},
+  { releasedir (itemPath, fd, reply) {
+    debug('TODO: implement fuse operation: releasedir(%s, %s)', itemPath, fd)
+    return reply(0)
+  }},
+  { link (itemPath, dest, reply) {
+    debug('TODO: implement fuse operation: link(%s, %s)', itemPath, dest)
+    return reply(0)
+  }},
+  { symlink (itemPath, dest, reply) {
+    debug('TODO: implement fuse operation: symlink(%s, %s)', itemPath, dest)
+    return reply(0)
+  }},
+  { symlink (itemPath, yyy, reply) {
+    debug('TODO: implement fuse operation: xxx(%s)', itemPath)
+    return reply(0)
+  }},
+  { destroy (reply) {
+    debug('TODO: implement fuse operation: destroy()')
+    return reply(0)
+  }}
 )
