@@ -4,6 +4,7 @@ const createGetattr = require('./getattr')
 const createMkdir = require('./mkdir')
 const createMknod = require('./mknod')
 const createOpen = require('./open')
+const createRelease = require('./release')
 const createRead = require('./read')
 const createReaddir = require('./readdir')
 const createRename = require('./rename')
@@ -20,6 +21,7 @@ module.exports = (safeJs) => Object.assign(
   createMkdir(safeJs),
   createMknod(safeJs),
   createOpen(safeJs),
+  createRelease(safeJs),
   createRead(safeJs),
   createReaddir(safeJs),
   createRename(safeJs),

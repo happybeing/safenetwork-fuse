@@ -261,6 +261,12 @@ class RootHandler {
     return this.getContainer(itemPath).openFile(containerItem, nfsFlags).catch((e) => { debug(e.message); throw new Error('file does not exist') })
   }
 
+  async close (itemPath, fd) {
+    debug('RootHandler for %s mounted at %s close(\'%s\')', this._safePath, this._mountPath, itemPath)
+    let containerItem = this.pruneMountPath(itemPath)
+    return this.getContainer(itemPath).closeFile(containerItem, fd).catch((e) => { debug(e.message); throw new Error('file does not exist') })
+  }
+
   async read (itemPath, fd, buf, len, pos) {
     debug('RootHandler for %s mounted at %s read(\'%s\')', this._safePath, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
