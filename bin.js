@@ -42,10 +42,17 @@ const containerOpts = {
 
 // Auth with Safetnetwork
 let safeVfs
+
+// TESTING
+// TODO re-visit using safeJsApi.authoriseWithSafeBrowser (see commented out code below)
 try {
-  debug('try bootstrap()...')
-  safeJsApi.bootstrap(appConfig, appContainers, containerOpts, argv)
-  .then(async (app) => {
+  debug('try safeJsApi.safeApi.bootstrap()...')
+  safeJsApi.safeApi.bootstrap(appConfig, appContainers, containerOpts, argv).then((safeApp) => {
+    safeJsApi.setSafeApi(safeApp)
+    safeJsApi._safeAppConfig = appConfig
+    safeJsApi._safeAppContainers = appContainers
+    safeJsApi._safeContainerOpts = containerOpts
+    safeJsApi._safeAuthUri = ''  // TODO refactor to get this from safeApi.bootstrap()
     safeVfs = new SafeVfs(safeJsApi)
     safeVfs.mountFuse(mountPath, { fuse: { displayFolder: true, force: true } })
     .then(_ => Promise.all([
@@ -63,22 +70,61 @@ try {
     })
     .catch((err) => {
       const msg = 'Failed to mount SAFE FUSE volume'
-      debug(msg)
+      debug(err, msg)
       explain(err, msg)
     })
   })
   .catch((err) => {
     const msg = 'Failed to mount SAFE FUSE volume'
-    debug(msg)
+    debug(err, msg)
     explain(err, msg)
   })
 } catch (err) {
   console.error(err.message)
   const msg = 'Failed to mount SAFE FUSE volume'
-  debug(msg)
+  debug(err, msg)
   explain(err, msg)
   //        throw new Error(err)
 }
+
+// Original
+// try {
+//   debug('try authoriseWithSafeBrowser()...')
+//   safeJsApi.authoriseWithSafeBrowser(appConfig, appContainers, containerOpts, argv)
+//   .then(async (app) => {
+//     safeVfs = new SafeVfs(safeJsApi)
+//     safeVfs.mountFuse(mountPath, { fuse: { displayFolder: true, force: true } })
+//     .then(_ => Promise.all([
+//       // TODO replace the following fixed defaults with CLI configured mounts
+//       safeVfs.mountContainer({safePath: '_public'}),
+//       // safeVfs.mountContainer({safePath: '_documents'}),
+//       // safeVfs.mountContainer({safePath: '_downloads'}),
+//       // safeVfs.mountContainer({safePath: '_music'}),
+//       // safeVfs.mountContainer({safePath: '_pictures'}),
+//       // safeVfs.mountContainer({safePath: '_videos'}),
+//       safeVfs.mountContainer({safePath: '_publicNames'})
+//     ]))
+//     .then(_ => {
+//       debug(`Mounted SAFE filesystem on ${mountPath}`)
+//     })
+//     .catch((err) => {
+//       const msg = 'Failed to mount SAFE FUSE volume'
+//       debug(msg)
+//       explain(err, msg)
+//     })
+//   })
+//   .catch((err) => {
+//     const msg = 'Failed to mount SAFE FUSE volume'
+//     debug(msg)
+//     explain(err, msg)
+//   })
+// } catch (err) {
+//   console.error(err.message)
+//   const msg = 'Failed to mount SAFE FUSE volume'
+//   debug(msg)
+//   explain(err, msg)
+//   //        throw new Error(err)
+// }
 
 let destroyed = false
 
