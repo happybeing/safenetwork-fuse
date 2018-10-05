@@ -1,6 +1,7 @@
 const createCreate = require('./create')
 const createFtruncate = require('./ftruncate')
 const createGetattr = require('./getattr')
+const createFgetattr = require('./fgetattr')
 const createMkdir = require('./mkdir')
 const createMknod = require('./mknod')
 const createOpen = require('./open')
@@ -75,22 +76,22 @@ module.exports = (safeJs) => Object.assign(
     debug('TODO: implement fuse operation: chmod(%s, %s)', itemPath, mode)
     return reply(0)
   }},
-  { setxattr (itemPath, name, buffer, length, offset, flags, reply) {
-    debug('TODO: implement fuse operation: setxattr(%s, %s, buffer, %s, %s, %s)', itemPath, name, length, offset, flags)
-    return reply(0)
-  }},
-  { getxattr (itemPath, name, buffer, length, offset, reply) {
-    debug('TODO: implement fuse operation: getxattr(%s, %s, buffer, %s, %s)', itemPath, name, length, offset)
-    return reply(0)
-  }},
-  { listxattr (itemPath, buffer, length, reply) {
-    debug('TODO: implement fuse operation: listxattr(%s, %s, %s)', itemPath, buffer, length)
-    return reply(0)
-  }},
-  { removexattr (itemPath, name, reply) {
-    debug('TODO: implement fuse operation: removexattr(%s, %s)', itemPath, name)
-    return reply(0)
-  }},
+  // { setxattr (itemPath, name, buffer, length, offset, flags, reply) {
+  //   debug('TODO: implement fuse operation: setxattr(%s, %s, buffer, %s, %s, %s)', itemPath, name, length, offset, flags)
+  //   return reply(0)
+  // }},
+  // { getxattr (itemPath, name, buffer, length, offset, reply) {
+  //   debug('TODO: implement fuse operation: getxattr(%s, %s, buffer, %s, %s)', itemPath, name, length, offset)
+  //   return reply(0)
+  // }},
+  // { listxattr (itemPath, buffer, length, reply) {
+  //   debug('TODO: implement fuse operation: listxattr(%s, %s, %s)', itemPath, buffer, length)
+  //   return reply(0)
+  // }},
+  // { removexattr (itemPath, name, reply) {
+  //   debug('TODO: implement fuse operation: removexattr(%s, %s)', itemPath, name)
+  //   return reply(0)
+  // }},
   { opendir (itemPath, flags, reply) {
     debug('TODO: implement fuse operation: opendir(%s, 0x%s)', itemPath, flags.toString(16))
     return reply(0)
