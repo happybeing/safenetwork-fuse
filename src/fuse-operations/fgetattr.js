@@ -2,7 +2,7 @@ const Fuse = require('fuse-bindings')
 const SafeJsApi = require('safenetworkjs')
 const debug = require('debug')('safe-fuse:ops')
 
-// See also fgetattr()
+// See also getattr()
 //
 // Useful refs:
 //
@@ -13,11 +13,11 @@ const debug = require('debug')('safe-fuse:ops')
 //  - https://github.com/mafintosh/fuse-bindings/blob/032ed16e234f7379fbf421c12afef592ab2a292d/fuse-bindings.cc#L749-L769
 module.exports = (safeVfs) => {
   return {
-    getattr (itemPath, reply) {
+    fgetattr (itemPath, fd, reply) {
       try {
-        debug('getattr(\'%s\')', itemPath)
+        debug('fgetattr(\'%s\', %s)', itemPath, fd)
         let handler = safeVfs.getHandler(itemPath)
-        handler.getattr(itemPath).then((result) => {
+        handler.fgetattr(itemPath, fd).then((result) => {
           // TODO implement more specific error handling like this on all fuse-ops
           if (result && result.entryType === SafeJsApi.containerTypeCodes.notFound) {
             reply(Fuse.ENOENT)
@@ -48,26 +48,4 @@ module.exports = (safeVfs) => {
       }
     }
   }
-
-      // ipfs.files.stat(itemPath, (err, stat) => {
-      //
-      //   if (err) {
-      //     if (err.message === 'file does not exist') return reply(Fuse.ENOENT)
-      //     err = explain(err, 'Failed to stat itemPath')
-      //     debug(err)
-      //     return reply(Fuse.EREMOTEIO)
-      //   }
-      //
-      //   reply(0, {
-      //     mtime: now,
-      //     atime: now,
-      //     ctime: now,
-      //     nlink: 1,
-      //     size: stat.size,
-      //     // https://github.com/TooTallNate/stat-mode/blob/master/index.js
-      //     mode: stat.type === 'directory' ? 16877 : 33188,
-      //     uid: process.getuid ? process.getuid() : 0,
-      //     gid: process.getgid ? process.getgid() : 0
-      //   })
-      // })
 }
