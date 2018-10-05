@@ -212,9 +212,9 @@ class RootHandler {
   fuseToNfsFlags (flags) {
     flags = flags & 3
     if (flags === 0) return this._safeVfs.safeJs().safeApi.CONSTANTS.NFS_FILE_MODE_READ
-    if (flags === 1) return this._safeVfs.safeJs().safeApi.CONSTANTS.NFS_FILE_MODE_WRITE
+    if (flags === 1) return this._safeVfs.safeJs().safeApi.CONSTANTS.NFS_FILE_MODE_OVERWRITE
 
-    return (this._safeVfs.safeJs().safeApi.CONSTANTS.NFS_FILE_MODE_WRITE |
+    return (this._safeVfs.safeJs().safeApi.CONSTANTS.NFS_FILE_MODE_OVERWRITE |
             this._safeVfs.safeJs().safeApi.CONSTANTS.NFS_FILE_MODE_READ)
   }
 
@@ -252,6 +252,12 @@ class RootHandler {
     debug('RootHandler for %s mounted at %s getattr(\'%s\')', this._safePath, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
     return this.getContainer(itemPath).itemAttributes(containerItem).catch((e) => { debug(e.message); throw new Error('file does not exist') })
+  }
+
+  async fgetattr (itemPath, fd) {
+    debug('RootHandler for %s mounted at %s fgetattr(\'%s\', %s)', this._safePath, this._mountPath, itemPath, fd)
+    let containerItem = this.pruneMountPath(itemPath)
+    return this.getContainer(itemPath).itemAttributes(containerItem, fd).catch((e) => { debug(e.message); throw new Error('file does not exist') })
   }
 
   async open (itemPath, flags) {
