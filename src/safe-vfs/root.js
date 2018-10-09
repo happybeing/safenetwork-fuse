@@ -292,7 +292,12 @@ class RootHandler {
     return this.getContainer(itemPath).writeFileBuf(containerItem, fd, buf, len).catch((e) => { debug(e.message); throw new Error('file write failed') })
   }
 
-  async unlink (itemPath) { debug('TODO unlink(' + itemPath + ') not implemented'); return {} }
+  async unlink (itemPath) {
+    debug('RootHandler for %s mounted at %s unlink(\'%s\', %s, buf, %s, %s)', this._safePath, this._mountPath, itemPath)
+    let containerItem = this.pruneMountPath(itemPath)
+    return this.getContainer(itemPath).deleteFile(containerItem).catch((e) => { debug(e.message); throw new Error('file delete failed') })
+  }
+
   async rmdir (itemPath) { debug('TODO rmdir(' + itemPath + ') not implemented'); return {} }
   async rename (itemPath) { debug('TODO rename(' + itemPath + ') not implemented'); return {} }
   async ftruncate (itemPath) { debug('TODO ftruncate(' + itemPath + ') not implemented'); return {} }
@@ -353,8 +358,8 @@ class RootContainer {
       created: now,
       size: 0,
       version: -1,
-      'isFile': false
-      // TODO entryType: SafeJs.fakeContainer
+      'isFile': false,
+      entryType: SafeJsApi.containerTypeCodes.defaultContainer
     }
   }
 }
