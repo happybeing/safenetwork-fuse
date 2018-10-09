@@ -1,20 +1,21 @@
 const Fuse = require('fuse-bindings')
-const explain = require('explain-error')
 const debug = require('debug')('safe-fuse:ops')
 
-module.exports = (ipfs) => {
+module.exports = (safeVfs) => {
   return {
     unlink (itemPath, reply) {
-      debug('unlink(\'%s\')', itemPath)
+      try {
+        debug('unlink(\'%s\', 0x%s)', itemPath)
 
-      ipfs.files.rm(itemPath, (err) => {
-        if (err) {
-          err = explain(err, 'Failed to delete file')
-          debug(err)
-          return reply(Fuse.EREMOTEIO)
-        }
-        reply(0)
-      })
+        safeVfs.getHandler(itemPath).unlink(itemPath).then((result) => {
+          debug('unlinked: %s', itemPath)
+          reply(0)
+        }).catch((e) => { throw e })
+      } catch (err) {
+        debug('Failed to unlink: ' + itemPath)
+        debug(err)
+        reply(Fuse.EREMOTEIO)
+      }
     }
   }
 }
