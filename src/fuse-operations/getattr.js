@@ -18,56 +18,47 @@ module.exports = (safeVfs) => {
         debug('getattr(\'%s\')', itemPath)
         let handler = safeVfs.getHandler(itemPath)
         handler.getattr(itemPath).then((result) => {
-          // TODO implement more specific error handling like this on all fuse-ops
-          if (result && result.entryType === SafeJsApi.containerTypeCodes.notFound) {
+          if (result === undefined) {
+            debug('getattr(\'%s\') result: undefined reply(Fuse.ENOENT)', itemPath)
             reply(Fuse.ENOENT)
             return
           }
 
-          reply(0, {
-            mtime: result.modified,
-            atime: result.accessed,
-            ctime: result.created,
-            nlink: 1,
-            size: result.size,    // bytes
-            // blocks: result.size, // TODO
-            // perm: ?,             // TODO also: dev, ino, nlink, rdev, blksize
-            // https://github.com/TooTallNate/stat-mode/blob/master/index.js
-            mode: (result.isFile ? 33188 : 16877),
-            uid: process.getuid ? process.getuid() : 0,
-            gid: process.getgid ? process.getgid() : 0
-          })
+          if (result.entryType === SafeJsApi.containerTypeCodes.file ||
+              result.entryType === SafeJsApi.containerTypeCodes.fakeContainer ||
+              result.entryType === SafeJsApi.containerTypeCodes.nfsContainer ||
+              result.entryType === SafeJsApi.containerTypeCodes.defaultContainer) {
+            debug('getattr(\'%s\') result type: %s', itemPath, result.entryType)
+            reply(0, {
+              mtime: result.modified,
+              atime: result.accessed,
+              ctime: result.created,
+              nlink: 1,
+              size: result.size,    // bytes
+              // blocks: result.size, // TODO
+              // perm: ?,             // TODO also: dev, ino, nlink, rdev, blksize
+              // https://github.com/TooTallNate/stat-mode/blob/master/index.js
+              mode: (result.isFile ? 33188 : 16877),
+              uid: process.getuid ? process.getuid() : 0,
+              gid: process.getgid ? process.getgid() : 0
+            })
+            return
+          }
+          // TODO implement more specific error handling like this on all fuse-ops
+          if (result.entryType === SafeJsApi.containerTypeCodes.notFound) {
+            debug('getattr(\'%s\') result type: %s reply(Fuse.ENOENT)', itemPath, result.entryType)
+            reply(Fuse.ENOENT)
+            return
+          }
+          throw new Error('Unhandled result.entryType: ' + result.entryType)
         }).catch((e) => {
-          debug(e.message + ' - for itemPath:' + itemPath)
-          reply(Fuse.EREMOTEIO)
+          throw e
         })
       } catch (err) {
-        debug('Failed to getattr: ' + itemPath)
+        debug('getattr(\'%s\') caught error. reply(Fuse.ENOENT)', itemPath)
         debug(err)
         reply(Fuse.EREMOTEIO)
       }
     }
   }
-
-      // ipfs.files.stat(itemPath, (err, stat) => {
-      //
-      //   if (err) {
-      //     if (err.message === 'file does not exist') return reply(Fuse.ENOENT)
-      //     err = explain(err, 'Failed to stat itemPath')
-      //     debug(err)
-      //     return reply(Fuse.EREMOTEIO)
-      //   }
-      //
-      //   reply(0, {
-      //     mtime: now,
-      //     atime: now,
-      //     ctime: now,
-      //     nlink: 1,
-      //     size: stat.size,
-      //     // https://github.com/TooTallNate/stat-mode/blob/master/index.js
-      //     mode: stat.type === 'directory' ? 16877 : 33188,
-      //     uid: process.getuid ? process.getuid() : 0,
-      //     gid: process.getgid ? process.getgid() : 0
-      //   })
-      // })
 }
