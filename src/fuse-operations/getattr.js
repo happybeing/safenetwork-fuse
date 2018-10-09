@@ -27,6 +27,7 @@ module.exports = (safeVfs) => {
           if (result.entryType === SafeJsApi.containerTypeCodes.file ||
               result.entryType === SafeJsApi.containerTypeCodes.fakeContainer ||
               result.entryType === SafeJsApi.containerTypeCodes.nfsContainer ||
+              result.entryType === SafeJsApi.containerTypeCodes.servicesContainer ||
               result.entryType === SafeJsApi.containerTypeCodes.defaultContainer) {
             debug('getattr(\'%s\') result type: %s', itemPath, result.entryType)
             reply(0, {
