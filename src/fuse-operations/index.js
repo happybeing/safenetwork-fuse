@@ -52,7 +52,7 @@ module.exports = (safeJs) => Object.assign(
     debug('TODO: implement fuse operation: flush(%s, fd)', itemPath, fd)
     return reply(0)
   }},
-  { fsunc (itemPath, fd, datasync, reply) {
+  { fsync (itemPath, fd, datasync, reply) {
     debug('TODO: implement fuse operation: fsync(%s, %s, datasync)', itemPath, fd)
     return reply(0)
   }},
