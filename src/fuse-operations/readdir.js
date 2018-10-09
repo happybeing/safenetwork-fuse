@@ -9,7 +9,7 @@ module.exports = (safeVfs) => {
         debug('readdir(\'%s\')', itemPath)
         safeVfs.getHandler(itemPath).readdir(itemPath).then((result) => {
           reply(0, result)
-        })
+        }).catch((e) => { throw e })
       } catch (err) {
         let e = explain(err, 'Failed to readdir: ' + itemPath)
         debug(e)

@@ -1,6 +1,5 @@
 const Fuse = require('fuse-bindings')
-const explain = require('explain-error')
-const debug = require('debug')('safe-fuse:ops:read')
+const debug = require('debug')('safe-fuse:ops')
 
 module.exports = (safeVfs) => {
   return {
@@ -10,25 +9,14 @@ module.exports = (safeVfs) => {
 
         safeVfs.getHandler(itemPath).read(itemPath, fd, buf, len, pos).then((bytes) => {
           debug('read %s bytes', bytes)
-          debug('data: %s', buf)
+          debug('data: %s', buf.slice(0, bytes))
           reply(bytes)
-        })
+        }).catch((e) => { throw e })
       } catch (err) {
-        let e = explain(err, 'Failed to read file: ' + itemPath)
-        debug(e)
+        debug('Failed to read file: ' + itemPath)
+        debug(err)
         reply(Fuse.EREMOTEIO)
       }
-
-      //   ipfs.files.read(itemPath, { offset: pos, count: len }, (err, part) => {
-      //   if (err) {
-      //     err = explain(err, 'Failed to read itemPath')
-      //     debug(err)
-      //     return reply(Fuse.EREMOTEIO)
-      //   }
-      //
-      //   part.copy(buf)
-      //   reply(part.length)
-      // })
     }
   }
 }

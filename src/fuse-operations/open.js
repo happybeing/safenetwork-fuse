@@ -1,6 +1,5 @@
 const Fuse = require('fuse-bindings')
-const explain = require('explain-error')
-const debug = require('debug')('safe-fuse:ops:open')
+const debug = require('debug')('safe-fuse:ops')
 
 module.exports = (safeVfs) => {
   return {
@@ -12,10 +11,10 @@ module.exports = (safeVfs) => {
         safeVfs.getHandler(itemPath).open(itemPath, flags).then((fd) => {
           debug('open returning fd: %s', fd)
           reply(0, fd)
-        })
+        }).catch((e) => { throw e })
       } catch (err) {
-        let e = explain(err, 'Failed to open: ' + itemPath)
-        debug(e)
+        debug('Failed to open: ' + itemPath)
+        debug(err)
         reply(Fuse.EREMOTEIO)
       }
     }

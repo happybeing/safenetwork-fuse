@@ -11,7 +11,7 @@ module.exports = (safeVfs) => {
         safeVfs.getHandler(itemPath).close(itemPath, fd).then(() => {
           debug('released file descriptor %s', fd)
           reply(0)
-        })
+        }).catch((e) => { throw e })
       } catch (err) {
         let e = explain(err, 'Failed to close file: ' + itemPath)
         debug(e)

@@ -44,7 +44,7 @@ module.exports = (safeVfs) => {
 
           debug(data)
           reply(0, data)
-        })
+        }).catch((e) => { throw e })
       } catch (err) {
         let e = explain(err, 'Failed to stat: ' + itemPath)
         debug(e)
