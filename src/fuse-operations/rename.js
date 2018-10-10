@@ -1,22 +1,22 @@
 const Fuse = require('fuse-bindings')
-const explain = require('explain-error')
 const debug = require('debug')('safe-fuse:ops')
 
-module.exports = (ipfs) => {
+module.exports = (safeVfs) => {
   return {
-    rename (src, dest, reply) {
-      debug('TODO: implement fuse operation: rename'); return reply(Fuse.EREMOTEIO)
+    rename (itemPath, newPath, reply) {
+      try {
+        debug('rename(\'%s\', \'%s\')', itemPath, newPath)
 
-      debug({ src, dest })
-
-      ipfs.files.mv([src, dest], (err) => {
-        if (err) {
-          err = explain(err, 'Failed to mv itemPath')
-          debug(err)
-          return reply(Fuse.EREMOTEIO)
-        }
-        reply(0)
-      })
+        safeVfs.getHandler(itemPath).rename(itemPath, newPath).then((result) => {
+          debug('Renamed: %s, to: %s', itemPath, newPath)
+          if (result) reply(0)
+          reply(Fuse.EOPNOTSUPP) // Don't allow rename of directories etc
+        }).catch((e) => { throw e })
+      } catch (err) {
+        debug('Failed to rename: %s, to: %s', itemPath, newPath)
+        debug(err)
+        reply(Fuse.EREMOTEIO)
+      }
     }
   }
 }
