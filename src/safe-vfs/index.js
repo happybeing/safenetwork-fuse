@@ -298,10 +298,12 @@ class SafeVfs {
   constructor (safeJsApi) {
     this._safeJs = safeJsApi
     this._pathMap = new Map()
+    this._vfsCache = new vfsCacheMap(this)
   }
 
   safeJs () { return this._safeJs }
   pathMap () { return this._pathMap }
+  vfsCache () return this._vfsCache }
 
   pathMapSet (mountPath, handler) {
     this._pathMap.set(path.normalize(mountPath), handler)

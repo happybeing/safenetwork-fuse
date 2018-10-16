@@ -1,5 +1,5 @@
-const Fuse = require('fuse-bindings')
-const SafeJsApi = require('safenetworkjs')
+// const Fuse = require('fuse-bindings')
+// const SafeJsApi = require('safenetworkjs')
 const debug = require('debug')('safe-fuse:ops')
 
 // See also fgetattr()
@@ -11,6 +11,20 @@ const debug = require('debug')('safe-fuse:ops')
 // This shows FUSE code retrieving the returned values:
 // TODO review settings from the following ref including: blocks, perm, dev, ino, nlink, rdev, blksize
 //  - https://github.com/mafintosh/fuse-bindings/blob/032ed16e234f7379fbf421c12afef592ab2a292d/fuse-bindings.cc#L749-L769
+module.exports = (safeVfs) => {
+  return {
+    getattr (itemPath, reply) {
+      try {
+        debug('getattr(\'%s\')', itemPath)
+        safeVfs.vfsCache().getattr(itemPath, reply)
+      } catch (e) {
+        debug(e)
+      }
+    }
+  }
+}
+
+/* NONE-CACHED CODE
 module.exports = (safeVfs) => {
   return {
     getattr (itemPath, reply) {
@@ -63,3 +77,4 @@ module.exports = (safeVfs) => {
     }
   }
 }
+*/
