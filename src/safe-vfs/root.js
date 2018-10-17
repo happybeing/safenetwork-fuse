@@ -1,5 +1,6 @@
 const path = require('path')  // Cross platform path handling
 const SafeJsApi = require('safenetworkjs')
+const u = SafeJsApi.safeUtils
 
 const debug = require('debug')('safe-fuse:vfs:root')
 
@@ -326,6 +327,7 @@ class RootHandler {
 class RootContainer {
   constructor (rootHandler) {
     this._handler = rootHandler
+    this._resultHolderMap = [] // Filesystem results cached by operation and container key
 
     // Helpers
     this.vfs = this._handler._safeVfs
@@ -348,24 +350,90 @@ class RootContainer {
     return listing
   }
 
-  async itemAttributes (itemPath) {
-    debug('RootContainer itemAttributes(' + itemPath + ')')
+  /**
+   * Get attributes of a file or directory
+   * @param  {String}  itemPath
+   * @param  {Number}  fd       [optional] file descriptor (if file is open)
+   * @return {Promise}          attributes object
+   */
+  async itemAttributes (itemPath, fd) {
+    debug('%s.itemAttributes(\'%s\', %s)', this.constructor.name, itemPath, fd)
+
+    try {
+      let resultsRef = await this.itemAttributesResultsRef(itemPath, fd)
+      if (resultsRef) return resultsRef.result
+    } catch (e) {
+      debug(e)
+    }
+  }
+
+  async itemAttributesResultRef (itemPath, fd) {
+    debug('%s.itemAttributesResultRef(\'%s\', %s)', this.constructor.name, itemPath, fd)
+    let fileOperation = 'itemAttributes'
+
+    let result
     if (itemPath !== '') {
       debug('RootContainer - item not found: ' + itemPath)
-      return { entryType: SafeJsApi.containerTypeCodes.notFound }
+      result = { entryType: SafeJsApi.containerTypeCodes.notFound }
     }
 
-    const now = Date.now()
+    if (!result) {
+      const now = Date.now()
+      result = {
+        // Default values (for '/') compatible with SafeContainer.itemAttributes()
+        // TODO improve this if SAFE accounts ever have suitable values for size etc:
+        modified: now,
+        accessed: now,
+        created: now,
+        size: 0,
+        version: -1,
+        'isFile': false,
+        entryType: SafeJsApi.containerTypeCodes.defaultContainer
+      }
+    }
+
+    return this._saveResultForPath(itemPath, fileOperation, result)
+  }
+
+  /** File system operation results cache
+  */
+
+  _clearCacheForCreateFile (itemPath) {
+    let base = u.itemPathBasename(itemPath)
+    if (base) this._clearResultForPath(itemPath)
+  }
+
+  _clearCacheForModify (itemPath) {
+    let base = u.itemPathBasename(itemPath)
+    if (base !== itemPath) this._clearResultForPath(base)
+  }
+
+  _clearCacheForDelete (itemPath) {
+    this.clearResultForPath(itemPath)
+    let base = u.itemPathBasename(itemPath)
+    if (base !== itemPath) this._clearResultDelete(base) // Recurse to clear all parent folders
+  }
+
+  _clearResultForPath (itemPath) {
+    this._resultHolderMap[itemPath] = undefined
+  }
+
+  // Store fileOperation result in _resultHolderMap and return a resultsRef
+  _saveResultForPath (itemPath, fileOperation, operationResult) {
+    let resultHolder = this._resultHolderMap[itemPath]
+    if (!resultHolder) {
+      resultHolder = {}
+      this._resultHolderMap[itemPath] = resultHolder
+    }
+
+    resultHolder[fileOperation] = operationResult
+
+    // Return a resultsRef
     return {
-      // Default values (for '/') compatible with SafeContainer.itemAttributes()
-      // TODO improve this if SAFE accounts ever have suitable values for size etc:
-      modified: now,
-      accessed: now,
-      created: now,
-      size: 0,
-      version: -1,
-      'isFile': false,
-      entryType: SafeJsApi.containerTypeCodes.defaultContainer
+      resultsMap: this._resultHolderMap,
+      resultsKey: itemPath,
+      result: operationResult,
+      'fileOperation': fileOperation  // For debugging only
     }
   }
 }
