@@ -10,6 +10,7 @@ const createRead = require('./read')
 const createReaddir = require('./readdir')
 const createRename = require('./rename')
 const createRmdir = require('./rmdir')
+const createTruncate = require('./truncate')
 const createStatfs = require('./statfs')
 const createUnlink = require('./unlink')
 const createUtimens = require('./utimens')
@@ -32,6 +33,7 @@ module.exports = (safeJs) => Object.assign(
   createRename(safeJs),
   createRmdir(safeJs),
   createStatfs(safeJs),
+  createTruncate(safeJs),
   createUnlink(safeJs),
   createUtimens(safeJs),
   createWrite(safeJs),
@@ -58,10 +60,6 @@ module.exports = (safeJs) => Object.assign(
   }},
   { fsyncdir (itemPath, fd, datasync, reply) {
     debug('TODO: implement fuse operation: fsyncdir(%s, %s)', itemPath, fd)
-    return reply(0)
-  }},
-  { truncate (itemPath, size, reply) {
-    debug('TODO: implement fuse operation: truncate(%s, %s)', itemPath, size)
     return reply(0)
   }},
   { readlink (itemPath, reply) {
@@ -93,7 +91,7 @@ module.exports = (safeJs) => Object.assign(
   //   return reply(0)
   // }},
   { opendir (itemPath, flags, reply) {
-    debug('TODO: implement fuse operation: opendir(%s, 0x%s)', itemPath, flags.toString(16))
+    debug('TODO: implement fuse operation: opendir(%s, %so)', itemPath, flags.toString(8))
     return reply(0)
   }},
   { releasedir (itemPath, fd, reply) {

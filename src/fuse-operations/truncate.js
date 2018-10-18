@@ -3,12 +3,12 @@ const debug = require('debug')('safe-fuse:ops')
 
 module.exports = (safeVfs) => {
   return {
-    ftruncate (itemPath, fd, size, reply) {
+    truncate (itemPath, size, reply) {
       try {
-        debug('ftruncate(\'%s\', %s, %s)', itemPath, fd, size)
+        debug('truncate(\'%s\', %s)', itemPath, size)
 
-        safeVfs.getHandler(itemPath).ftruncate(itemPath, fd, size).then((result) => {
-          debug('truncated: %s (%s) at %s bytes', itemPath, fd, size)
+        safeVfs.getHandler(itemPath).truncate(itemPath, size).then((result) => {
+          debug('truncated: %s at %s bytes', itemPath, size)
           reply(0)
         }).catch((e) => { throw e })
       } catch (err) {

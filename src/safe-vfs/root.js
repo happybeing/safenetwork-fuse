@@ -205,6 +205,7 @@ class RootHandler {
   Fuse ref: https://github.com/mafintosh/fuse-bindings#opsopenpath-flags-cb
 
   From: /usr/include/x86_64-linux-gnu/bits/fcntl-linux.h
+  NOTE: fcntl.h values are octal, not hexadecimal
   #define O_ACCMODE 0003
   #define O_RDONLY  00
   #define O_WRONLY  01
@@ -213,7 +214,7 @@ class RootHandler {
   fuseToNfsFlags (flags) {
     flags = flags & 3
     if (flags === 0) return this._safeVfs.safeJs().safeApi.CONSTANTS.NFS_FILE_MODE_READ
-    if (flags === 1) return this._safeVfs.safeJs().safeApi.CONSTANTS.NFS_FILE_MODE_OVERWRITE
+    if (flags === 1) return this._safeVfs.safeJs().safeApi.CONSTANTS.NFS_FILE_MODE_APPEND
 
     return (this._safeVfs.safeJs().safeApi.CONSTANTS.NFS_FILE_MODE_OVERWRITE |
             this._safeVfs.safeJs().safeApi.CONSTANTS.NFS_FILE_MODE_READ)
@@ -272,6 +273,18 @@ class RootHandler {
     debug('RootHandler for %s mounted at %s close(\'%s\')', this._safePath, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
     return this.getContainer(itemPath).closeFile(containerItem, fd).catch((e) => { debug(e); throw e })
+  }
+
+  async ftruncate (itemPath, fd, size) {
+    debug('RootHandler for %s mounted at %s ftruncate(\'%s\', %s, %s)', this._safePath, this._mountPath, itemPath, fd, size)
+    let containerItem = this.pruneMountPath(itemPath)
+    return this.getContainer(itemPath)._truncateFile(containerItem, fd, size).catch((e) => { debug(e); throw e })
+  }
+
+  async truncate (itemPath, size) {
+    debug('RootHandler for %s mounted at %s truncate(\'%s\', %s)', this._safePath, this._mountPath, itemPath, size)
+    let containerItem = this.pruneMountPath(itemPath)
+    return this.getContainer(itemPath)._truncateFile(containerItem, undefined, size).catch((e) => { debug(e); throw e })
   }
 
   async read (itemPath, fd, buf, len, pos) {
@@ -392,7 +405,7 @@ class RootContainer {
       }
     }
 
-    return this._saveResultForPath(itemPath, fileOperation, result)
+    return this._updateResultForPath(itemPath, fileOperation, result, SafeJsApi.isCacheableResult(result.entryType))
   }
 
   /** File system operation results cache
@@ -404,6 +417,7 @@ class RootContainer {
   }
 
   _clearCacheForModify (itemPath) {
+    this._clearResultForPath(itemPath)
     let base = u.itemPathBasename(itemPath)
     if (base !== itemPath) this._clearResultForPath(base)
   }
@@ -418,15 +432,35 @@ class RootContainer {
     this._resultHolderMap[itemPath] = undefined
   }
 
-  // Store fileOperation result in _resultHolderMap and return a resultsRef
-  _saveResultForPath (itemPath, fileOperation, operationResult) {
+  // Called by a child container to clear our cache entry
+  _clearCacheForChildContainer (childContainerPath, childItemPath) {
+    let pathPrefix = this._subTree
+    if (this._subTree[0] === '/') pathPrefix = this._subTree.substring(1)
+    let itemPath = pathPrefix + childItemPath
+    this._clearResultForPath(itemPath)
+  }
+
+  /**
+   * Update _resultHolderMap and return a resultsRef
+   *
+   * @param  {String} itemPath
+   * @param  {String} fileOperation
+   * @param  {Object} operationResult
+   * @param  {Boolean} cacheTheResult if true updates cache, otherwise clears it
+   * @return {Object} A 'resultsRef' which has the result, its cache location
+   */
+  _updateResultForPath (itemPath, fileOperation, operationResult, cacheTheResult) {
     let resultHolder = this._resultHolderMap[itemPath]
     if (!resultHolder) {
       resultHolder = {}
       this._resultHolderMap[itemPath] = resultHolder
     }
 
-    resultHolder[fileOperation] = operationResult
+    if (cacheTheResult) {
+      resultHolder[fileOperation] = operationResult
+    } else {
+      this._clearResultForPath(itemPath)
+    }
 
     // Return a resultsRef
     return {
