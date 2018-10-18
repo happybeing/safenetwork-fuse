@@ -5,7 +5,7 @@ module.exports = (safeVfs) => {
   return {
     unlink (itemPath, reply) {
       try {
-        debug('unlink(\'%s\', 0x%s)', itemPath)
+        debug('unlink(\'%s\')', itemPath)
 
         safeVfs.getHandler(itemPath).unlink(itemPath).then((result) => {
           debug('unlinked: %s', itemPath)
