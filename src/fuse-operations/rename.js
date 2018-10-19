@@ -6,6 +6,11 @@ module.exports = (safeVfs) => {
     rename (itemPath, newPath, reply) {
       try {
         debug('rename(\'%s\', \'%s\')', itemPath, newPath)
+        let fuseResult = safeVfs.vfsCache().renameVirtual(itemPath, newPath)
+        if (fuseResult) {
+          debug('Renamed: %s, to: %s', itemPath, newPath)
+          return reply(fuseResult.returnCode, fuseResult.returnObject)
+        }
 
         safeVfs.getHandler(itemPath).rename(itemPath, newPath).then((result) => {
           debug('Renamed: %s, to: %s', itemPath, newPath)

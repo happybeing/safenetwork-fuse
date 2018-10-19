@@ -10,6 +10,8 @@ module.exports = (safeVfs) => {
 
         safeVfs.getHandler(itemPath).close(itemPath, fd).then(() => {
           debug('released file descriptor %s', fd)
+          // Clear any virtual directories in itemPath path, in case its a new file
+          safeVfs.vfsCache().closeVirtual(itemPath)
           reply(0)
         }).catch((e) => { throw e })
       } catch (err) {

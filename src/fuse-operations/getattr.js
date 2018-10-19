@@ -16,7 +16,11 @@ module.exports = (safeVfs) => {
     getattr (itemPath, reply) {
       try {
         debug('getattr(\'%s\')', itemPath)
-        safeVfs.vfsCache().getattr(itemPath, reply)
+        let fuseResult = safeVfs.vfsCache().getattrVirtual(itemPath)
+        if (fuseResult) {
+          return reply(fuseResult.returnCode, fuseResult.returnObject)
+        }
+        return safeVfs.vfsCache().getattr(itemPath, reply)
       } catch (e) {
         debug(e)
       }

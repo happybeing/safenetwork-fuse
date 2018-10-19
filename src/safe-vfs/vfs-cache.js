@@ -106,9 +106,8 @@ class VfsCacheMap {
    * knows nothing about them.
    * @private
    *
-   * @return {FuseResult} if the action is complete, or undefined if the
-   *                      action should passed on to the non-virtual
-   *                      implementation.
+   * @return {FuseResult} an object if the action is complete, or undefined
+   * if the action should passed on to the non-virtual implementation.
    */
 
   // Note: deleting (unlink) the last file in a SAFE NFS 'fake' directory
@@ -118,16 +117,32 @@ class VfsCacheMap {
   // ideally leave an empty directory.
 
   // Assumes FUSE will only mkdir() if it doesn't exist yet
-  mkdirVirtual (itemPath) {
+  mkdirVirtual (itemPath, mode) {
     this._directoryMap[itemPath] = true
     return new FuseResult(0)
   }
 
-   // Assumes FUSE will only rmdir() an empty directory
   rmdirVirtual (itemPath) {
-    let nextDir = itemPath
+    for (var entry in this._directoryMap) {
+      if (entry.indexOf(itemPath) === 0 && entry !== itemPath) {
+        return new FuseResult(Fuse.ENOTEMPTY) // Has subdirectory
+      }
+    }
+
+    if (this._directoryMap[itemPath]) {
+      delete this._directoryMap[itemPath]
+      return new FuseResult(0)
+    }
+
+    // No virtual directory
+    return new FuseResult(Fuse.EOPNOTSUPP)
+  }
+
+  // When a file is created, check for and clear virtual folders on its path
+  closeVirtual (itemPath) {
+    let nextDir = SafeJsApi.parentPath(itemPath)
     while (this._directoryMap[nextDir]) {
-      this._directoryMap[nextDir] = undefined
+      delete this._directoryMap[nextDir]
       nextDir = SafeJsApi.parentPath(nextDir)
     }
     return new FuseResult(0)
@@ -139,6 +154,18 @@ class VfsCacheMap {
     }
 
     return undefined  // No virtual directory, so action is incomplete
+  }
+
+  // Add any virtual directories to the itemPath directory's listing
+  mergeVirtualDirs (itemPath, folders) {
+    for (var entry in this._directoryMap) {
+      if (entry.indexOf(itemPath) === 0 && entry !== itemPath) {
+        let subTree = entry.substring(itemPath.length)
+        let subFolder = subTree.split('/')[1]
+        if (folders.indexOf(subFolder) === -1) folders.push(subFolder)
+      }
+    }
+    return folders
   }
 
   // TODO remove code that returns as if empty directory, for getattr/readdir
@@ -219,7 +246,7 @@ class VfsCacheMap {
         resultsRef = await container.itemAttributesResultRef(containerPath)
         this._resultsRefMap[itemPath] = resultsRef
 
-        fuseResult = await this._makeGetattrResult(itemPath, resultsRef)
+        fuseResult = this._makeGetattrResult(itemPath, resultsRef.result)
         resultHolder = resultsRef.resultsMap[resultsRef.resultsKey]
       } catch (e) {
         debug(e)
@@ -238,11 +265,10 @@ class VfsCacheMap {
    * @param  {Object}  resultsRef  a resultsRef from SafeContainer itemAttributes()
    * @return {Promise}                     [description]
    */
-  async _makeGetattrResult (itemPath, resultsRef) {
+  _makeGetattrResult (itemPath, result) {
     let fuseResult = new FuseResult()
 
     try {
-      let result = resultsRef.result
       if (result.entryType === SafeJsApi.containerTypeCodes.file ||
           result.entryType === SafeJsApi.containerTypeCodes.fakeContainer ||
           result.entryType === SafeJsApi.containerTypeCodes.nfsContainer ||
@@ -275,6 +301,7 @@ class VfsCacheMap {
     } catch (e) {
       debug(e)
     }
+    return fuseResult
   }
 }
 
