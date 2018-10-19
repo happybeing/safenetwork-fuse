@@ -9,7 +9,7 @@ module.exports = (safeVfs) => {
 
         safeVfs.getHandler(itemPath).read(itemPath, fd, buf, len, pos).then((bytes) => {
           debug('read %s bytes', bytes)
-          debug('data: %s', buf.slice(0, bytes))
+          // debug('data: %s', buf.slice(0, bytes))
           reply(bytes)
         }).catch((e) => { throw e })
       } catch (err) {
