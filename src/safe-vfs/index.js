@@ -314,6 +314,17 @@ class SafeVfs {
     return this._pathMap.get(path.normalize(mountPath))
   }
 
+  isPartOfMountedPath (path) {
+    let result = false
+    this._pathMap.forEach((value, mountPath, pathMap) => {
+      if (mountPath.indexOf(path) === 0) {
+        result = true
+      }
+    })
+
+    return result
+  }
+
   async mountFuse (mountPath, opts) {
     opts = opts || {}
 
@@ -398,12 +409,18 @@ class SafeVfs {
    * Mount SAFE container (Mutable Data)
    *
    * @param  {map} {
-   *    @param  {String} safePath      path starting with a default container
-   *    Examples:
-   *   _publicNames                 mount _publicNames container
-   *   _publicNames/happybeing      mount services container for 'happybeing'
-   *   _publicNames/www.happybeing  mount www container (NFS for service at www.happybeing)
-   *   _publicNames/thing.happybeing mount the services container (NFS, mail etc at thing.happybeing
+   *    @param  {String} safePath path describing a default SAFE container (e.g. '/_public', '/_publicNames' etc))
+   *        Examples:
+   *      _publicNames                 mount _publicNames container
+   *      _publicNames/happybeing      mount services container for 'happybeing'
+   *      _publicNames/www.happybeing  mount www container (NFS for service at www.happybeing)
+   *      _publicNames/thing.happybeing mount the services container (NFS, mail etc at thing.happybeing
+   *   @param {String}  safeUri if no safePath, safeUri is the full or partial safe uri in the form [safe://][serviceName.]publicName
+   *        Examples for safeUri:
+   *      safe://blog.happybeing
+   *      safe://happbeing/documents
+   *      email.happybeing
+   *      happybeing
    *    @param {String}   mountPath (optional) subpath of the mount point
    *    @param  {String}  lazyInitialise (optional) if false, any API init occurs immediately
    *    @param  {String}  ContainerHandler (optional) handler class for the container type
@@ -414,7 +431,11 @@ class SafeVfs {
   async mountContainer (params) {
     params.lazyInitialise = params.lazyInitialise || false // Default values
     if (!params.mountPath) {
-      params.mountPath = params.safePath
+      if (params.safePath) {
+        params.mountPath = params.safePath
+      } else if (params.safeUri) {
+        params.mountPath = this._makeMountPathFromUri(params.safeUri)
+      }
     }
 
     let handler
@@ -427,24 +448,39 @@ class SafeVfs {
       if (params.safePath === '/' || this.safeJs().defaultContainerNames.indexOf(params.safePath) !== -1) {
         DefaultHandlerClass = RootHandler
       } else {
-        DefaultHandlerClass = NfsHandler
+        DefaultHandlerClass = RootHandler  // Cater for different handlers?
       }
 
       let fullMountPath = params.mountPath
-      if (fullMountPath[0] !== path.sep) {
-        fullMountPath = path.sep + fullMountPath
+      if (fullMountPath[0] !== '/') {
+        fullMountPath = '/' + fullMountPath
       }
 
       if (!params.ContainerHandlerClass) {
         params.ContainerHandlerClass = DefaultHandlerClass
       }
 
-      handler = new params.ContainerHandlerClass(this, params.safePath, fullMountPath, params.lazyInitialise)
+      handler = new params.ContainerHandlerClass(this, { safePath: params.safePath, safeUri: params.safeUri }, fullMountPath, params.lazyInitialise)
       this.pathMapSet(fullMountPath, handler)
       return handler
     } catch (err) {
       throw err
     }
+  }
+
+  _makeMountPathFromUri (uri) {
+    let serviceName
+    let publicName
+    let host = this._safeJs.safeUtils.hostpart(uri)
+    if (host.indexOf('.') === -1) {
+      publicName = host
+    } else {
+      serviceName = host.split('.')[0]
+      publicName = host.split('.')[1]
+    }
+
+    let basePath = '_webMounts/'
+    return '/' + basePath + (serviceName ? serviceName + '.' : '') + publicName
   }
 }
 

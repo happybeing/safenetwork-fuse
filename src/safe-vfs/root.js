@@ -34,38 +34,47 @@ class RootHandler {
  *
  * Constructor
  * @param {SafeVfs} safeVfs       the VFS object
- * @param {String} safePath       mounted path (either '/' or one of '_publicNames', '_public' etc)
+ * @param {Object}  containerRef { safePath: | safeUri: }
+ *                                  safePath: mounted path (either '/' or one of '_publicNames', '_public' etc)
+ *                                  safeUri: full or partial safe uri, [safe://][serviceName.]publicName
+ *                                  Examples for safeUri:
+ *                                    safe://blog.happybeing
+ *                                    safe://happbeing/documents
+ *                                    email.happybeing
+ *                                    happybeing
+ *
  * @param {String} mountPath      where safePath appears relative to filesystem mount point
+ *                                [optional] for containerRef.safeUri. If omitted, will be derived from the URI
  * @param {Boolean} lazyInitialise don't create SafenetworkJs container (no effect for a safePath of '/')
  */
-  constructor (safeVfs, safePath, mountPath, lazyInitialise) {
+  constructor (safeVfs, containerRef, mountPath, lazyInitialise) {
     this._safeVfs = safeVfs
-    this._safePath = safePath
+    this._containerRef = containerRef
     this._mountPath = mountPath
     this._lazyInitialise = lazyInitialise
 
     if (!lazyInitialise) {
-      this._container = this.initRootContainer(safePath)
+      this._container = this.initContainer(containerRef)
     }
   }
 
 /* TODO delete
-    for (var i = 0, size = rootContainerNames.length; i < size ; i++){
-      let name = rootContainerNames[i]
-      mountRootContainer(path.join(mountPath, name), name)
+    for (var i = 0, size = defaultContainerNames.length; i < size ; i++){
+      let name = defaultContainerNames[i]
+      mountSafeContainer(path.join(mountPath, name), name)
     }
  */
 
  /**
-  * Creates a RootHandler for a root container and inserts it into mountPath
+  * Creates a RootHandler for a SAFE container and inserts it into mountPath
   * @param  {String} mountPath         where to mount
-  * @param  {String} rootContainerName safe root container name (e.g. _public)
+  * @param  {String} defaultContainerName safe root container name (e.g. _public)
   * @param  {String} lazyInitialise    (optional) if true, new handler won't create the safeJs container
   * @return {RootHandler}              the newly created handler
   */
-  mountRootContainer (mountPath, rootContainerName, lazyInitialise) {
+  mountSafeContainer (mountPath, defaultContainerName, lazyInitialise) {
     if (!lazyInitialise) lazyInitialise = false
-    return this._safeVfs.mountContainer(rootContainerName, {'mountPath': mountPath, 'lazyInitialise': lazyInitialise})
+    return this._safeVfs.mountContainer({'mountPath': mountPath, 'safePath': defaultContainerName, 'lazyInitialise': lazyInitialise})
   }
 
   /**
@@ -76,11 +85,8 @@ class RootHandler {
    * @param  {string} itemPath mounted path
    * @return {VfsHandler}      handler for itemPath (can be this)
    */
-// BUG here or in getHandler() need to catch attempts to handle item in
-// the root '/' which are not mountable or in the pathMap. So we dont
-// pass them on to root handler. It should only be called for '/'
   getHandlerFor (itemPath) {
-    debug('getHandlerFor(%s) - safePath: %s, mountPath: %s', itemPath, this._safePath, this._mountPath)
+    debug('getHandlerFor(%s) - containerRef: %o, mountPath: %s', itemPath, this._containerRef, this._mountPath)
     try {
       if (this._mountPath === itemPath) {
         return this // The handler for itemPath
@@ -91,7 +97,12 @@ class RootHandler {
         return this // The handler for itemPath's container
       }
 
-      if (this._mountPath !== '/') {
+      if (this._mountPath === '/') {
+        // Handler for '/' also handles all subpaths of a mounted path
+        if (this._safeVfs.isPartOfMountedPath(itemPath)) {
+          return this
+        }
+      } else {
         // If this RootHandler is not for '/' we will only get here if
         // there is no entry in the pathMap that's a better match than
         // us. We will have a root container, so assume it is for us
@@ -100,23 +111,48 @@ class RootHandler {
       }
 
       // This is the RootHandler for '/', so getHandlerFor() will only called
-      // if there is no pathMap entry mathcing the start of itemPath. When this
+      // if there is no pathMap entry matching the start of itemPath. When this
       // happens it attempts to mount the SAFE container which corresponds
       // to the itemPath.
-      let itemRoot = path.sep + itemPath.split(path.sep)[0]
-      if (!this._safeVfs.safeJs().rootContainerNames.indexOf(itemRoot) === -1) {
+
+      // First automounts for safe URIs which are expressed as paths
+      // starting with /_webMounts with subdirectories for the publicName
+      // followed by the serviceName
+      // So the path  /_webMounts/happybeing/www is safe://happybeing or safe://www.happybeing
+      // etc. This makes it easy to mount arbitrary public websites by
+      // and the path /_webMounts/maidsafe/blog is safe://blog.maidsafe
+      // just lising them with ls. Such as 'ls ~/SAFE/_webMounts/maidsafe/blog'
+      if (itemPath.indexOf('/_webMounts') === 0) {
+        let host = itemPath.split('/')[2]
+        let prefix = host.split('.')[0]
+        let remainder = host.split('.')[1]
+        let safeUri = 'safe://' + (prefix !== '' ? prefix + '.' + remainder : prefix)
+
+        let handler = new RootHandler(this._safeVfs, { 'safeUri': safeUri }, itemPath, false)
+        if (handler.getContainer(itemPath)) {
+          this._safeVfs.pathMapSet(itemPath, handler)
+          return handler
+        } else {
+          throw new Error('failed to create VFS handler for path: ' + itemPath)
+        }
+      }
+
+      // Finally paths which start with the name of a default container
+      let itemRoot = itemPath.split('/')[1]
+      if (this._safeVfs.safeJs().defaultContainerNames.indexOf(itemRoot) === -1) {
         throw new Error('no suitable VFS root handler class for path: ' + itemPath)
       }
 
-      let handler = new RootHandler(this._safeVfs, itemRoot, itemRoot, false)
+      let handler = new RootHandler(this._safeVfs, { safePath: itemRoot }, itemRoot, false)
       if (handler) {
         this._safeVfs.pathMapSet(itemRoot, handler)
+        return handler
       } else {
         throw new Error('failed to create VFS handler for path: ' + itemPath)
       }
     } catch (err) {
       debug('RootHandler ERROR: ' + err.message)
-      debug('{ safePath: %s, mountPath: %s %s}', this._safePath, this._mountPath, (this._container ? ', ' + this._container._name : ''))
+      debug('{ containerRef: %o, mountPath: %s %s}', this._containerRef, this._mountPath, (this._container && this._container._name ? ', ' + this._container._name : ''))
       throw err
     }
   }
@@ -137,60 +173,70 @@ class RootHandler {
    * @param  {String} itemPath the mountPath of the FUSE item
    * @return {[type]}          a SafenetworkJs container
    */
-  getContainer (itemPath) {
-    let rootContainerName = '/' + itemPath.split('/')[1]
-    if (this._container) {
+  async getContainer (itemPath) {
+    let defaultContainerName = '/' + itemPath.split('/')[1]
+    if (await this._container) {
       // Root containers hold items which all start with '/'
-      if (itemPath.indexOf(rootContainerName) !== 0) {
+      if (itemPath.indexOf(defaultContainerName) !== 0) {
+        let e = new Error('file does not exist')
+        debug(e)
         throw e
       }
       return this._container
     }
 
-    // This handler's container is not mounted yet so attempt to mount it
-    if (this._mountPath !== '/') {
-      // This RootHandler is for a SAFE root container
-      if (this._lazyInitialise) {
-        // Make it on demand (lazy)
-        return this.initContainer(rootContainerName)
-      } else {
-        // Either itemPath should not be handled here (so a bug elsewhere)
-        // or perhaps the constructor has not finished creating containers
-        throw new Error('getContainer() - no container object ready for ' + itemPath)
-      }
-    } else {
-      throw new Error('WOOPS why is this being called. TODO I don\'t think this code is needed')
-      // The RootHandler for '/' will auto mount a SAFE root container
+    // Wasn't mounted by the constructor, so we do it on demand
+    if (this._lazyInitialise && this._mountPath !== '/') {
+      return this.initContainer(this._containerRef)
+    }
+
+    // Allow automount based on itemPath that matches a default
+    // container (e.g. _public, _documents etc)
+    if (!this._safeVfs.safeJs().defaultContainerNames.indexOf(defaultContainerName) === -1) {
+      // The RootHandler for '/' will auto mount a default SAFE container
       // If we get here, the container of the item is not mounted yet
-      let mountPath = rootContainerName
-      this.mountRootContainer(mountPath, rootContainerName).then((handler) => {
+      let mountPath = defaultContainerName
+      this.mountSafeContainer(mountPath, defaultContainerName).then((handler) => {
         if (handler) {
           return handler.getContainer(itemPath)
         }
       })
     }
 
-    throw new Error('getContainer() failed for path: ' + itemPath)
+    debug('WARNING getContainer() failed for path: ' + itemPath)
   }
 
-  /**
-   * Initialise this RootHandler with a standard SAFE root container
+   /**
+   * Initialise this RootHandler with a SAFE container (or a RootContainer for '/')
    *
-   * @param  {String} rootContainerName a root container name (e.g. _public, _publicNames etc)
+   * @param {Object}  containerRef { safePath: | safeUri: }
+   *                                  safePath: mounted path (either '/' or one of '_publicNames', '_public' etc)
+   *                                  safeUri: full or partial safe uri, [safe://][serviceName.]publicName
+   *                                  Examples for safeUri:
+   *                                    safe://blog.happybeing
+   *                                    safe://happbeing/documents
+   *                                    email.happybeing
+   *                                    happybeing
    * @return {Object}                   a SafenetworkJs container (or VFS RootContainer for '/')
    */
-  initRootContainer (rootContainerName) {
-    if (this._mountPath === '/') {
-      this._container = new RootContainer(this)
-      return this._container
-    }
+  async initContainer (containerRef) {
+    try {
+      if (this._mountPath === '/') {
+        this._container = new RootContainer(this)
+        return this._container
+      }
 
-    this._safeVfs.safeJs().getSafeContainer(rootContainerName).then((container) => {
+      let container = await this._safeVfs.safeJs().getSafeContainer(containerRef)
       if (container) {
         this._container = container
+        if (this._mountPath === undefined && containerRef.safeUri) {
+          this._mountPath = this._safeVfs._makeMountPathFromUri(containerRef.safeUri)
+        }
         return container
       }
-    })
+    } catch (e) { debug(e) }
+
+    debug('RootHandler.initContainer(%o) failed to create SAFE container', containerRef)
   }
 
   // FUSE Helpers:
@@ -222,15 +268,15 @@ class RootHandler {
 
   // Fuse operations:
   async readdir (itemPath) {
-    debug('RootHandler for %s mounted at %s readdir(\'%s\')', this._safePath, this._mountPath, itemPath)
+    debug('RootHandler for %o mounted at %s readdir(\'%s\')', this._containerRef, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
-    return this.getContainer(itemPath).listFolder(containerItem).catch((e) => { debug(e); throw e })
+    return (await this.getContainer(itemPath)).listFolder(containerItem).catch((e) => { debug(e); throw e })
   }
 
   async mkdir (itemPath) { debug('TODO mkdir(' + itemPath + ') not implemented'); return {} }
 
   async statfs (itemPath) {
-    debug('RootHandler for %s mounted at %s statfs(\'%s\')', this._safePath, this._mountPath, itemPath)
+    debug('RootHandler for %o mounted at %s statfs(\'%s\')', this._containerRef, this._mountPath, itemPath)
 
     // FUSE statfs expects Uint32Values as follows:
     //
@@ -251,69 +297,69 @@ class RootHandler {
   }
 
   async getattr (itemPath) {
-    debug('RootHandler for %s mounted at %s getattr(\'%s\')', this._safePath, this._mountPath, itemPath)
+    debug('RootHandler for %o mounted at %s getattr(\'%s\')', this._containerRef, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
     return this.getContainer(itemPath).itemAttributes(containerItem).catch((e) => { debug(e); throw e })
   }
 
   async fgetattr (itemPath, fd) {
-    debug('RootHandler for %s mounted at %s fgetattr(\'%s\', %s)', this._safePath, this._mountPath, itemPath, fd)
+    debug('RootHandler for %o mounted at %s fgetattr(\'%s\', %s)', this._containerRef, this._mountPath, itemPath, fd)
     let containerItem = this.pruneMountPath(itemPath)
     return this.getContainer(itemPath).itemAttributes(containerItem, fd).catch((e) => { debug(e); throw e })
   }
 
   async open (itemPath, flags) {
-    debug('RootHandler for %s mounted at %s open(\'%s\')', this._safePath, this._mountPath, itemPath)
+    debug('RootHandler for %o mounted at %s open(\'%s\')', this._containerRef, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
     let nfsFlags = this.fuseToNfsFlags(flags)
     return this.getContainer(itemPath).openFile(containerItem, nfsFlags).catch((e) => { debug(e); throw e })
   }
 
   async close (itemPath, fd) {
-    debug('RootHandler for %s mounted at %s close(\'%s\')', this._safePath, this._mountPath, itemPath)
+    debug('RootHandler for %o mounted at %s close(\'%s\')', this._containerRef, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
     return this.getContainer(itemPath).closeFile(containerItem, fd).catch((e) => { debug(e); throw e })
   }
 
   async ftruncate (itemPath, fd, size) {
-    debug('RootHandler for %s mounted at %s ftruncate(\'%s\', %s, %s)', this._safePath, this._mountPath, itemPath, fd, size)
+    debug('RootHandler for %o mounted at %s ftruncate(\'%s\', %s, %s)', this._containerRef, this._mountPath, itemPath, fd, size)
     let containerItem = this.pruneMountPath(itemPath)
     return this.getContainer(itemPath)._truncateFile(containerItem, fd, size).catch((e) => { debug(e); throw e })
   }
 
   async truncate (itemPath, size) {
-    debug('RootHandler for %s mounted at %s truncate(\'%s\', %s)', this._safePath, this._mountPath, itemPath, size)
+    debug('RootHandler for %o mounted at %s truncate(\'%s\', %s)', this._containerRef, this._mountPath, itemPath, size)
     let containerItem = this.pruneMountPath(itemPath)
     return this.getContainer(itemPath)._truncateFile(containerItem, undefined, size).catch((e) => { debug(e); throw e })
   }
 
   async read (itemPath, fd, buf, len, pos) {
-    debug('RootHandler for %s mounted at %s read(\'%s\')', this._safePath, this._mountPath, itemPath)
+    debug('RootHandler for %o mounted at %s read(\'%s\')', this._containerRef, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
     return this.getContainer(itemPath).readFileBuf(containerItem, fd, buf, pos, len).catch((e) => { debug(e); throw e })
   }
 
   async create (itemPath, flags) {
-    debug('RootHandler for %s mounted at %s create(\'%s\')', this._safePath, this._mountPath, itemPath)
+    debug('RootHandler for %o mounted at %s create(\'%s\')', this._containerRef, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
 //    let nfsFlags = this.fuseToNfsFlags(flags)
     return this.getContainer(itemPath).createFile(containerItem).catch((e) => { debug(e); throw e })
   }
 
   async write (itemPath, fd, buf, len, pos) {
-    debug('RootHandler for %s mounted at %s write(\'%s\', %s, buf, %s, %s)', this._safePath, this._mountPath, itemPath, fd, len, pos)
+    debug('RootHandler for %o mounted at %s write(\'%s\', %s, buf, %s, %s)', this._containerRef, this._mountPath, itemPath, fd, len, pos)
     let containerItem = this.pruneMountPath(itemPath)
     return this.getContainer(itemPath).writeFileBuf(containerItem, fd, buf, len).catch((e) => { debug(e); throw e })
   }
 
   async unlink (itemPath) {
-    debug('RootHandler for %s mounted at %s unlink(\'%s\')', this._safePath, this._mountPath, itemPath)
+    debug('RootHandler for %o mounted at %s unlink(\'%s\')', this._containerRef, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
     return this.getContainer(itemPath).deleteFile(containerItem).catch((e) => { debug(e); throw e })
   }
 
   async rename (itemPath, newPath) {
-    debug('RootHandler for %s mounted at %s rename(\'%s\', \'%s\')', this._safePath, this._mountPath, itemPath, newPath)
+    debug('RootHandler for %o mounted at %s rename(\'%s\', \'%s\')', this._containerRef, this._mountPath, itemPath, newPath)
     let containerItem = this.pruneMountPath(itemPath)
     let newContainerItem = this.pruneMountPath(newPath)
     return this.getContainer(itemPath).renameFile(containerItem, newContainerItem, newPath).catch((e) => { debug(e); throw e })
@@ -326,11 +372,18 @@ class RootHandler {
 }
 
 /**
- * A special container for the root ('/') which mimics SafeContainer
+ * A container to mount SafeContainer containers - mimics SafeContainer
  *
- * This handler supports operations on '/' as reflected
- * in the VFS Path Map
+ * This handler supports operations on its mount path as reflected
+ * in the VFS Path Map.
  *
+ * A single RootContainer handles the mountPath '/', and any number of
+ * subpaths which are used as mount points for other containers.
+ *
+ * The root container has a list of paths it handles, which always includes
+ * '/', plus any supaths (such as '_webMounts/happybeing/www',
+ * '_webMounts/maidsafe/blog' etc.)
+
  * Although this is a stand-alone class it implements the same FS methods as
  * SafenetworkJs base container class SafeContainer. This means that the FUSE
  * operations of any handler can call the same FS implementation on this
@@ -350,15 +403,30 @@ class RootContainer {
   // Fuse operations:
   async listFolder (itemPath) {
     debug('RootContainer listFolder(' + itemPath + ')')
-    if (itemPath !== '') throw new Error('RootContainer - item not found: ' + itemPath)
 
+    let isInMap = false
     let listing = []
-    this.vfs.pathMap().forEach((value, key, pathMap) => {
-      key = key.substring(key.split(path.sep)[0].length + 1)
-      if (key.length) {
-        listing.push(key)
-      }
-    })
+    if (itemPath === '') {
+      isInMap = true
+      this.vfs.pathMap().forEach((value, mountPath, pathMap) => {
+        mountPath = mountPath.split('/')[1]
+        if (mountPath.length && listing.indexOf(mountPath) === -1) {
+          listing.push(mountPath)
+        }
+      })
+    } else {
+      this.vfs.pathMap().forEach((value, mountPath, pathMap) => {
+        if (mountPath.indexOf(itemPath) === 1) {
+          isInMap = true
+          let subPath = mountPath.substring(itemPath.length + 1)
+          let subFolder = subPath.split('/')[1]
+          if (subFolder.length && listing.indexOf(subFolder) === -1) listing.push(subFolder)
+        }
+      })
+    }
+
+    if (!isInMap) throw new Error('RootContainer - item not found: ' + itemPath)
+
     debug('listing: %o', listing)
     return listing
   }
@@ -385,12 +453,8 @@ class RootContainer {
     let fileOperation = 'itemAttributes'
 
     let result
-    if (itemPath !== '') {
-      debug('RootContainer - item not found: ' + itemPath)
-      result = { entryType: SafeJsApi.containerTypeCodes.notFound }
-    }
 
-    if (!result) {
+    if (itemPath === '' || this.vfs.isPartOfMountedPath('/' + itemPath)) {
       const now = Date.now()
       result = {
         // Default values (for '/') compatible with SafeContainer.itemAttributes()
@@ -403,6 +467,11 @@ class RootContainer {
         'isFile': false,
         entryType: SafeJsApi.containerTypeCodes.defaultContainer
       }
+    }
+
+    if (!result) {
+      debug('RootContainer - item not found: ' + itemPath)
+      result = { entryType: SafeJsApi.containerTypeCodes.notFound }
     }
 
     return this._updateResultForPath(itemPath, fileOperation, result, SafeJsApi.isCacheableResult(result.entryType))
