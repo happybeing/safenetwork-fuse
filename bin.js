@@ -14,9 +14,7 @@ const argv = yargs
   .help()
   .argv
 
-const mountPath = process.platform !== 'win32'
-  ? path.join(Os.homedir(), 'SAFE')
-  : 'I:\\'
+const mountPath = path.join(Os.homedir(), 'SAFE')
 
 // TODO: parameterise these? or separate out?
 let appConfig = {
@@ -67,7 +65,17 @@ try {
       // safeVfs.mountContainer({safePath: '_music'}),
       // safeVfs.mountContainer({safePath: '_pictures'}),
       // safeVfs.mountContainer({safePath: '_videos'}),
-      safeVfs.mountContainer({safePath: '_publicNames'})
+
+      // safeVfs.mountContainer({safePath: '_publicNames'}),
+      safeVfs.mountContainer({safePath: '_webMounts'}),
+      // safeVfs.mountContainer({safeUri: 'safe://cat.ashi'}),
+      // safeVfs.mountContainer({safeUri: 'safe://home.dgeddes'}),
+      // safeVfs.mountContainer({safeUri: 'safe://eye.eye'}),
+      // safeVfs.mountContainer({safeUri: 'safe://heaven'}),
+      // safeVfs.mountContainer({safeUri: 'safe://hello'}),
+      // safeVfs.mountContainer({safeUri: 'safe://jams.demo'}),
+      // safeVfs.mountContainer({safeUri: 'safe://jams.jammed'}),
+      // safeVfs.mountContainer({safeUri: 'safe://myfd.rsports'})
     ]))
     .then(_ => {
       debug(`Mounted SAFE filesystem on ${mountPath}`)
