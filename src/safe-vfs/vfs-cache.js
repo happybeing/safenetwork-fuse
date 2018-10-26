@@ -273,6 +273,7 @@ class VfsCacheMap {
           result.entryType === SafeJsApi.containerTypeCodes.fakeContainer ||
           result.entryType === SafeJsApi.containerTypeCodes.nfsContainer ||
           result.entryType === SafeJsApi.containerTypeCodes.servicesContainer ||
+          result.entryType === SafeJsApi.containerTypeCodes.service ||
           result.entryType === SafeJsApi.containerTypeCodes.defaultContainer ||
           result.entryType === 'virtualDirectory') {
         debug('getattr(\'%s\') result type: %s', itemPath, result.entryType)
