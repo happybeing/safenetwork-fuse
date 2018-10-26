@@ -92,9 +92,19 @@ class RootHandler {
         return this // The handler for itemPath
       }
 
+      // If this is the handler for '/' it can automount some folders
       let directory = path.dirname(itemPath)
-      if (directory === this._mountPath) {
-        return this // The handler for itemPath's container
+      if (this._mountPath === '/' && directory === '/') {
+        // If a defaultContainer, try to automount it:
+        let itemRoot = itemPath.split('/')[1]
+        if (this._safeVfs.safeJs().defaultContainerNames.indexOf(itemRoot) !== -1) {
+          let handler = this._safeVfs.mountContainer({safePath: itemRoot})
+          // let handler = new RootHandler(this._safeVfs, { safePath: itemRoot }, itemRoot, false)
+          // this._safeVfs.pathMapSet(itemRoot, handler)
+          return handler
+        }
+
+        return this // Default
       }
 
       if (this._mountPath === '/') {
@@ -135,20 +145,6 @@ class RootHandler {
         } else {
           throw new Error('failed to create VFS handler for path: ' + itemPath)
         }
-      }
-
-      // Finally paths which start with the name of a default container
-      let itemRoot = itemPath.split('/')[1]
-      if (this._safeVfs.safeJs().defaultContainerNames.indexOf(itemRoot) === -1) {
-        throw new Error('no suitable VFS root handler class for path: ' + itemPath)
-      }
-
-      let handler = new RootHandler(this._safeVfs, { safePath: itemRoot }, itemRoot, false)
-      if (handler) {
-        this._safeVfs.pathMapSet(itemRoot, handler)
-        return handler
-      } else {
-        throw new Error('failed to create VFS handler for path: ' + itemPath)
       }
     } catch (err) {
       debug('RootHandler ERROR: ' + err.message)
