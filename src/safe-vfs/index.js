@@ -314,6 +314,10 @@ class SafeVfs {
     return this._pathMap.get(path.normalize(mountPath))
   }
 
+  pathMapDelete (mountPath) {
+    this._pathMap.delete(path.normalize(mountPath))
+  }
+
   isPartOfMountedPath (path) {
     let result = false
     this._pathMap.forEach((value, mountPath, pathMap) => {
@@ -461,11 +465,20 @@ class SafeVfs {
       }
 
       handler = new params.ContainerHandlerClass(this, { safePath: params.safePath, safeUri: params.safeUri }, fullMountPath, params.lazyInitialise)
-      this.pathMapSet(fullMountPath, handler)
-      return handler
+      if (params.lazyInitialise || await handler._container !== undefined) {
+        this.pathMapSet(fullMountPath, handler)
+        return handler
+      } else {
+        throw new Error('mount rejected: failed to initialise container')
+      }
     } catch (err) {
-      throw err
+      debug(err)
+      return undefined
     }
+  }
+
+  unmountPath (mountPath) {
+    this.pathMapDelete(mountPath)
   }
 
   _makeMountPathFromUri (uri) {

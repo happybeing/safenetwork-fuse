@@ -180,34 +180,39 @@ class RootHandler {
    * @return {[type]}          a SafenetworkJs container
    */
   async getContainer (itemPath) {
-    let defaultContainerName = '/' + itemPath.split('/')[1]
-    if (await this._container) {
-      // Root containers hold items which all start with '/'
-      if (itemPath.indexOf(defaultContainerName) !== 0) {
-        let e = new Error('file does not exist')
-        debug(e)
-        throw e
-      }
-      return this._container
-    }
-
-    // Wasn't mounted by the constructor, so we do it on demand
-    if (this._lazyInitialise && this._mountPath !== '/') {
-      return this.initContainer(this._containerRef)
-    }
-
-    // Allow automount based on itemPath that matches a default
-    // container (e.g. _public, _documents etc)
-    if (!this._safeVfs.safeJs().defaultContainerNames.indexOf(defaultContainerName) === -1) {
-      // The RootHandler for '/' will auto mount a default SAFE container
-      // If we get here, the container of the item is not mounted yet
-      let mountPath = defaultContainerName
-      this.mountSafeContainer(mountPath, defaultContainerName).then((handler) => {
-        if (handler) {
-          return handler.getContainer(itemPath)
+    try {
+      let defaultContainerName = '/' + itemPath.split('/')[1]
+      if (await this._container) {
+        // Root containers hold items which all start with '/'
+        if (itemPath.indexOf(defaultContainerName) !== 0) {
+          let e = new Error('file does not exist')
+          debug(e)
+          throw e
         }
-      })
-    }
+        return this._container
+      }
+
+      // Wasn't mounted by the constructor, so we do it on demand
+      if (this._lazyInitialise && this._mountPath !== '/') {
+        return this.initContainer(this._containerRef)
+      }
+
+      // Allow automount based on itemPath that matches a default
+      // container (e.g. _public, _documents etc)
+      if (!this._safeVfs.safeJs().defaultContainerNames.indexOf(defaultContainerName) === -1) {
+        // The RootHandler for '/' will auto mount a default SAFE container
+        // If we get here, the container of the item is not mounted yet
+        let mountPath = defaultContainerName
+        this.mountSafeContainer(mountPath, defaultContainerName).then((handler) => {
+          if (handler) {
+            return handler.getContainer(itemPath)
+          }
+        })
+      }
+
+      // Failed to get container, so purge mounts (ensures failed automount doesn't hang around)
+      this._safeVfs.unmountPath(itemPath)
+    } catch (e) { debug(e) }
 
     debug('WARNING getContainer() failed for path: ' + itemPath)
   }
@@ -276,7 +281,7 @@ class RootHandler {
   async readdir (itemPath) {
     debug('RootHandler for %o mounted at %s readdir(\'%s\')', this._containerRef, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
-    return (await this.getContainer(itemPath)).listFolder(containerItem).catch((e) => { debug(e); throw e })
+    return (await this.getContainer(itemPath)).listFolder(containerItem).catch((e) => { debug(e) })
   }
 
   async mkdir (itemPath) { debug('TODO mkdir(' + itemPath + ') not implemented'); return {} }
@@ -305,70 +310,70 @@ class RootHandler {
   async getattr (itemPath) {
     debug('RootHandler for %o mounted at %s getattr(\'%s\')', this._containerRef, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
-    return this.getContainer(itemPath).itemAttributes(containerItem).catch((e) => { debug(e); throw e })
+    return this.getContainer(itemPath).itemAttributes(containerItem).catch((e) => { debug(e) })
   }
 
   async fgetattr (itemPath, fd) {
     debug('RootHandler for %o mounted at %s fgetattr(\'%s\', %s)', this._containerRef, this._mountPath, itemPath, fd)
     let containerItem = this.pruneMountPath(itemPath)
-    return this.getContainer(itemPath).itemAttributes(containerItem, fd).catch((e) => { debug(e); throw e })
+    return this.getContainer(itemPath).itemAttributes(containerItem, fd).catch((e) => { debug(e) })
   }
 
   async open (itemPath, flags) {
     debug('RootHandler for %o mounted at %s open(\'%s\')', this._containerRef, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
     let nfsFlags = this.fuseToNfsFlags(flags)
-    return this.getContainer(itemPath).openFile(containerItem, nfsFlags).catch((e) => { debug(e); throw e })
+    return this.getContainer(itemPath).openFile(containerItem, nfsFlags).catch((e) => { debug(e) })
   }
 
   async close (itemPath, fd) {
     debug('RootHandler for %o mounted at %s close(\'%s\')', this._containerRef, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
-    return this.getContainer(itemPath).closeFile(containerItem, fd).catch((e) => { debug(e); throw e })
+    return this.getContainer(itemPath).closeFile(containerItem, fd).catch((e) => { debug(e) })
   }
 
   async ftruncate (itemPath, fd, size) {
     debug('RootHandler for %o mounted at %s ftruncate(\'%s\', %s, %s)', this._containerRef, this._mountPath, itemPath, fd, size)
     let containerItem = this.pruneMountPath(itemPath)
-    return this.getContainer(itemPath)._truncateFile(containerItem, fd, size).catch((e) => { debug(e); throw e })
+    return this.getContainer(itemPath)._truncateFile(containerItem, fd, size).catch((e) => { debug(e) })
   }
 
   async truncate (itemPath, size) {
     debug('RootHandler for %o mounted at %s truncate(\'%s\', %s)', this._containerRef, this._mountPath, itemPath, size)
     let containerItem = this.pruneMountPath(itemPath)
-    return this.getContainer(itemPath)._truncateFile(containerItem, undefined, size).catch((e) => { debug(e); throw e })
+    return this.getContainer(itemPath)._truncateFile(containerItem, undefined, size).catch((e) => { debug(e) })
   }
 
   async read (itemPath, fd, buf, len, pos) {
     debug('RootHandler for %o mounted at %s read(\'%s\')', this._containerRef, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
-    return this.getContainer(itemPath).readFileBuf(containerItem, fd, buf, pos, len).catch((e) => { debug(e); throw e })
+    return this.getContainer(itemPath).readFileBuf(containerItem, fd, buf, pos, len).catch((e) => { debug(e) })
   }
 
   async create (itemPath, flags) {
     debug('RootHandler for %o mounted at %s create(\'%s\')', this._containerRef, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
 //    let nfsFlags = this.fuseToNfsFlags(flags)
-    return this.getContainer(itemPath).createFile(containerItem).catch((e) => { debug(e); throw e })
+    return this.getContainer(itemPath).createFile(containerItem).catch((e) => { debug(e) })
   }
 
   async write (itemPath, fd, buf, len, pos) {
     debug('RootHandler for %o mounted at %s write(\'%s\', %s, buf, %s, %s)', this._containerRef, this._mountPath, itemPath, fd, len, pos)
     let containerItem = this.pruneMountPath(itemPath)
-    return this.getContainer(itemPath).writeFileBuf(containerItem, fd, buf, len).catch((e) => { debug(e); throw e })
+    return this.getContainer(itemPath).writeFileBuf(containerItem, fd, buf, len).catch((e) => { debug(e) })
   }
 
   async unlink (itemPath) {
-    debug('RootHandler for %o mounted at %s unlink(\'%s\')', this._containerRef, this._mountPath, itemPath)
+      debug('RootHandler for %o mounted at %s unlink(\'%s\')', this._containerRef, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
-    return this.getContainer(itemPath).deleteFile(containerItem).catch((e) => { debug(e); throw e })
+    return this.getContainer(itemPath).deleteFile(containerItem).catch((e) => { debug(e) })
   }
 
   async rename (itemPath, newPath) {
     debug('RootHandler for %o mounted at %s rename(\'%s\', \'%s\')', this._containerRef, this._mountPath, itemPath, newPath)
     let containerItem = this.pruneMountPath(itemPath)
     let newContainerItem = this.pruneMountPath(newPath)
-    return this.getContainer(itemPath).renameFile(containerItem, newContainerItem, newPath).catch((e) => { debug(e); throw e })
+    return this.getContainer(itemPath).renameFile(containerItem, newContainerItem, newPath).catch((e) => { debug(e) })
   }
 
   async rmdir (itemPath) { debug('TODO rmdir(' + itemPath + ') not implemented'); return {} }
@@ -409,29 +414,30 @@ class RootContainer {
   // Fuse operations:
   async listFolder (itemPath) {
     debug('RootContainer listFolder(' + itemPath + ')')
-
-    let isInMap = false
     let listing = []
-    if (itemPath === '') {
-      isInMap = true
-      this.vfs.pathMap().forEach((value, mountPath, pathMap) => {
-        mountPath = mountPath.split('/')[1]
-        if (mountPath.length && listing.indexOf(mountPath) === -1) {
-          listing.push(mountPath)
-        }
-      })
-    } else {
-      this.vfs.pathMap().forEach((value, mountPath, pathMap) => {
-        if (mountPath.indexOf(itemPath) === 1) {
-          isInMap = true
-          let subPath = mountPath.substring(itemPath.length + 1)
-          let subFolder = subPath.split('/')[1]
-          if (subFolder.length && listing.indexOf(subFolder) === -1) listing.push(subFolder)
-        }
-      })
-    }
+    try {
+      let isInMap = false
+      if (itemPath === '') {
+        isInMap = true
+        this.vfs.pathMap().forEach((value, mountPath, pathMap) => {
+          mountPath = mountPath.split('/')[1]
+          if (mountPath.length && listing.indexOf(mountPath) === -1) {
+            listing.push(mountPath)
+          }
+        })
+      } else {
+        this.vfs.pathMap().forEach((value, mountPath, pathMap) => {
+          if (mountPath.indexOf(itemPath) === 1) {
+            isInMap = true
+            let subPath = mountPath.substring(itemPath.length + 1)
+            let subFolder = subPath.split('/')[1]
+            if (subFolder.length && listing.indexOf(subFolder) === -1) listing.push(subFolder)
+          }
+        })
+      }
 
-    if (!isInMap) throw new Error('RootContainer - item not found: ' + itemPath)
+      if (!isInMap) throw new Error('RootContainer - item not found: ' + itemPath)
+    } catch (e) { debug(e) }
 
     debug('listing: %o', listing)
     return listing
@@ -456,33 +462,35 @@ class RootContainer {
 
   async itemAttributesResultRef (itemPath, fd) {
     debug('%s.itemAttributesResultRef(\'%s\', %s)', this.constructor.name, itemPath, fd)
-    let fileOperation = 'itemAttributes'
+    try {
+      let fileOperation = 'itemAttributes'
 
-    let result
+      let result
 
-    if (itemPath === '' ||
-        this.vfs.isPartOfMountedPath('/' + itemPath) ||
-        itemPath.indexOf(WEB_MOUNTS_NAME === 0)) {  // Always pass '_webMounts' even if not mounted!
-      const now = Date.now()
-      result = {
-        // Default values (for '/') compatible with SafeContainer.itemAttributes()
-        // TODO improve this if SAFE accounts ever have suitable values for size etc:
-        modified: now,
-        accessed: now,
-        created: now,
-        size: 0,
-        version: -1,
-        'isFile': false,
-        entryType: SafeJsApi.containerTypeCodes.defaultContainer
+      if (itemPath === '' ||
+          this.vfs.isPartOfMountedPath('/' + itemPath) ||
+          itemPath.indexOf(WEB_MOUNTS_NAME === 0)) {  // Always pass '_webMounts' even if not mounted!
+        const now = Date.now()
+        result = {
+          // Default values (for '/') compatible with SafeContainer.itemAttributes()
+          // TODO improve this if SAFE accounts ever have suitable values for size etc:
+          modified: now,
+          accessed: now,
+          created: now,
+          size: 0,
+          version: -1,
+          'isFile': false,
+          entryType: SafeJsApi.containerTypeCodes.defaultContainer
+        }
       }
-    }
 
-    if (!result) {
-      debug('RootContainer - item not found: ' + itemPath)
-      result = { entryType: SafeJsApi.containerTypeCodes.notFound }
-    }
+      if (!result) {
+        debug('RootContainer - item not found: ' + itemPath)
+        result = { entryType: SafeJsApi.containerTypeCodes.notFound }
+      }
 
-    return this._updateResultForPath(itemPath, fileOperation, result, SafeJsApi.isCacheableResult(result.entryType))
+      return this._updateResultForPath(itemPath, fileOperation, result, SafeJsApi.isCacheableResult(result.entryType))
+    } catch (e) { debug(e) }
   }
 
   /** File system operation results cache
