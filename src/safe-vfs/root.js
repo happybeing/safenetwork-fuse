@@ -4,6 +4,8 @@ const u = SafeJsApi.safeUtils
 
 const debug = require('debug')('safe-fuse:vfs:root')
 
+const WEB_MOUNTS_NAME = '_webMounts'
+
 /**
  * VFS RootHandler the root ('/') container, and containers mounted at the root
  *
@@ -85,6 +87,12 @@ class RootHandler {
    * @param  {string} itemPath mounted path
    * @return {VfsHandler}      handler for itemPath (can be this)
    */
+
+  // TODO test _webMounts automount
+  //  [/] can automount websites!!! :-)
+  //  [ ] BUG before mounting, ls ~/SAFE/_webMounts FAILS BADLY!
+  //  [ ] feature: SAFE Drive operation without SAFE a/c login
+
   getHandlerFor (itemPath) {
     debug('getHandlerFor(%s) - containerRef: %o, mountPath: %s', itemPath, this._containerRef, this._mountPath)
     try {
@@ -95,15 +103,17 @@ class RootHandler {
       // If this is the handler for '/' it can automount some folders
       let directory = path.dirname(itemPath)
       if (this._mountPath === '/' && directory === '/') {
-        // If a defaultContainer, try to automount it:
+        // If a defaultContainer or the web mount, try to automount it:
         let itemRoot = itemPath.split('/')[1]
-        if (this._safeVfs.safeJs().defaultContainerNames.indexOf(itemRoot) !== -1) {
-          let handler = this._safeVfs.mountContainer({safePath: itemRoot})
-          // let handler = new RootHandler(this._safeVfs, { safePath: itemRoot }, itemRoot, false)
-          // this._safeVfs.pathMapSet(itemRoot, handler)
-          return handler
-        }
 
+        let handler
+        if (this._safeVfs.safeJs().defaultContainerNames.indexOf(itemRoot) !== -1) {
+          handler = this._safeVfs.mountContainer({safePath: itemRoot})
+          // Attempt to automount a SAFE URI
+          let uri = 'safe:/' + itemPath.substring(WEB_MOUNTS_NAME.length + 1)
+          handler = this._safeVfs.mountContainer({safeUri: uri})
+        }
+        if (handler) return handler
         return this // Default
       }
 
@@ -132,7 +142,7 @@ class RootHandler {
       // etc. This makes it easy to mount arbitrary public websites by
       // and the path /_webMounts/maidsafe/blog is safe://blog.maidsafe
       // just lising them with ls. Such as 'ls ~/SAFE/_webMounts/maidsafe/blog'
-      if (itemPath.indexOf('/_webMounts') === 0) {
+      if (itemPath.indexOf('/' + WEB_MOUNTS_NAME) === 0) {
         let host = itemPath.split('/')[2]
         let prefix = host.split('.')[0]
         let remainder = host.split('.')[1]
@@ -217,7 +227,7 @@ class RootHandler {
    */
   async initContainer (containerRef) {
     try {
-      if (this._mountPath === '/') {
+      if (this._mountPath === '/' || this._mountPath === '/' + WEB_MOUNTS_NAME) {
         this._container = new RootContainer(this)
         return this._container
       }
@@ -450,7 +460,9 @@ class RootContainer {
 
     let result
 
-    if (itemPath === '' || this.vfs.isPartOfMountedPath('/' + itemPath)) {
+    if (itemPath === '' ||
+        this.vfs.isPartOfMountedPath('/' + itemPath) ||
+        itemPath.indexOf(WEB_MOUNTS_NAME === 0)) {  // Always pass '_webMounts' even if not mounted!
       const now = Date.now()
       result = {
         // Default values (for '/') compatible with SafeContainer.itemAttributes()
