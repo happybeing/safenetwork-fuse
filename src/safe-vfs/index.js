@@ -433,6 +433,7 @@ class SafeVfs {
    */
 
   async mountContainer (params) {
+    debug('%s.mountContainer(%o)', this.constructor.name, params)
     params.lazyInitialise = params.lazyInitialise || false // Default values
     if (!params.mountPath) {
       if (params.safePath) {

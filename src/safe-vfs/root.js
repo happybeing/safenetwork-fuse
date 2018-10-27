@@ -87,12 +87,6 @@ class RootHandler {
    * @param  {string} itemPath mounted path
    * @return {VfsHandler}      handler for itemPath (can be this)
    */
-
-  // TODO test _webMounts automount
-  //  [/] can automount websites!!! :-)
-  //  [ ] BUG before mounting, ls ~/SAFE/_webMounts FAILS BADLY!
-  //  [ ] feature: SAFE Drive operation without SAFE a/c login
-
   getHandlerFor (itemPath) {
     debug('getHandlerFor(%s) - containerRef: %o, mountPath: %s', itemPath, this._containerRef, this._mountPath)
     try {
@@ -146,7 +140,7 @@ class RootHandler {
         let host = itemPath.split('/')[2]
         let prefix = host.split('.')[0]
         let remainder = host.split('.')[1]
-        let safeUri = 'safe://' + (prefix !== '' ? prefix + '.' + remainder : prefix)
+        let safeUri = 'safe://' + (remainder ? prefix + '.' + remainder : prefix)
 
         let handler = new RootHandler(this._safeVfs, { 'safeUri': safeUri }, itemPath, false)
         if (handler.getContainer(itemPath)) {
