@@ -66,8 +66,8 @@ try {
       // safeVfs.mountContainer({safePath: '_pictures'}),
       // safeVfs.mountContainer({safePath: '_videos'}),
 
-      // safeVfs.mountContainer({safePath: '_publicNames'}),
-      safeVfs.mountContainer({safePath: '_webMounts'}),
+      safeVfs.mountContainer({safePath: '_publicNames'}),
+      // safeVfs.mountContainer({safePath: '_webMounts'}),
       // safeVfs.mountContainer({safeUri: 'safe://cat.ashi'}),
       // safeVfs.mountContainer({safeUri: 'safe://home.dgeddes'}),
       // safeVfs.mountContainer({safeUri: 'safe://eye.eye'}),
