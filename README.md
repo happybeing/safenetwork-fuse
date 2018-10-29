@@ -78,7 +78,7 @@ To install dependencies on Ubuntu / Debian:
 
 On Fedora:
 ```
-    sudo apt-get install fuse fuse-devel xdg-utils
+    sudo dnf install fuse fuse-devel xdg-utils
 ```
 
 On Arch based distros try `fuse2`:
