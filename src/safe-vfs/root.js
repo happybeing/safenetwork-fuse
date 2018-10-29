@@ -304,74 +304,73 @@ class RootHandler {
   async getattr (itemPath) {
     debug('RootHandler for %o mounted at %s getattr(\'%s\')', this._containerRef, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
-    return this.getContainer(itemPath).itemAttributes(containerItem).catch((e) => { debug(e) })
+    return (await this.getContainer(itemPath)).itemAttributes(containerItem).catch((e) => { debug(e) })
   }
 
   async fgetattr (itemPath, fd) {
     debug('RootHandler for %o mounted at %s fgetattr(\'%s\', %s)', this._containerRef, this._mountPath, itemPath, fd)
     let containerItem = this.pruneMountPath(itemPath)
-    return this.getContainer(itemPath).itemAttributes(containerItem, fd).catch((e) => { debug(e) })
+    return (await this.getContainer(itemPath)).itemAttributes(containerItem, fd).catch((e) => { debug(e) })
   }
 
   async open (itemPath, flags) {
     debug('RootHandler for %o mounted at %s open(\'%s\')', this._containerRef, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
     let nfsFlags = this.fuseToNfsFlags(flags)
-    return this.getContainer(itemPath).openFile(containerItem, nfsFlags).catch((e) => { debug(e) })
+    return (await this.getContainer(itemPath)).openFile(containerItem, nfsFlags).catch((e) => { debug(e) })
   }
 
   async close (itemPath, fd) {
     debug('RootHandler for %o mounted at %s close(\'%s\')', this._containerRef, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
-    return this.getContainer(itemPath).closeFile(containerItem, fd).catch((e) => { debug(e) })
+    return (await this.getContainer(itemPath)).closeFile(containerItem, fd).catch((e) => { debug(e) })
   }
 
   async ftruncate (itemPath, fd, size) {
     debug('RootHandler for %o mounted at %s ftruncate(\'%s\', %s, %s)', this._containerRef, this._mountPath, itemPath, fd, size)
     let containerItem = this.pruneMountPath(itemPath)
-    return this.getContainer(itemPath)._truncateFile(containerItem, fd, size).catch((e) => { debug(e) })
+    return (await this.getContainer(itemPath))._truncateFile(containerItem, fd, size).catch((e) => { debug(e) })
   }
 
   async truncate (itemPath, size) {
     debug('RootHandler for %o mounted at %s truncate(\'%s\', %s)', this._containerRef, this._mountPath, itemPath, size)
     let containerItem = this.pruneMountPath(itemPath)
-    return this.getContainer(itemPath)._truncateFile(containerItem, undefined, size).catch((e) => { debug(e) })
+    return (await this.getContainer(itemPath))._truncateFile(containerItem, undefined, size).catch((e) => { debug(e) })
   }
 
   async read (itemPath, fd, buf, len, pos) {
     debug('RootHandler for %o mounted at %s read(\'%s\')', this._containerRef, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
-    return this.getContainer(itemPath).readFileBuf(containerItem, fd, buf, pos, len).catch((e) => { debug(e) })
+    return (await this.getContainer(itemPath)).readFileBuf(containerItem, fd, buf, pos, len).catch((e) => { debug(e) })
   }
 
   async create (itemPath, flags) {
     debug('RootHandler for %o mounted at %s create(\'%s\')', this._containerRef, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
 //    let nfsFlags = this.fuseToNfsFlags(flags)
-    return this.getContainer(itemPath).createFile(containerItem).catch((e) => { debug(e) })
+    return (await this.getContainer(itemPath)).createFile(containerItem).catch((e) => { debug(e) })
   }
 
   async write (itemPath, fd, buf, len, pos) {
     debug('RootHandler for %o mounted at %s write(\'%s\', %s, buf, %s, %s)', this._containerRef, this._mountPath, itemPath, fd, len, pos)
     let containerItem = this.pruneMountPath(itemPath)
-    return this.getContainer(itemPath).writeFileBuf(containerItem, fd, buf, len).catch((e) => { debug(e) })
+    return (await this.getContainer(itemPath)).writeFileBuf(containerItem, fd, buf, len).catch((e) => { debug(e) })
   }
 
   async unlink (itemPath) {
-      debug('RootHandler for %o mounted at %s unlink(\'%s\')', this._containerRef, this._mountPath, itemPath)
+    debug('RootHandler for %o mounted at %s unlink(\'%s\')', this._containerRef, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
-    return this.getContainer(itemPath).deleteFile(containerItem).catch((e) => { debug(e) })
+    return (await this.getContainer(itemPath)).deleteFile(containerItem).catch((e) => { debug(e) })
   }
 
   async rename (itemPath, newPath) {
     debug('RootHandler for %o mounted at %s rename(\'%s\', \'%s\')', this._containerRef, this._mountPath, itemPath, newPath)
     let containerItem = this.pruneMountPath(itemPath)
     let newContainerItem = this.pruneMountPath(newPath)
-    return this.getContainer(itemPath).renameFile(containerItem, newContainerItem, newPath).catch((e) => { debug(e) })
+    return (await this.getContainer(itemPath)).renameFile(containerItem, newContainerItem, newPath).catch((e) => { debug(e) })
   }
 
   async rmdir (itemPath) { debug('TODO rmdir(' + itemPath + ') not implemented'); return {} }
-  async ftruncate (itemPath) { debug('TODO ftruncate(' + itemPath + ') not implemented'); return {} }
   async mknod (itemPath) { debug('TODO mknod(' + itemPath + ') not implemented'); return {} }
   async utimens (itemPath) { debug('TODO utimens(' + itemPath + ') not implemented'); return {} }
 }
