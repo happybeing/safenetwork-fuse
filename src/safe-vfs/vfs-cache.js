@@ -276,7 +276,7 @@ class VfsCacheMap {
           result.entryType === SafeJsApi.containerTypeCodes.service ||
           result.entryType === SafeJsApi.containerTypeCodes.defaultContainer ||
           result.entryType === 'virtualDirectory') {
-        debug('getattr(\'%s\') result type: %s', itemPath, result.entryType)
+        debug('%s._makeGetattrResult(\'%s\') result type: %s', this.constructor.name, itemPath, result.entryType)
         fuseResult.returnCode = 0
         fuseResult.returnObject = {
           mtime: result.modified,
@@ -294,8 +294,9 @@ class VfsCacheMap {
         return fuseResult
       }
       // TODO implement more specific error handling like this on other fuse-ops
-      if (result.entryType === SafeJsApi.containerTypeCodes.notFound) {
-        debug('getattr(\'%s\') result type: %s reply(Fuse.ENOENT)', itemPath, result.entryType)
+      if (result.entryType === SafeJsApi.containerTypeCodes.notFound ||
+          result.entryType === SafeJsApi.containerTypeCodes.deletedEntry) {
+        debug('_makeGetattrResult(\'%s\') result type: %s reply(Fuse.ENOENT)', this.constructor.name, itemPath, result.entryType)
         return fuseResult
       }
       throw new Error('Unhandled result.entryType: ' + result.entryType)
