@@ -225,6 +225,7 @@ class RootHandler {
    * @return {Object}                   a SafenetworkJs container (or VFS RootContainer for '/')
    */
   async initContainer (containerRef) {
+    debug('%s.initContainer(%s) at %s', this.constructor.name, containerRef, this._mountPath)
     try {
       if (this._mountPath === '/' || this._mountPath === '/' + WEB_MOUNTS_NAME) {
         this._container = new RootContainer(this)
