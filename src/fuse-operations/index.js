@@ -106,10 +106,6 @@ module.exports = (safeJs) => Object.assign(
     debug('TODO: implement fuse operation: symlink(%s, %s)', itemPath, dest)
     return reply(0)
   }},
-  { symlink (itemPath, yyy, reply) {
-    debug('TODO: implement fuse operation: xxx(%s)', itemPath)
-    return reply(0)
-  }},
   { destroy (reply) {
     debug('TODO: implement fuse operation: destroy()')
     return reply(0)
