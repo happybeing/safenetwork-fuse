@@ -1,5 +1,4 @@
 const Fuse = require('fuse-bindings')
-const explain = require('explain-error')
 const debug = require('debug')('safe-fuse:ops')
 
 module.exports = (safeVfs) => {
@@ -8,15 +7,14 @@ module.exports = (safeVfs) => {
       try {
         debug('release(\'%s\', %s)', itemPath, fd)
 
-        safeVfs.getHandler(itemPath).close(itemPath, fd).then(() => {
+        safeVfs.getHandler(itemPath).close(itemPath, fd).then((result) => {
           debug('released file descriptor %s', fd)
           // Clear any virtual directories in itemPath path, in case its a new file
           safeVfs.vfsCache().closeVirtual(itemPath)
-          reply(0)
+          reply(result ? 0 : Fuse.EREMOTEIO)
         }).catch((e) => { throw e })
       } catch (err) {
-        let e = explain(err, 'Failed to close file: ' + itemPath)
-        debug(e)
+        debug('Failed to close file: ' + itemPath)
         reply(Fuse.EREMOTEIO)
       }
     }
