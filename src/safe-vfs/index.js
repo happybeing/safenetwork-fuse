@@ -394,6 +394,7 @@ class SafeVfs {
    */
   getHandler (itemPath) {
     debug('getHandler(%s)', itemPath)
+    if (itemPath === '') itemPath = '/'
     let handler = this.pathMapGet(itemPath) ||
       this.getHandler(path.dirname(itemPath))
 
