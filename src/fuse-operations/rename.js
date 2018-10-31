@@ -15,7 +15,7 @@ module.exports = (safeVfs) => {
         safeVfs.getHandler(itemPath).rename(itemPath, newPath).then((result) => {
           if (result) {
             debug('Renamed: %s, to: %s', itemPath, newPath)
-            reply(0)
+            return reply(0)
           }
           debug('Rename failed - operation not supported')
           reply(Fuse.EOPNOTSUPP) // Don't allow rename of directories etc
