@@ -18,18 +18,6 @@ module.exports = (safeVfs) => {
         debug(e)
         reply(Fuse.EREMOTEIO)
       }
-
-  //   write (itemPath, fd, buf, len, pos, reply) {
-  //     debug('write(\'%s\', %s, buf, %n, %n)', itemPath, fd, len, pos)
-  //
-  //     ipfs.files.write(itemPath, buf, { offset: pos, count: len }, (err) => {
-  //       if (err) {
-  //         err = explain(err, 'Failed to write to file')
-  //         debug(err)
-  //         return reply(Fuse.EREMOTEIO)
-  //       }
-  //       reply(len)
-  //     })
     }
   }
 }

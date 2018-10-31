@@ -20,22 +20,3 @@ module.exports = (safeVfs) => {
     }
   }
 }
-
-// module.exports = (ipfs) => {
-//   return {
-//     mkdir (itemPath, mode, reply) {
-//       debug('TODO: implement fuse operation: mkdir'); return reply(Fuse.EREMOTEIO)
-//
-//       debug({ itemPath, mode })
-//
-//       ipfs.files.mkdir(itemPath, (err) => {
-//         if (err) {
-//           err = explain(err, 'Failed to create directory')
-//           debug(err)
-//           return reply(Fuse.EREMOTEIO)
-//         }
-//         reply(0)
-//       })
-//     }
-//   }
-// }

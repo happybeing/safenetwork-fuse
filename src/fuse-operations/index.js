@@ -46,10 +46,6 @@ module.exports = (safeJs) => Object.assign(
     debug('TODO: implement fuse operation: access(%s)', itemPath)
     return reply(0)
   }},
-  // { fgetattr (itemPath, fd, reply) {
-  //   debug('TODO: implement fuse operation: fgetattr(%s, %s)', itemPath, fd)
-  //   return reply(0)
-  // }},
   { flush (itemPath, fd, reply) {
     debug('TODO: implement fuse operation: flush(%s, fd)', itemPath, fd)
     return reply(0)
