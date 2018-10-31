@@ -43,6 +43,7 @@ module.exports = (safeVfs) => {
           }
 
           if (result.entryType === SafeJsApi.containerTypeCodes.file ||
+              result.entryType === SafeJsApi.containerTypeCodes.newFile ||
               result.entryType === SafeJsApi.containerTypeCodes.fakeContainer ||
               result.entryType === SafeJsApi.containerTypeCodes.nfsContainer ||
               result.entryType === SafeJsApi.containerTypeCodes.servicesContainer ||

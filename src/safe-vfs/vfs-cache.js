@@ -131,11 +131,21 @@ class VfsCacheMap {
 
     if (this._directoryMap[itemPath]) {
       delete this._directoryMap[itemPath]
-      return new FuseResult(0)
     }
 
-    // No virtual directory
-    return new FuseResult(Fuse.EOPNOTSUPP)
+    // Return success even if we already purged from the cache.
+    //
+    // It's not a problem if something tries removing a directory that
+    // was removed as a side effect of deleting the last file in the
+    // directory.
+    //
+    // It is a minor issue that this means trying to remove a non-existent
+    // directory will appear to succeed, so we might want to improve
+    // handling of that by keeping a small cache of recently discarded
+    // directories. But for now, best not to trip up things that
+    // try to remove a file tree, and fail each time they try to
+    // remove a directory.
+    return new FuseResult(0)
   }
 
   // When a file is created, check for and clear virtual folders on its path
@@ -229,33 +239,42 @@ class VfsCacheMap {
    */
   async getattr (itemPath, reply) {
     debug('%s.getattr(%s)', this.constructor.name, itemPath)
-    let resultHolder
-    let fuseResult
     let fuseOp = 'getattr'
 
-    let resultsRef = this._resultsRefMap[itemPath]
-    if (resultsRef) resultHolder = resultsRef.resultsMap[resultsRef.resultsKey]
-    if (resultHolder) fuseResult = resultHolder[fuseOp]
-
+    let fuseResult = this._getResultFromCache(itemPath, fuseOp)
     if (!fuseResult) {
       let resultsRef
       try {
         let handler = this._safeVfs.getHandler(itemPath)
         let containerPath = handler.pruneMountPath(itemPath)
         let container = await handler.getContainer(itemPath)
-        resultsRef = await container.itemAttributesResultRef(containerPath)
-        this._resultsRefMap[itemPath] = resultsRef
 
+        resultsRef = await container.itemAttributesResultRef(containerPath)
         fuseResult = this._makeGetattrResult(itemPath, resultsRef.result)
-        resultHolder = resultsRef.resultsMap[resultsRef.resultsKey]
+        this._saveResultToCache(itemPath, fuseOp, fuseResult, resultsRef)
       } catch (e) {
         debug(e)
         fuseResult = new FuseResult()
       }
     }
 
-    if (resultHolder) resultHolder[fuseOp] = fuseResult // Insert into SafenetworkJs cached result object
     reply(fuseResult.returnCode, fuseResult.returnObject)
+  }
+
+  _saveResultToCache (itemPath, fuseOp, fuseResult, resultsRef) {
+    debug('%s._saveResultToCache(%s, %o, %o)', this.constructor.name, fuseOp, fuseResult, resultsRef)
+    this._resultsRefMap[itemPath] = resultsRef
+    let resultHolder = resultsRef.resultsMap[resultsRef.resultsKey]
+    resultHolder[fuseOp] = fuseResult // Insert into SafenetworkJs cached result object
+  }
+
+  // Returns a fuseResult for fuseOp if successful
+  _getResultFromCache (itemPath, fuseOp) {
+    debug('%s._getResultFromCache(%s, %o)', this.constructor.name, fuseOp)
+    let resultHolder
+    let resultsRef = this._resultsRefMap[itemPath]
+    if (resultsRef) resultHolder = resultsRef.resultsMap[resultsRef.resultsKey]
+    return resultHolder ? resultHolder[fuseOp] : undefined
   }
 
   /**
@@ -270,6 +289,7 @@ class VfsCacheMap {
 
     try {
       if (result.entryType === SafeJsApi.containerTypeCodes.file ||
+          result.entryType === SafeJsApi.containerTypeCodes.newFile ||
           result.entryType === SafeJsApi.containerTypeCodes.fakeContainer ||
           result.entryType === SafeJsApi.containerTypeCodes.nfsContainer ||
           result.entryType === SafeJsApi.containerTypeCodes.servicesContainer ||
@@ -296,7 +316,7 @@ class VfsCacheMap {
       // TODO implement more specific error handling like this on other fuse-ops
       if (result.entryType === SafeJsApi.containerTypeCodes.notFound ||
           result.entryType === SafeJsApi.containerTypeCodes.deletedEntry) {
-        debug('_makeGetattrResult(\'%s\') result type: %s reply(Fuse.ENOENT)', this.constructor.name, itemPath, result.entryType)
+        debug('%s._makeGetattrResult(\'%s\') result type: %s reply(Fuse.ENOENT)', this.constructor.name, itemPath, result.entryType)
         return fuseResult
       }
       throw new Error('Unhandled result.entryType: ' + result.entryType)

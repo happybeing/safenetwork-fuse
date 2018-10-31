@@ -349,7 +349,30 @@ class RootHandler {
     debug('RootHandler for %o mounted at %s create(\'%s\')', this._containerRef, this._mountPath, itemPath)
     let containerItem = this.pruneMountPath(itemPath)
 //    let nfsFlags = this.fuseToNfsFlags(flags)
-    return (await this.getContainer(itemPath)).createFile(containerItem).catch((e) => { debug(e) })
+    let container = await this.getContainer(itemPath)
+    let fd = await container.createFile(containerItem).catch((e) => { debug(e) })
+    if (fd) {
+      // We create a cache entry for getattr() on this item so that
+      // between create() and close(), getattr() will show the file
+      // exists. See also SafenetworkJs containers' createFile() which
+      // does the same with its cache.
+      let attributesResult
+      let containerOp = 'itemAttributes'
+      let resultHolder = container._getResultHolderForPath(containerItem)
+      if (resultHolder) attributesResult = resultHolder[containerOp]
+      if (attributesResult) {
+        let fuseResult = this._safeVfs.vfsCache()._makeGetattrResult(itemPath, attributesResult)
+        let attributesResultsRef = {
+          resultsMap: container._resultHolderMap,
+          resultsKey: containerItem,
+          result: attributesResult,
+          'fileOperation': containerOp  // For debugging only
+        }
+
+        let fuseOp = 'getattr'
+        this._safeVfs.vfsCache()._saveResultToCache(itemPath, fuseOp, fuseResult, attributesResultsRef)
+      }
+    }
   }
 
   async write (itemPath, fd, buf, len, pos) {
@@ -447,7 +470,7 @@ class RootContainer {
     debug('%s.itemAttributes(\'%s\', %s)', this.constructor.name, itemPath, fd)
 
     try {
-      let resultsRef = await this.itemAttributesResultsRef(itemPath, fd)
+      let resultsRef = await this.itemAttributesResultRef(itemPath, fd)
       if (resultsRef) return resultsRef.result
     } catch (e) {
       debug(e)
