@@ -5,7 +5,6 @@ const Os = require('os')
 const path = require('path')
 const safeJsApi = require('safenetworkjs').SafenetworkApi
 const SafeVfs = require('./src/safe-vfs')
-const explain = require('explain-error')
 const yargs = require('yargs')
 
 const argv = yargs
@@ -141,6 +140,6 @@ process.on('SIGINT', () => {
     msg += (process.platform !== 'win32' ? '\n\nType \'sudo umount ~/SAFE\' and try again.'
             : '') // TODO insert in advice for Windows here
     debug(msg)
-    explain(err, msg)
+    debug(err)
   }
 })

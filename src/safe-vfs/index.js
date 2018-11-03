@@ -290,7 +290,6 @@ const Fuse = require('fuse-bindings')
 const debug = require('debug')('safe-fuse:vfs:index')
 const mkdirp = require('mkdirp-promise')
 const createSafeFuse = require('../fuse-operations')
-const explain = require('explain-error')
 
 const VfsCacheMap = require('./vfs-cache')
 const RootHandler = require('./root')
@@ -341,7 +340,7 @@ class SafeVfs {
             Fuse.mount(mountPath, createSafeFuse(this), opts.fuse, (err) => {
               debug('Fuse.mount() at ' + mountPath)
               if (err) {
-                err = explain(err, 'Failed to create mount point')
+                debug('Failed to create mount point at: %s', mountPath)
                 debug(err)
                 reject(err)
               } else {
@@ -364,7 +363,7 @@ class SafeVfs {
     return new Promise((resolve, reject) => {
       return Fuse.unmount(mountPath, err => {
         if (err) {
-          err = explain(err, 'Failed to unmount SAFE FUSE volume')
+          debug('Failed to unmount SAFE FUSE volume at: %s', mountPath)
           debug(err)
           reject(err)
         } else {
