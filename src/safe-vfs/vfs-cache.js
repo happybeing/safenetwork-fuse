@@ -237,7 +237,7 @@ class VfsCacheMap {
   /**
    * Wrappers for FUSE ops that implement results caching and virtual directories
    */
-  async getattr (itemPath, reply) {
+  async getattr (itemPath) {
     debug('%s.getattr(%s)', this.constructor.name, itemPath)
     let fuseOp = 'getattr'
 
@@ -251,14 +251,19 @@ class VfsCacheMap {
 
         resultsRef = await container.itemAttributesResultRef(containerPath)
         fuseResult = this._makeGetattrResult(itemPath, resultsRef.result)
-        this._saveResultToCache(itemPath, fuseOp, fuseResult, resultsRef)
+        // Most getattr() results can be cached, but some
+        // such as 'not found' clear the cache by deleting
+        // the resultHolder, so this checks if it exists
+        if (resultsRef.resultsMap[resultsRef.resultsKey]) {
+          this._saveResultToCache(itemPath, fuseOp, fuseResult, resultsRef)
+        }
       } catch (e) {
         debug(e)
         fuseResult = new FuseResult()
       }
     }
 
-    reply(fuseResult.returnCode, fuseResult.returnObject)
+    return fuseResult
   }
 
   _saveResultToCache (itemPath, fuseOp, fuseResult, resultsRef) {
@@ -270,7 +275,7 @@ class VfsCacheMap {
 
   // Returns a fuseResult for fuseOp if successful
   _getResultFromCache (itemPath, fuseOp) {
-    debug('%s._getResultFromCache(%s, %o)', this.constructor.name, fuseOp)
+    debug('%s._getResultFromCache(%s, %o)', this.constructor.name, itemPath, fuseOp)
     let resultHolder
     let resultsRef = this._resultsRefMap[itemPath]
     if (resultsRef) resultHolder = resultsRef.resultsMap[resultsRef.resultsKey]
