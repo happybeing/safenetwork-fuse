@@ -1,4 +1,4 @@
-// const Fuse = require('fuse-bindings')
+const Fuse = require('fuse-bindings')
 // const SafeJsApi = require('safenetworkjs')
 const debug = require('debug')('safe-fuse:ops')
 
@@ -20,9 +20,12 @@ module.exports = (safeVfs) => {
         if (fuseResult) {
           return reply(fuseResult.returnCode, fuseResult.returnObject)
         }
-        return safeVfs.vfsCache().getattr(itemPath, reply)
+        safeVfs.vfsCache().getattr(itemPath, reply).then((result) => {
+          return reply(result.returnCode, result.returnObject)
+        }).catch((e) => { throw e })
       } catch (e) {
         debug(e)
+        reply(Fuse.EREMOTEIO)
       }
     }
   }
