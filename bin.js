@@ -24,14 +24,14 @@ let appConfig = {
 }
 
 const appContainers = {
-  // TODO is this right for solid service container (ie solid.<safepublicid>)
-  _public: ['Read', 'Insert', 'Update', 'Delete'], // TODO maybe reduce defaults later
-  // _documents: ['Read', 'Insert', 'Update', 'Delete'], // TODO maybe reduce defaults later
-  // _downloads: ['Read', 'Insert', 'Update', 'Delete'], // TODO maybe reduce defaults later
-  // _music: ['Read', 'Insert', 'Update', 'Delete'], // TODO maybe reduce defaults later
-  // _pictures: ['Read', 'Insert', 'Update', 'Delete'], // TODO maybe reduce defaults later
-  // _videos: ['Read', 'Insert', 'Update', 'Delete'], // TODO maybe reduce defaults later
-  _publicNames: ['Read', 'Insert', 'Update', 'Delete'] // TODO maybe reduce defaults later
+  // TODO review requested permissions here and in SafenetworkJs
+  _documents: ['Read', 'Insert', 'Update', 'Delete', 'ManagePermissions'], // TODO maybe reduce defaults later
+  _downloads: ['Read', 'Insert', 'Update', 'Delete', 'ManagePermissions'], // TODO maybe reduce defaults later
+  _music: ['Read', 'Insert', 'Update', 'Delete', 'ManagePermissions'], // TODO maybe reduce defaults later
+  // ??? _pictures: ['Read', 'Insert', 'Update', 'Delete', 'ManagePermissions'], // TODO maybe reduce defaults later
+  _public: ['Read', 'Insert', 'Update', 'Delete', 'ManagePermissions'], // TODO maybe reduce defaults later
+  _publicNames: ['Read', 'Insert', 'Update', 'Delete', 'ManagePermissions'], // TODO maybe reduce defaults later
+  _videos: ['Read', 'Insert', 'Update', 'Delete', 'ManagePermissions'] // TODO maybe reduce defaults later
 }
 
 const containerOpts = {
