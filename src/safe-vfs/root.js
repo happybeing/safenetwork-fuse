@@ -262,14 +262,20 @@ class RootHandler {
   #define O_RDONLY  00
   #define O_WRONLY  01
   #define O_RDWR    02
+
+  Mapping these is tricky because different apps use them in different ways
+  that may not map precisely. So take care with any changes here. We map:
+    O_RDONLY to NFS_FILE_MODE_READ
+    O_WRONLY to NFS_FILE_MODE_APPEND
+    O_RDWR   to NFS_FILE_MODE_APPEND|CONSTANTS.NFS_FILE_MODE_READ
   */
   fuseToNfsFlags (flags) {
     flags = flags & 3
     if (flags === 0) return this._safeVfs.safeJs().safeApi.CONSTANTS.NFS_FILE_MODE_READ
     if (flags === 1) return this._safeVfs.safeJs().safeApi.CONSTANTS.NFS_FILE_MODE_APPEND
 
-    return (this._safeVfs.safeJs().safeApi.CONSTANTS.NFS_FILE_MODE_OVERWRITE |
-            this._safeVfs.safeJs().safeApi.CONSTANTS.NFS_FILE_MODE_READ)
+    return this._safeVfs.safeJs().safeApi.CONSTANTS.NFS_FILE_MODE_APPEND |
+           this._safeVfs.safeJs().safeApi.CONSTANTS.NFS_FILE_MODE_READ
   }
 
   // Fuse operations:
@@ -373,6 +379,7 @@ class RootHandler {
         this._safeVfs.vfsCache()._saveResultToCache(itemPath, fuseOp, fuseResult, attributesResultsRef)
       }
     }
+    return fd
   }
 
   async write (itemPath, fd, buf, len, pos) {
