@@ -20,8 +20,7 @@ module.exports = (safeVfs) => {
         handler.fgetattr(itemPath, fd).then((result) => {
           // TODO implement more specific error handling like this on all fuse-ops
           if (result && result.entryType === SafeJsApi.containerTypeCodes.notFound) {
-            reply(Fuse.ENOENT)
-            return
+            return reply(Fuse.ENOENT)
           }
 
           reply(0, {

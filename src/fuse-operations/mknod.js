@@ -1,5 +1,4 @@
 const Fuse = require('fuse-bindings')
-const explain = require('explain-error')
 const debug = require('debug')('safe-fuse:ops')
 
 module.exports = (ipfs) => {
@@ -11,7 +10,7 @@ module.exports = (ipfs) => {
 
       ipfs.files.write(itemPath, Buffer.from(''), { create: true }, (err) => {
         if (err) {
-          err = explain(err, 'Failed to create device node')
+          debug('Failed to create device node for: ', itemPath)
           debug(err)
           return reply(Fuse.EREMOTEIO)
         }

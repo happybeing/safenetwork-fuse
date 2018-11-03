@@ -1,5 +1,4 @@
 const Fuse = require('fuse-bindings')
-const explain = require('explain-error')
 const debug = require('debug')('safe-fuse:ops')
 
 module.exports = (safeVfs) => {
@@ -14,8 +13,8 @@ module.exports = (safeVfs) => {
           reply(bytes)
         }).catch((e) => { throw e })
       } catch (err) {
-        let e = explain(err, 'Failed to write file: ' + itemPath)
-        debug(e)
+        debug('Failed to write file: ' + itemPath)
+        debug(err)
         reply(Fuse.EREMOTEIO)
       }
     }

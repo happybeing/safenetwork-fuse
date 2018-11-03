@@ -1,5 +1,4 @@
 const Fuse = require('fuse-bindings')
-const explain = require('explain-error')
 const debug = require('debug')('safe-fuse:ops')
 
 /* statfs - get filesystem statistics
@@ -18,8 +17,8 @@ module.exports = (safeVfs) => {
           reply(0, data)
         }).catch((e) => { throw e })
       } catch (err) {
-        let e = explain(err, 'Failed to stat: ' + itemPath)
-        debug(e)
+        debug('Failed to stat: ' + itemPath)
+        debug(err)
         reply(Fuse.EREMOTEIO)
       }
     }

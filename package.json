@@ -38,7 +38,6 @@
     "@maidsafe/safe-node-app": "^0.8.1",
     "async": "^2.6.0",
     "debug": "^3.1.0",
-    "explain-error": "^1.0.4",
     "filesize": "^3.6.1",
     "fuse-bindings": "^2.11.2",
     "ipfs-api": "^22.3.0",

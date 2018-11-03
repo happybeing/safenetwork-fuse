@@ -1,5 +1,4 @@
 const Fuse = require('fuse-bindings')
-// const explain = require('explain-error')
 const debug = require('debug')('safe-fuse:ops')
 
 module.exports = (safeVfs) => {
@@ -11,7 +10,7 @@ module.exports = (safeVfs) => {
         if (fuseResult) {
           return reply(fuseResult.returnCode)
         }
-        return reply(Fuse.EREMOTEIO)
+        reply(Fuse.EREMOTEIO)
       } catch (e) {
         debug(e)
         debug('Failed to create directory: %s', itemPath)

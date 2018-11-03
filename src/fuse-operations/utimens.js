@@ -1,5 +1,4 @@
 const Fuse = require('fuse-bindings')
-const explain = require('explain-error')
 const debug = require('debug')('safe-fuse:ops')
 
 module.exports = (ipfs) => {
@@ -13,7 +12,7 @@ module.exports = (ipfs) => {
         if (err && err.message === 'file does not exist') {
           ipfs.files.write(itemPath, Buffer.from(''), { create: true }, (err) => {
             if (err) {
-              err = explain(err, 'Failed to create file')
+              debug('Failed to update timestamp for: ', itemPath)
               debug(err)
               return reply(Fuse.EREMOTEIO)
             }

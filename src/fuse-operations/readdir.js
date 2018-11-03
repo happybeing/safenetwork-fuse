@@ -1,5 +1,4 @@
 const Fuse = require('fuse-bindings')
-const explain = require('explain-error')
 const debug = require('debug')('safe-fuse:ops')
 
 module.exports = (safeVfs) => {
@@ -17,11 +16,11 @@ module.exports = (safeVfs) => {
         safeVfs.getHandler(itemPath).readdir(itemPath).then((result) => {
           // Add any virtual directories to the itemPath directory's listing
           result = safeVfs.vfsCache().mergeVirtualDirs(itemPath, result)
-          reply(0, result)
+          return reply(0, result)
         }).catch((e) => { throw e })
       } catch (err) {
-        let e = explain(err, 'Failed to readdir: ' + itemPath)
-        debug(e)
+        debug('Failed to readdir: ' + itemPath)
+        debug(err)
         reply(Fuse.EREMOTEIO)
       }
     }
