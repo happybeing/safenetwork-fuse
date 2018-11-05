@@ -13,7 +13,7 @@ module.exports = (safeVfs) => {
         reply(Fuse.EREMOTEIO)
       } catch (e) {
         debug(e)
-        debug('Failed to create directory: %s', itemPath)
+        debug('Failed to delete directory: %s', itemPath)
         return reply(Fuse.EREMOTEIO)
       }
     }

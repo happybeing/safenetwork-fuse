@@ -123,16 +123,27 @@ class VfsCacheMap {
   }
 
   rmdirVirtual (itemPath) {
-    for (var entry in this._directoryMap) {
-      if (entry.indexOf(itemPath) === 0 && entry !== itemPath) {
-        return new FuseResult(Fuse.ENOTEMPTY) // Has subdirectory
+    try {
+      for (var entry in this._directoryMap) {
+        if (entry.indexOf(itemPath) === 0 && entry !== itemPath) {
+          return new FuseResult(Fuse.ENOTEMPTY) // Has subdirectory
+        }
       }
-    }
 
-    if (this._directoryMap[itemPath]) {
-      delete this._directoryMap[itemPath]
+      if (this._directoryMap[itemPath]) {
+        delete this._directoryMap[itemPath]   // Remove the virtual folder
+      }
+      if (this._resultsRefMap[itemPath]) {
+        // Check that Safenetwork does not still have op results for this path.
+        // It is a bug if previous SafentworkJs ops have failed to purged that.
+        if (this._resultsRefMap[itemPath].resultsMap !== undefined) {
+          throw new Error('ERROR: SafenetworkJs container operation cache not deleted for:', itemPath)
+        }
+        delete this._resultsRefMap[itemPath]  // Purge any cached op result
+      }
+    } catch (e) {
+      debug(e)
     }
-
     // Return success even if we already purged from the cache.
     //
     // It's not a problem if something tries removing a directory that
