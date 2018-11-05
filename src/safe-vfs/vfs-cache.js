@@ -290,7 +290,12 @@ class VfsCacheMap {
     let resultHolder
     let resultsRef = this._resultsRefMap[itemPath]
     if (resultsRef) resultHolder = resultsRef.resultsMap[resultsRef.resultsKey]
-    return resultHolder ? resultHolder[fuseOp] : undefined
+    if (resultHolder) {
+      debug('cached %s(): %o', fuseOp, resultHolder[fuseOp])
+      return resultHolder[fuseOp]
+    }
+    debug('NO cached %s():', fuseOp)
+    return undefined
   }
 
   /**
