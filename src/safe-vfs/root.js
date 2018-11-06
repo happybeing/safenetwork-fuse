@@ -513,7 +513,7 @@ class RootContainer {
         result = { entryType: SafeJsApi.containerTypeCodes.notFound }
       }
 
-      return this._updateResultForPath(itemPath, fileOperation, result, SafeJsApi.isCacheableResult(result.entryType))
+      return this._updateResultForPath(itemPath, fileOperation, result)
     } catch (e) { debug(e) }
   }
 
@@ -521,20 +521,20 @@ class RootContainer {
   */
 
   _clearCacheForCreateFile (itemPath) {
-    let base = u.itemPathBasename(itemPath)
-    if (base) this._clearResultForPath(itemPath)
+    let parentDir = u.parentPath(itemPath)
+    if (parentDir) this._clearResultForPath(itemPath)
   }
 
   _clearCacheForModify (itemPath) {
     this._clearResultForPath(itemPath)
-    let base = u.itemPathBasename(itemPath)
-    if (base !== itemPath) this._clearResultForPath(base)
+    let parentDir = u.parentPath(itemPath)
+    if (parentDir !== itemPath) this._clearResultForPath(parentDir)
   }
 
   _clearCacheForDelete (itemPath) {
     this.clearResultForPath(itemPath)
-    let base = u.itemPathBasename(itemPath)
-    if (base !== itemPath) this._clearResultDelete(base) // Recurse to clear all parent folders
+    let parentDir = u.parentPath(itemPath)
+    if (parentDir !== itemPath) this._clearResultDelete(parentDir) // Recurse to clear all parent folders
   }
 
   _clearResultForPath (itemPath) {
@@ -549,23 +549,34 @@ class RootContainer {
     this._clearResultForPath(itemPath)
   }
 
-  /**
-   * Update _resultHolderMap and return a resultsRef
-   *
-   * @param  {String} itemPath
-   * @param  {String} fileOperation
-   * @param  {Object} operationResult
-   * @param  {Boolean} cacheTheResult if true updates cache, otherwise clears it
-   * @return {Object} A 'resultsRef' which has the result, its cache location
-   */
-  _updateResultForPath (itemPath, fileOperation, operationResult, cacheTheResult) {
+  _getResultHolderForPath (itemPath) {
     let resultHolder = this._resultHolderMap[itemPath]
     if (!resultHolder) {
       resultHolder = {}
       this._resultHolderMap[itemPath] = resultHolder
     }
+    return resultHolder
+  }
 
-    if (cacheTheResult) {
+  /**
+   * Update _resultHolderMap and return a resultsRef
+   *
+   * NOTE: changes here need to follow SafenetworkJs
+   *
+   * @param  {String} itemPath
+   * @param  {String} fileOperation
+   * @param  {Object} operationResult
+   * @param  {Boolean} cacheTheResult [optional] if false, clears cache rather than updates
+   * @return {Object} A 'resultsRef' which has the result, its cache location
+   */
+  _updateResultForPath (itemPath, fileOperation, operationResult, cacheTheResult) {
+    debug('%s._updateResultForPath(%s, %s, %o, %o)', this.constructor.name, itemPath, fileOperation, operationResult, cacheTheResult)
+    if (cacheTheResult === undefined) cacheTheResult = true
+    cacheTheResult = cacheTheResult && process.env.SAFENETWORKJS_CACHE !== 'disable'
+
+    // Caller wants it cached, but also check if it is cacheable
+    if (cacheTheResult && SafeJsApi.isCacheableResult(fileOperation, operationResult)) {
+      let resultHolder = this._getResultHolderForPath(itemPath)
       resultHolder[fileOperation] = operationResult
     } else {
       this._clearResultForPath(itemPath)
