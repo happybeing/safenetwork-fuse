@@ -375,8 +375,7 @@ class RootHandler {
           'fileOperation': containerOp  // For debugging only
         }
 
-        let fuseOp = 'getattr'
-        this._safeVfs.vfsCache()._saveResultToCache(itemPath, fuseOp, fuseResult, attributesResultsRef)
+        this._safeVfs.vfsCache()._saveResultToCache(itemPath, containerOp, fuseResult, attributesResultsRef)
       }
     }
     return fd
@@ -520,18 +519,18 @@ class RootContainer {
   /** File system operation results cache
   */
 
-  _clearCacheForCreateFile (itemPath) {
+  _handleCacheForCreateFile (itemPath) {
     let parentDir = u.parentPath(itemPath)
     if (parentDir) this._clearResultForPath(itemPath)
   }
 
-  _clearCacheForModify (itemPath) {
+  _handleCacheForModify (itemPath) {
     this._clearResultForPath(itemPath)
     let parentDir = u.parentPath(itemPath)
     if (parentDir !== itemPath) this._clearResultForPath(parentDir)
   }
 
-  _clearCacheForDelete (itemPath) {
+  _handleCacheForDelete (itemPath) {
     this.clearResultForPath(itemPath)
     let parentDir = u.parentPath(itemPath)
     if (parentDir !== itemPath) this._clearResultDelete(parentDir) // Recurse to clear all parent folders
@@ -542,7 +541,7 @@ class RootContainer {
   }
 
   // Called by a child container to clear our cache entry
-  _clearCacheForChildContainer (childContainerPath, childItemPath) {
+  _handleCacheForChildContainer (childContainerPath, childItemPath) {
     let pathPrefix = this._subTree
     if (this._subTree[0] === '/') pathPrefix = this._subTree.substring(1)
     let itemPath = pathPrefix + childItemPath

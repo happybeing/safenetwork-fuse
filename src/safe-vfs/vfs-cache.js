@@ -250,9 +250,9 @@ class VfsCacheMap {
    */
   async getattr (itemPath) {
     debug('%s.getattr(%s)', this.constructor.name, itemPath)
-    let fuseOp = 'getattr'
+    let containerOp = 'itemAttributes'
 
-    let fuseResult = this._getResultFromCache(itemPath, fuseOp)
+    let fuseResult = this._getResultFromCache(itemPath, containerOp)
     if (!fuseResult) {
       let resultsRef
       try {
@@ -266,7 +266,7 @@ class VfsCacheMap {
         // such as 'not found' clear the cache by deleting
         // the resultHolder, so this checks if it exists
         if (resultsRef.resultsMap[resultsRef.resultsKey]) {
-          this._saveResultToCache(itemPath, fuseOp, fuseResult, resultsRef)
+          this._saveResultToCache(itemPath, 'itemAttributes', fuseResult, resultsRef)
         }
       } catch (e) {
         debug(e)
@@ -277,24 +277,29 @@ class VfsCacheMap {
     return fuseResult
   }
 
-  _saveResultToCache (itemPath, fuseOp, fuseResult, resultsRef) {
-    debug('%s._saveResultToCache(%s, %o, %o)', this.constructor.name, fuseOp, fuseResult, resultsRef)
+  // Piggy back the fuse result on the containerOp result, so we don't
+  // need the container to get our result back, but if the container
+  // invalidates it's result, it will also invalidate the fuse result
+  _saveResultToCache (itemPath, containerOp, fuseResult, resultsRef) {
+    debug('%s._saveResultToCache(%s, %o, %o, %O)', this.constructor.name, itemPath, containerOp, fuseResult, resultsRef)
     this._resultsRefMap[itemPath] = resultsRef
     let resultHolder = resultsRef.resultsMap[resultsRef.resultsKey]
-    resultHolder[fuseOp] = fuseResult // Insert into SafenetworkJs cached result object
+
+    // Insert into SafenetworkJs cached result object
+    if (resultHolder[containerOp]) resultHolder[containerOp].fuseResult = fuseResult
   }
 
   // Returns a fuseResult for fuseOp if successful
-  _getResultFromCache (itemPath, fuseOp) {
-    debug('%s._getResultFromCache(%s, %o)', this.constructor.name, itemPath, fuseOp)
+  _getResultFromCache (itemPath, containerOp) {
+    debug('%s._getResultFromCache(%s, %o)', this.constructor.name, itemPath, containerOp)
     let resultHolder
     let resultsRef = this._resultsRefMap[itemPath]
     if (resultsRef) resultHolder = resultsRef.resultsMap[resultsRef.resultsKey]
-    if (resultHolder) {
-      debug('cached %s(): %o', fuseOp, resultHolder[fuseOp])
-      return resultHolder[fuseOp]
+    if (resultHolder && resultHolder[containerOp]) {
+      debug('cached %s(): %o', containerOp, resultHolder[containerOp])
+      return resultHolder[containerOp].fuseResult
     }
-    debug('NO cached %s():', fuseOp)
+    debug('NO cached %s():', containerOp)
     return undefined
   }
 
