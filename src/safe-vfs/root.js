@@ -520,19 +520,19 @@ class RootContainer {
   */
 
   _handleCacheForCreateFile (itemPath) {
-    let parentDir = u.parentPath(itemPath)
+    let parentDir = u.parentPathNoDot(itemPath)
     if (parentDir) this._clearResultForPath(itemPath)
   }
 
   _handleCacheForModify (itemPath) {
     this._clearResultForPath(itemPath)
-    let parentDir = u.parentPath(itemPath)
+    let parentDir = u.parentPathNoDot(itemPath)
     if (parentDir !== itemPath) this._clearResultForPath(parentDir)
   }
 
   _handleCacheForDelete (itemPath) {
     this.clearResultForPath(itemPath)
-    let parentDir = u.parentPath(itemPath)
+    let parentDir = u.parentPathNoDot(itemPath)
     if (parentDir !== itemPath) this._clearResultDelete(parentDir) // Recurse to clear all parent folders
   }
 
