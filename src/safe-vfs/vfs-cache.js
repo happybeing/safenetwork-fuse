@@ -118,6 +118,7 @@ class VfsCacheMap {
 
   // Assumes FUSE will only mkdir() if it doesn't exist yet
   mkdirVirtual (itemPath, mode) {
+    if (itemPath.substr(itemPath.length) === '/') itemPath = itemPath.substr(1, itemPath.length - 1)
     this._directoryMap[itemPath] = true
     return new FuseResult(0)
   }
@@ -132,13 +133,10 @@ class VfsCacheMap {
 
       if (this._directoryMap[itemPath]) {
         delete this._directoryMap[itemPath]   // Remove the virtual folder
+        // Clear operation result from SafenetworkJs container cache
+        this._clearResultFromCache(itemPath, 'itemAttributes')
       }
       if (this._resultsRefMap[itemPath]) {
-        // Check that Safenetwork does not still have op results for this path.
-        // It is a bug if previous SafentworkJs ops have failed to purged that.
-        if (this._resultsRefMap[itemPath].resultsMap !== undefined) {
-          throw new Error('ERROR: SafenetworkJs container operation cache not deleted for:', itemPath)
-        }
         delete this._resultsRefMap[itemPath]  // Purge any cached op result
       }
     } catch (e) {
@@ -160,11 +158,12 @@ class VfsCacheMap {
   }
 
   // When a file is created, check for and clear virtual folders on its path
+  // and clear any cached operation results for this path
   closeVirtual (itemPath) {
-    let nextDir = SafeJsApi.parentPath(itemPath)
+    let nextDir = SafeJsApi.parentPathNoDot(itemPath)
     while (this._directoryMap[nextDir]) {
-      delete this._directoryMap[nextDir]
-      nextDir = SafeJsApi.parentPath(nextDir)
+      this.rmdirVirtual(nextDir)
+      nextDir = SafeJsApi.parentPathNoDot(nextDir)
     }
     return new FuseResult(0)
   }
@@ -236,10 +235,10 @@ class VfsCacheMap {
    */
 
   openVirtual (itemPath, flags) {
-    let parentDir = SafeJsApi.parentPath(itemPath)
+    let parentDir = SafeJsApi.parentPathNoDot(itemPath)
     while (this._directoryMap[parentDir]) {
       this._directoryMap[parentDir] = undefined
-      parentDir = SafeJsApi.parentPath(parentDir)
+      parentDir = SafeJsApi.parentPathNoDot(parentDir)
     }
 
     return undefined  // For open, the action is always incomplete
@@ -301,6 +300,17 @@ class VfsCacheMap {
     }
     debug('NO cached %s():', containerOp)
     return undefined
+  }
+
+  _clearResultFromCache (itemPath, containerOp) {
+    debug('%s._clearResultFromCache(%s, %o)', this.constructor.name, itemPath)
+    let resultHolder
+    let resultsRef = this._resultsRefMap[itemPath]
+    if (resultsRef) resultHolder = resultsRef.resultsMap[resultsRef.resultsKey]
+    if (resultHolder && resultHolder[containerOp]) {
+      debug('clearing cached %s(): %o', containerOp, resultHolder[containerOp])
+      delete resultHolder[containerOp]
+    }
   }
 
   /**
