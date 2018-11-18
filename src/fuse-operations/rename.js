@@ -15,10 +15,20 @@ module.exports = (safeVfs) => {
         safeVfs.getHandler(itemPath).rename(itemPath, newPath).then((result) => {
           if (result) {
             debug('Renamed: %s, to: %s', itemPath, newPath)
-            return reply(0)
+            // If this left itemPath parentDir empty, make a virtual directory
+            // to replace the lost fake-container
+            if (result.wasLastItem) {
+              let parentDir = safeVfs.safeJs().parentPathNoDot(itemPath)
+              if (parentDir !== '') safeVfs.vfsCache().mkdirVirtual(parentDir)
+            }
+
+            // Clear any virtual directories in newPath in case the file is on a different path
+            return safeVfs.vfsCache().closeVirtual(newPath).then((result) => {
+              return reply(0)
+            }).catch((e) => { throw e })
           }
           debug('Rename failed - operation not supported')
-          reply(Fuse.EOPNOTSUPP) // Don't allow rename of directories etc
+          reply(Fuse.EOPNOTSUPP) // Not allowed (e.g. rename of fake-container)
         }).catch((e) => { throw e })
       } catch (err) {
         debug('Failed to rename: %s, to: %s', itemPath, newPath)
