@@ -291,14 +291,14 @@ const debug = require('debug')('safe-fuse:vfs:index')
 const mkdirp = require('mkdirp-promise')
 const createSafeFuse = require('../fuse-operations')
 
-const VfsCacheMap = require('./vfs-cache')
+const VfsCaching = require('./vfs-cache')
 const RootHandler = require('./root')
 
 class SafeVfs {
   constructor (safeJsApi) {
     this._safeJs = safeJsApi
     this._pathMap = new Map()
-    this._vfsCache = new VfsCacheMap(this)
+    this._vfsCache = new VfsCaching(this)
   }
 
   safeJs () { return this._safeJs }
