@@ -1,6 +1,6 @@
 const path = require('path')  // Cross platform path handling
 const SafeJsApi = require('safenetworkjs')
-const u = SafeJsApi.safeUtils
+const SafeContainer = require('safenetworkjs').SafeContainer
 
 const debug = require('debug')('safe-fuse:vfs:root')
 
@@ -424,10 +424,14 @@ class RootHandler {
  * and any of the classes based on SafeContainer (see SafenetworkJs container
  * classes).
  */
-class RootContainer {
+
+class RootContainer extends SafeContainer {
   constructor (rootHandler) {
+    // super() params are dummy values as we only use the cache implementation
+    super(undefined, '', '', '')
+
     this._handler = rootHandler
-    this._resultHolderMap = [] // Filesystem results cached by operation and container key
+    // TODO delete this line this._resultHolderMap = [] // Filesystem results cached by operation and container key
 
     // Helpers
     this.vfs = this._handler._safeVfs
@@ -476,15 +480,15 @@ class RootContainer {
     debug('%s.itemAttributes(\'%s\', %s)', this.constructor.name, itemPath, fd)
 
     try {
-      let resultsRef = await this.itemAttributesResultRef(itemPath, fd)
+      let resultsRef = await this.itemAttributesResultsRef(itemPath, fd)
       if (resultsRef) return resultsRef.result
     } catch (e) {
       debug(e)
     }
   }
 
-  async itemAttributesResultRef (itemPath, fd) {
-    debug('%s.itemAttributesResultRef(\'%s\', %s)', this.constructor.name, itemPath, fd)
+  async itemAttributesResultsRef (itemPath, fd) {
+    debug('%s.itemAttributesResultsRef(\'%s\', %s)', this.constructor.name, itemPath, fd)
     try {
       let fileOperation = 'itemAttributes'
 
@@ -492,7 +496,7 @@ class RootContainer {
 
       if (itemPath === '' ||
           this.vfs.isPartOfMountedPath('/' + itemPath) ||
-          itemPath.indexOf(WEB_MOUNTS_NAME === 0)) {  // Always pass '_webMounts' even if not mounted!
+          itemPath.indexOf(WEB_MOUNTS_NAME) === 0) {  // Always pass '_webMounts' even if not mounted!
         const now = Date.now()
         result = {
           // Default values (for '/') compatible with SafeContainer.itemAttributes()
@@ -512,82 +516,8 @@ class RootContainer {
         result = { entryType: SafeJsApi.containerTypeCodes.notFound }
       }
 
-      return this._updateResultForPath(itemPath, fileOperation, result)
+      return this._cacheResultForPath(itemPath, fileOperation, result)
     } catch (e) { debug(e) }
-  }
-
-  /** File system operation results cache
-  */
-
-  _handleCacheForCreateFile (itemPath) {
-    let parentDir = u.parentPathNoDot(itemPath)
-    if (parentDir) this._clearResultForPath(itemPath)
-  }
-
-  _handleCacheForModify (itemPath) {
-    this._clearResultForPath(itemPath)
-    let parentDir = u.parentPathNoDot(itemPath)
-    if (parentDir !== itemPath) this._clearResultForPath(parentDir)
-  }
-
-  _handleCacheForDelete (itemPath) {
-    this.clearResultForPath(itemPath)
-    let parentDir = u.parentPathNoDot(itemPath)
-    if (parentDir !== itemPath) this._clearResultDelete(parentDir) // Recurse to clear all parent folders
-  }
-
-  _clearResultForPath (itemPath) {
-    this._resultHolderMap[itemPath] = undefined
-  }
-
-  // Called by a child container to clear our cache entry
-  _handleCacheForChildContainer (childContainerPath, childItemPath) {
-    let pathPrefix = this._subTree
-    if (this._subTree[0] === '/') pathPrefix = this._subTree.substring(1)
-    let itemPath = pathPrefix + childItemPath
-    this._clearResultForPath(itemPath)
-  }
-
-  _getResultHolderForPath (itemPath) {
-    let resultHolder = this._resultHolderMap[itemPath]
-    if (!resultHolder) {
-      resultHolder = {}
-      this._resultHolderMap[itemPath] = resultHolder
-    }
-    return resultHolder
-  }
-
-  /**
-   * Update _resultHolderMap and return a resultsRef
-   *
-   * NOTE: changes here need to follow SafenetworkJs
-   *
-   * @param  {String} itemPath
-   * @param  {String} fileOperation
-   * @param  {Object} operationResult
-   * @param  {Boolean} cacheTheResult [optional] if false, clears cache rather than updates
-   * @return {Object} A 'resultsRef' which has the result, its cache location
-   */
-  _updateResultForPath (itemPath, fileOperation, operationResult, cacheTheResult) {
-    debug('%s._updateResultForPath(%s, %s, %o, %o)', this.constructor.name, itemPath, fileOperation, operationResult, cacheTheResult)
-    if (cacheTheResult === undefined) cacheTheResult = true
-    cacheTheResult = cacheTheResult && process.env.SAFENETWORKJS_CACHE !== 'disable'
-
-    // Caller wants it cached, but also check if it is cacheable
-    if (cacheTheResult && SafeJsApi.isCacheableResult(fileOperation, operationResult)) {
-      let resultHolder = this._getResultHolderForPath(itemPath)
-      resultHolder[fileOperation] = operationResult
-    } else {
-      this._clearResultForPath(itemPath)
-    }
-
-    // Return a resultsRef
-    return {
-      resultsMap: this._resultHolderMap,
-      resultsKey: itemPath,
-      result: operationResult,
-      'fileOperation': fileOperation  // For debugging only
-    }
   }
 }
 

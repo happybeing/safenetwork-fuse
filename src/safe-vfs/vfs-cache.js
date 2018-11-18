@@ -6,8 +6,8 @@ const debug = require('debug')('safe-fuse:vfs-cache')
  * class implementing a filesystem cache that also supports empty directories
  *
  * Used for:
- * - caching directory content (readdir)
- * - caching attributes (getattr)
+ * - accessing cached directory content (readdir)
+ * - accessing cached attributes (getattr)
  * - directory existence (mkdir/rmdir)
  * - empty directories for the life of a session
  *
@@ -18,71 +18,24 @@ const debug = require('debug')('safe-fuse:vfs-cache')
  * - enables empty directories to be created and removed (mkdir/rmdir)
  *   which is not supported by SAFE NFS (or SafenetworkJs)
  *
+ * CACHE IMPLEMENTATION
+ * The caching of filesystem operations relies on the cache feature of
+ * SafenetworkJs SafeContainer. VfsCaching checks the container's cache
+ * before asking the contaicloseVner to get the result.
  *
- * IMPLEMENTATION
- * This is not a simple one level cache, sorry :)
+ * In addition to this, it may 'piggy-back' the FUSE result on top of
+ * the cached container result.
  *
- * The cache doesn't store attributes or directory listings directly,
- * but holds references to a map, and a key to the map, where that
- * information is held within a SafenetworkJs (SafeContainer) cache. This
- * means that the SafeContainer can clear a cache entry due when it becomes
- * invalid due to a file operation (such as create, delete or modify), and
- * the data/cache entry will be updated next time a FUSE operation requests
- * it.
- *
- * vfsCacheMap holds a map which allows it to look up a results object for a
- * given itemPath (e.g. for getattr(itemPath)). The results object is contains
- * references to a SafenetworkJs container's resultsMap, and the key to use
- * when looking up the results in that resultsMap.
- *
- * So a lookup for getattr() is in essence (only):
- *    let resultsRef = this._resultsRefMap[itemPath]
- *    if (resultsRef) resultHolder = resultsRef.resultsMap[resultsRef.resultsKey]
- *    if (resultHolder) result = resultHolder['getattr']
- *
- * Note: vfsCacheMap has a helper for each FUSE operation, so the
+ * VfsCaching has a helper for each FUSE operation, so the
  * implementation inside getattr() can be simplified to a single call:
  *    let result = vfsCacheMap.getattr(itemPath)
- *
- * The reason for the middle level of indirection, is so that a
- * SafenetworkJs container can invalidate cache entries. Without that,
- * if the 'result' were held inside vfsCacheMap, another way would need
- * to be implemented to invalidate it, because removing it from the
- * SafenetworkJs container's cache would leave it in the vfsCacheMap.
- *
- * To support the above, SafentetworkJs a container provides "ResultRef"
- * versions of some functions (e.g. itemAttributesResultRef()) so that
- * cached results can be accessed externally, and safely invalidated at any
- * time by a SafenetworkJs container.
- *
- * [ ] TODO: It is up to SafenetworkJs to ensure that when a resultsMap[]
- *     entry becomes invalid in one container object, it is invalidated in
- *     all container objects being used to manage the same SAFE Network
- *     container.
  *
  * @private
  */
 
-class VfsCacheMap {
+class VfsCaching {
   constructor (safeVfs) {
     this._safeVfs = safeVfs
-
-    /**
-    * Map of itemPath to resultsRef
-    *
-    * Looked up using an itemPath, the resultsRef for holds:
-    *  - resultsMap  // SafenetworkJs' map of results for a given container key
-    *  - key         // The key to look up the relevant resultsHolder
-    *
-    *  The resultsHolder may contain a results object for each FUSE method
-    *  with a cached value. Values can be inserted by the vfsCacheMap
-    *  FUSE op, alongside any values set by SafenetworkJs container. This
-    *  can saves converting from the SafenetworkJs result to the form
-    *  required by the FUSE op.
-    *
-    * @type {Array}
-    */
-    this._resultsRefMap = []
 
     /**
      * Virtual directory map:
@@ -101,13 +54,37 @@ class VfsCacheMap {
   }
 
   /**
+   * Virtual Directory API For FUSE Operations
+   *
    * The following functions implement virtual directories which are
    * overlaid on top of the SafenetworkJs container based filesystem, which
-   * knows nothing about them.
+   * knows nothing about them. This is necessary to allow the creation of
+   * empty directories, because empty directories are not supported in the
+   * SAFE NFS API, or in SafenetworkJs.
+   *
    * @private
    *
+   * Each virtual directory operation:
    * @return {FuseResult} an object if the action is complete, or undefined
    * if the action should passed on to the non-virtual implementation.
+   *
+   * Implementation
+   *
+   * _directoryMap[] contains a minimised map of virtual paths, not
+   * one entry per directory.
+   *
+   * Example virtual directory tree:
+   *  a---b
+   *   \--c
+   *       \--d
+   * Will be represented by two _directoryMap entries, not four, as follows:
+   *  /a/b
+   *  /a/c/d
+   * So '/a' only existed while it had no content.
+   *
+   * Minimisation applies for directories that contain files too, so that
+   * as soon as a virtual path contains a file, it becomes real and the
+   * path is removed from _directoryMap.
    */
 
   // Note: deleting (unlink) the last file in a SAFE NFS 'fake' directory
@@ -117,13 +94,38 @@ class VfsCacheMap {
   // ideally leave an empty directory.
 
   // Assumes FUSE will only mkdir() if it doesn't exist yet
-  mkdirVirtual (itemPath, mode) {
-    if (itemPath.substr(itemPath.length) === '/') itemPath = itemPath.substr(1, itemPath.length - 1)
+  mkdirVirtual (itemPath) {
+    debug('rmdirVirtual(%s)...', itemPath)
+    if (itemPath.substr(itemPath.length) === '/') {
+      itemPath = itemPath.substr(1, itemPath.length - 1)
+    }
+
+    if (itemPath === '') return new FuseResult(Fuse.EEXIST)
+
     this._directoryMap[itemPath] = true
+    this._minimiseSubpathsOf(itemPath)
+    this._debugListVirtualDirectories('mkdirVirtual(%s)...', itemPath)
+
     return new FuseResult(0)
   }
 
-  rmdirVirtual (itemPath) {
+  _minimiseSubpathsOf (directoryPath) {
+    let nextDir = SafeJsApi.parentPathNoDot(directoryPath)
+    while (this._directoryMap[nextDir]) {
+      delete this._directoryMap[nextDir]
+      nextDir = SafeJsApi.parentPathNoDot(nextDir)
+    }
+  }
+
+  /**
+   * remove a virtual directory
+   *
+   * @param  {[type]}  itemPath
+   * @param  {[type]}  dontCreateParent [optiona] if true, suppress creation of parent virtual directory
+   * @return {Promise}  FuseResult
+   */
+  async rmdirVirtual (itemPath, dontCreateParent) {
+    debug('rmdirVirtual(%s, %s)...', itemPath, dontCreateParent)
     try {
       for (var entry in this._directoryMap) {
         if (entry.indexOf(itemPath) === 0 && entry !== itemPath) {
@@ -131,17 +133,22 @@ class VfsCacheMap {
         }
       }
 
+      // Ok, can delete the directory
       if (this._directoryMap[itemPath]) {
-        delete this._directoryMap[itemPath]   // Remove the virtual folder
-        // Clear operation result from SafenetworkJs container cache
-        this._clearResultFromCache(itemPath, 'itemAttributes')
+        delete this._directoryMap[itemPath]   // Remove the virtual directory
       }
-      if (this._resultsRefMap[itemPath]) {
-        delete this._resultsRefMap[itemPath]  // Purge any cached op result
+
+      let parentDir = SafeJsApi.parentPathNoDot(itemPath)
+      if (!dontCreateParent) {
+        // If no parent exists in container, create a virtual directory
+        let result = await this.getattr(parentDir)
+        if (result.returnCode === Fuse.ENOENT) this.mkdirVirtual(parentDir)
       }
     } catch (e) {
       debug(e)
     }
+    this._debugListVirtualDirectories()
+
     // Return success even if we already purged from the cache.
     //
     // It's not a problem if something tries removing a directory that
@@ -157,14 +164,22 @@ class VfsCacheMap {
     return new FuseResult(0)
   }
 
+  _debugListVirtualDirectories () {
+    debug('Virtual Directories...')
+    let keys = Object.keys(this._directoryMap)
+    for (let i = 0, len = keys.length; i < len; i++) {
+      debug('vdir: %s', keys[i])
+    }
+  }
+
   // When a file is created, check for and clear virtual folders on its path
-  // and clear any cached operation results for this path
-  closeVirtual (itemPath) {
+  async closeVirtual (itemPath) {
     let nextDir = SafeJsApi.parentPathNoDot(itemPath)
     while (this._directoryMap[nextDir]) {
-      this.rmdirVirtual(nextDir)
+      await this.rmdirVirtual(nextDir, true)
       nextDir = SafeJsApi.parentPathNoDot(nextDir)
     }
+
     return new FuseResult(0)
   }
 
@@ -190,24 +205,37 @@ class VfsCacheMap {
 
   // TODO remove code that returns as if empty directory, for getattr/readdir
   //      on a non-existent directory - ACTUALLY I DON'T THINK THAT CODE EXISTS?
-  getattrVirtual (itemPath) {
-    if (this._directoryMap[itemPath]) {
-      const now = Date.now()
-      let itemAttributesResult = {
-        modified: now,
-        accessed: now,
-        created: now,
-        size: 0,
-        version: -1,
-        'isFile': false,
-        entryType: 'virtualDirectory'
+  getattrVirtual (directoryPath) {
+    // Check if this directory is, or lies on a virtual path
+    for (var entry in this._directoryMap) {
+      if (entry === directoryPath ||
+          entry.indexOf(directoryPath + '/') === 0) {
+        const now = Date.now()
+        let itemAttributesResult = {
+          modified: now,
+          accessed: now,
+          created: now,
+          size: 0,
+          version: -1,
+          'isFile': false,
+          entryType: 'virtualDirectory'
+        }
+        return this._makeGetattrResult(directoryPath, itemAttributesResult)
       }
-      return this._makeGetattrResult(itemPath, itemAttributesResult)
     }
+
+    // ??? TODO delete this
+    // // If this lies on a virtual path, it can't exist
+    // for (var entry in this._directoryMap) {
+    //   if ((directoryPath + '/').indexOf(entry) === 0) {
+    //     return new FuseResult(Fuse.ENOENT)
+    //   }
+    // }
 
     return undefined  // No virtual directory, so action is incomplete
   }
 
+  // TODO Fix this - can it be done?
   renameVirtual (itemPath, newPath) {
     if (this._directoryMap[itemPath]) {
       this._directoryMap[newPath] = true
@@ -251,66 +279,37 @@ class VfsCacheMap {
     debug('%s.getattr(%s)', this.constructor.name, itemPath)
     let containerOp = 'itemAttributes'
 
-    let fuseResult = this._getResultFromCache(itemPath, containerOp)
-    if (!fuseResult) {
-      let resultsRef
-      try {
-        let handler = this._safeVfs.getHandler(itemPath)
-        let containerPath = handler.pruneMountPath(itemPath)
-        let container = await handler.getContainer(itemPath)
+    let fuseResult
+    try {
+      let handler = this._safeVfs.getHandler(itemPath)
+      let containerPath = handler.pruneMountPath(itemPath)
+      let container = await handler.getContainer(itemPath)
 
-        resultsRef = await container.itemAttributesResultRef(containerPath)
-        fuseResult = this._makeGetattrResult(itemPath, resultsRef.result)
-        // Most getattr() results can be cached, but some
-        // such as 'not found' clear the cache by deleting
-        // the resultHolder, so this checks if it exists
-        if (resultsRef.resultsMap[resultsRef.resultsKey]) {
-          this._saveResultToCache(itemPath, 'itemAttributes', fuseResult, resultsRef)
-        }
-      } catch (e) {
-        debug(e)
-        fuseResult = new FuseResult()
+      // Lookup result in container's cache
+      let result
+      let resultHolder = container._getResultHolderForPath(containerPath)
+      if (resultHolder) result = resultHolder[containerOp]
+
+      if (!result) {
+        let resultsRef = await container.itemAttributesResultsRef(containerPath)
+        result = resultsRef.result
+        delete result.fuseResult //  No longer valid
       }
+
+      if (result && result.fuseResult) {
+        fuseResult = result.fuseResult
+      }
+
+      if (!fuseResult) {
+        fuseResult = this._makeGetattrResult(itemPath, result)
+        result.fuseResult = fuseResult
+      }
+    } catch (e) {
+      debug(e)
+      fuseResult = new FuseResult()
     }
 
     return fuseResult
-  }
-
-  // Piggy back the fuse result on the containerOp result, so we don't
-  // need the container to get our result back, but if the container
-  // invalidates it's result, it will also invalidate the fuse result
-  _saveResultToCache (itemPath, containerOp, fuseResult, resultsRef) {
-    debug('%s._saveResultToCache(%s, %o, %o, %O)', this.constructor.name, itemPath, containerOp, fuseResult, resultsRef)
-    this._resultsRefMap[itemPath] = resultsRef
-    let resultHolder = resultsRef.resultsMap[resultsRef.resultsKey]
-
-    // Insert into SafenetworkJs cached result object
-    if (resultHolder[containerOp]) resultHolder[containerOp].fuseResult = fuseResult
-  }
-
-  // Returns a fuseResult for fuseOp if successful
-  _getResultFromCache (itemPath, containerOp) {
-    debug('%s._getResultFromCache(%s, %o)', this.constructor.name, itemPath, containerOp)
-    let resultHolder
-    let resultsRef = this._resultsRefMap[itemPath]
-    if (resultsRef) resultHolder = resultsRef.resultsMap[resultsRef.resultsKey]
-    if (resultHolder && resultHolder[containerOp]) {
-      debug('cached %s(): %o', containerOp, resultHolder[containerOp])
-      return resultHolder[containerOp].fuseResult
-    }
-    debug('NO cached %s():', containerOp)
-    return undefined
-  }
-
-  _clearResultFromCache (itemPath, containerOp) {
-    debug('%s._clearResultFromCache(%s, %o)', this.constructor.name, itemPath)
-    let resultHolder
-    let resultsRef = this._resultsRefMap[itemPath]
-    if (resultsRef) resultHolder = resultsRef.resultsMap[resultsRef.resultsKey]
-    if (resultHolder && resultHolder[containerOp]) {
-      debug('clearing cached %s(): %o', containerOp, resultHolder[containerOp])
-      delete resultHolder[containerOp]
-    }
   }
 
   /**
@@ -375,4 +374,4 @@ class FuseResult {
   }
 }
 
-module.exports = VfsCacheMap
+module.exports = VfsCaching
