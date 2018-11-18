@@ -20,7 +20,7 @@ module.exports = (safeVfs) => {
         if (fuseResult) {
           return reply(fuseResult.returnCode, fuseResult.returnObject)
         }
-        safeVfs.vfsCache().getattr(itemPath, reply).then((result) => {
+        safeVfs.vfsCache().getattr(itemPath).then((result) => {
           return reply(result.returnCode, result.returnObject)
         }).catch((e) => { throw e })
       } catch (e) {
