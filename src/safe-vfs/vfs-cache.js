@@ -70,21 +70,21 @@ class VfsCaching {
    *
    * Implementation
    *
-   * _directoryMap[] contains a minimised map of virtual paths, not
-   * one entry per directory.
+   * _directoryMap[] contains an entry per virtual directory indexed by its path
    *
    * Example virtual directory tree:
    *  a---b
    *   \--c
    *       \--d
-   * Will be represented by two _directoryMap entries, not four, as follows:
+   * Will be represented by four _directoryMap entries, as follows:
+   *  /a
    *  /a/b
+   *  /a/c
    *  /a/c/d
-   * So '/a' only existed while it had no content.
    *
-   * Minimisation applies for directories that contain files too, so that
-   * as soon as a virtual path contains a file, it becomes real and the
-   * path is removed from _directoryMap.
+   * As soon as a virtual path contains a file, it becomes real and the
+   * path is removed from _directoryMap, and so are all entries that
+   * lie on the path of the file.
    */
 
   // Note: deleting (unlink) the last file in a SAFE NFS 'fake' directory
@@ -95,7 +95,7 @@ class VfsCaching {
 
   // Assumes FUSE will only mkdir() if it doesn't exist yet
   mkdirVirtual (itemPath) {
-    debug('rmdirVirtual(%s)...', itemPath)
+    debug('mkdirVirtual(%s)...', itemPath)
     if (itemPath.substr(itemPath.length) === '/') {
       itemPath = itemPath.substr(1, itemPath.length - 1)
     }
@@ -103,64 +103,62 @@ class VfsCaching {
     if (itemPath === '') return new FuseResult(Fuse.EEXIST)
 
     this._directoryMap[itemPath] = true
-    this._minimiseSubpathsOf(itemPath)
     this._debugListVirtualDirectories('mkdirVirtual(%s)...', itemPath)
 
     return new FuseResult(0)
   }
 
-  _minimiseSubpathsOf (directoryPath) {
-    let nextDir = SafeJsApi.parentPathNoDot(directoryPath)
-    while (this._directoryMap[nextDir]) {
-      delete this._directoryMap[nextDir]
-      nextDir = SafeJsApi.parentPathNoDot(nextDir)
-    }
-  }
-
   /**
    * remove a virtual directory
    *
-   * @param  {[type]}  itemPath
-   * @param  {[type]}  dontCreateParent [optiona] if true, suppress creation of parent virtual directory
+   * @param  {String}  itemPath
+   * @param  {Boolean} [otional] pathExists, if true just delete (don't check subfolders or create parent)
    * @return {Promise}  FuseResult
    */
-  async rmdirVirtual (itemPath, dontCreateParent) {
-    debug('rmdirVirtual(%s, %s)...', itemPath, dontCreateParent)
+  async rmdirVirtual (itemPath, pathExists) {
+    debug('rmdirVirtual(%s, %s)...', itemPath, pathExists)
     try {
-      for (var entry in this._directoryMap) {
-        if (entry.indexOf(itemPath) === 0 && entry !== itemPath) {
-          return new FuseResult(Fuse.ENOTEMPTY) // Has subdirectory
+      if (!pathExists) {
+        for (var entry in this._directoryMap) {
+          if (entry.indexOf(itemPath) === 0 && entry !== itemPath) {
+            debug('cannot remove because of subdirectory in path: ', entry)
+            return new FuseResult(Fuse.ENOTEMPTY) // Has subdirectory
+          }
         }
       }
 
       // Ok, can delete the directory
       if (this._directoryMap[itemPath]) {
+        debug('removed vdir: ', itemPath)
         delete this._directoryMap[itemPath]   // Remove the virtual directory
-      }
 
-      let parentDir = SafeJsApi.parentPathNoDot(itemPath)
-      if (!dontCreateParent) {
-        // If no parent exists in container, create a virtual directory
-        let result = await this.getattr(parentDir)
-        if (result.returnCode === Fuse.ENOENT) this.mkdirVirtual(parentDir)
+        if (!pathExists) {
+          // Re-create virtual directory for immediate parent(s) until one exists
+          let parentDir = SafeJsApi.parentPathNoDot(itemPath)
+          while (parentDir !== '' && parentDir !== '/') {
+            let result = await this.getattr(parentDir)
+            if (result && result.returnCode === Fuse.ENOENT) {
+              this.mkdirVirtual(parentDir)
+              parentDir = SafeJsApi.parentPathNoDot(parentDir)
+            } else {
+              parentDir = ''
+            }
+          }
+        }
+      } else {
+        // There's no virtual directory to delete, so check if its a valid path
+        let result = await this.getattr(itemPath)
+        if (result && result.returnCode === Fuse.ENOENT) {
+          return result // Doesn't exist
+        } else {
+          return new FuseResult(Fuse.ENOTEMPTY) // Is not empty
+        }
       }
     } catch (e) {
       debug(e)
     }
     this._debugListVirtualDirectories()
 
-    // Return success even if we already purged from the cache.
-    //
-    // It's not a problem if something tries removing a directory that
-    // was removed as a side effect of deleting the last file in the
-    // directory.
-    //
-    // It is a minor issue that this means trying to remove a non-existent
-    // directory will appear to succeed, so we might want to improve
-    // handling of that by keeping a small cache of recently discarded
-    // directories. But for now, best not to trip up things that
-    // try to remove a file tree, and fail each time they try to
-    // remove a directory.
     return new FuseResult(0)
   }
 
@@ -174,12 +172,14 @@ class VfsCaching {
 
   // When a file is created, check for and clear virtual folders on its path
   async closeVirtual (itemPath) {
+    debug('%s.closeVirtual(%s)', this.constructor.name, itemPath)
     let nextDir = SafeJsApi.parentPathNoDot(itemPath)
-    while (this._directoryMap[nextDir]) {
-      await this.rmdirVirtual(nextDir, true)
+    while (nextDir !== '' && nextDir !== '/') {
+      if (this._directoryMap[nextDir]) await this.rmdirVirtual(nextDir, true)
       nextDir = SafeJsApi.parentPathNoDot(nextDir)
     }
 
+    this._debugListVirtualDirectories()
     return new FuseResult(0)
   }
 
