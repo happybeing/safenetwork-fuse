@@ -4,7 +4,7 @@ const debug = require('debug')('safe-fuse:ops')
 module.exports = (ipfs) => {
   return {
     utimens (itemPath, atime, mtime, reply) {
-      debug('TODO: implement fuse operation: utimens'); return reply(Fuse.EREMOTEIO)
+      debug('TODO: implement fuse operation: utimens'); return reply(0)
 
       debug('utimens(\'%s\', %s, %s)', itemPath, atime, mtime)
 
