@@ -202,7 +202,6 @@ mkdir $SAFE_DRIVE_PATH/del-dir
 echo v1 > $SAFE_DRIVE_PATH/del-dir/foo
 [ -f $SAFE_DRIVE_PATH/del-dir/foo ]
 rm $SAFE_DRIVE_PATH/del-dir/foo
-echo currently failing due to loss of directory when last entry is deleted:
 [ -d $SAFE_DRIVE_PATH/del-dir ]
 rmdir $SAFE_DRIVE_PATH/del-dir
 [ ! -d $SAFE_DRIVE_PATH/del-dir ]
@@ -222,8 +221,8 @@ mkdir $SAFE_DRIVE_PATH/testdir
 touch $SAFE_DRIVE_PATH/testdir/testfile
 rmdir $SAFE_DRIVE_PATH/testdir 2>/dev/null
 if [ $? -eq 0 ]; then
+  rc=1
 	echo "rmdir succeeded, although it must not"
-	rc=$(($rc + $?))
 fi
 rm $SAFE_DRIVE_PATH/testdir/testfile
 rc=$(($rc + $?))
@@ -235,6 +234,7 @@ if [ $rc -ne 0 ]; then
 else
   echo "SUCCESS: rmdir test"
 fi
+set -e  # Exit on error
 
 rm -rf $SAFE_DRIVE_PATH
 mkdir $SAFE_DRIVE_PATH
@@ -257,7 +257,6 @@ tree $SAFE_DRIVE_PATH
 echo ""
 echo "TESTING: git"
 rm -rf tests-git  # In case left over after rsync
-sleep 1
 set -e  # Exit on error
 set -v  # Echo output
 tree $DRIVE_PATH
@@ -326,7 +325,6 @@ rsync -r --delete $SAFE_DRIVE_PATH/ $SYNCDIR/
 diff -r $SAFE_DRIVE_PATH/ $SYNCDIR/
 
 echo abcd >$SYNCDIR/blah
-# failing to copy blah...
 rsync -r --delete $SYNCDIR/ $SAFE_DRIVE_PATH/
 diff -r $SAFE_DRIVE_PATH/ $SYNCDIR/
 rm $SYNCDIR/blah
