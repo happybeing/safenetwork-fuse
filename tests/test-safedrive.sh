@@ -84,7 +84,8 @@ trap cleanup EXIT
 # ------------------------ START OF TESTS -------------------------
 rm -rf $SAFE_DRIVE_PATH
 mkdir $SAFE_DRIVE_PATH
-tree $SAFE_DRIVE_PATH
+if [ $(which tree) ]; then tree $SAFE_DRIVE_PATH; fi
+
 echo ""
 echo "TESTING: file and directory renaming"
 set -e  # Exit on error
@@ -94,7 +95,7 @@ echo Hello1 > $SAFE_DRIVE_PATH/dir-tree/file1
 mkdir $SAFE_DRIVE_PATH/dir-tree/dir-tree2
 mkdir $SAFE_DRIVE_PATH/dir-tree/dir-tree2/dir-tree3
 echo Hello3 > $SAFE_DRIVE_PATH/dir-tree/dir-tree2/dir-tree3/file3
-tree $SAFE_DRIVE_PATH
+if [ $(which tree) ]; then tree $SAFE_DRIVE_PATH; fi
 
 [ "$(cat $SAFE_DRIVE_PATH/dir-tree/file1)" = "Hello1" ]
 [ ! "$(mv $SAFE_DRIVE_PATH/dir-tree/file1 $SAFE_DRIVE_PATH/dir-tree/file1_newname)" ]
@@ -103,12 +104,12 @@ tree $SAFE_DRIVE_PATH
 [ ! "$(mv $SAFE_DRIVE_PATH/dir-tree/dir-tree2/file2_newname $SAFE_DRIVE_PATH/dir-tree/dir-tree2/file2)" ]
 [ "$(cat $SAFE_DRIVE_PATH/dir-tree/dir-tree2/dir-tree3/file3_newname)" = "Hello3" ]
 set +v  # Don't echo output
-tree $SAFE_DRIVE_PATH
+if [ $(which tree) ]; then tree $SAFE_DRIVE_PATH; fi
 echo "SUCCESS: renaming files and directories"
 
 rm -rf $SAFE_DRIVE_PATH
 mkdir $SAFE_DRIVE_PATH
-tree $SAFE_DRIVE_PATH
+if [ $(which tree) ]; then tree $SAFE_DRIVE_PATH; fi
 echo ""
 echo "TESTING: create & remove directory tree (dir-tree) with empty parent directory"
 set -e  # Exit on error
@@ -116,7 +117,7 @@ set -v  # Echo output
 
 mkdir $SAFE_DRIVE_PATH/del-dir
 
-tree $SAFE_DRIVE_PATH
+if [ $(which tree) ]; then tree $SAFE_DRIVE_PATH; fi
 mkdir $SAFE_DRIVE_PATH/dir-tree/
 echo Hello1 > $SAFE_DRIVE_PATH/dir-tree/file1
 mkdir $SAFE_DRIVE_PATH/dir-tree/dir-tree2
@@ -124,7 +125,7 @@ echo Hello2 > $SAFE_DRIVE_PATH/dir-tree/dir-tree2/file2
 mkdir $SAFE_DRIVE_PATH/dir-tree/dir-tree2/dir-tree3
 echo Hello3 > $SAFE_DRIVE_PATH/dir-tree/dir-tree2/dir-tree3/file3
 
-tree $SAFE_DRIVE_PATH/dir-tree
+if [ $(which tree) ]; then tree $SAFE_DRIVE_PATH/dir-tree; fi
 [ "$(cat $SAFE_DRIVE_PATH/dir-tree/file1)" = "Hello1" ]
 [ "$(cat $SAFE_DRIVE_PATH/dir-tree/dir-tree2/dir-tree3/file3)" = "Hello3" ]
 
@@ -146,14 +147,14 @@ rm -rf $SAFE_DRIVE_PATH/dir-tree
 [ ! -d $SAFE_DRIVE_PATH/dir-tree ]
 [ ! -d $SAFE_DRIVE_PATH/dir-tree ]
 [ -d $SAFE_DRIVE_PATH ]
-tree $DRIVE_PATH
+if [ $(which tree) ]; then tree $DRIVE_PATH; fi
 set +v  # Don't echo output
 echo "SUCCESS: remove directory tree"
 echo ""
 
 rm -rf $SAFE_DRIVE_PATH
 mkdir $SAFE_DRIVE_PATH $SAFE_DRIVE_PATH/play-dir $SAFE_DRIVE_PATH/del-dir
-tree $SAFE_DRIVE_PATH
+if [ $(which tree) ]; then tree $SAFE_DRIVE_PATH; fi
 echo "TESTING: file creation and modification"
 echo Making files...
 set -e  # Exit on error
@@ -193,7 +194,7 @@ rmdir $SAFE_DRIVE_PATH/play-dir
 rmdir $SAFE_DRIVE_PATH/del-dir
 [ ! -d $SAFE_DRIVE_PATH/del-dir ]
 
-! echo v1 > $SAFE_DRIVE_PATH/del-dir/foo
+! echo v1 > $SAFE_DRIVE_PATH/del-dir/foo 2>/dev/null
 
 # Catch another past bug
 [ ! -d $SAFE_DRIVE_PATH/del-dir ]
@@ -213,7 +214,7 @@ set +e  # Don't exit on error
 set +v  # Don't echo output
 rm -rf $SAFE_DRIVE_PATH
 mkdir $SAFE_DRIVE_PATH
-tree $SAFE_DRIVE_PATH
+if [ $(which tree) ]; then tree $SAFE_DRIVE_PATH; fi
 echo "TESTING: rmdir"
 sleep 1
 rc=0
@@ -238,7 +239,7 @@ set -e  # Exit on error
 
 rm -rf $SAFE_DRIVE_PATH
 mkdir $SAFE_DRIVE_PATH
-tree $SAFE_DRIVE_PATH
+if [ $(which tree) ]; then tree $SAFE_DRIVE_PATH; fi
 echo ""
 echo "TESTING: automount of _documents"
 set +v  # Don't echo output
@@ -253,13 +254,13 @@ set +v  # Don't echo output
 
 rm -rf $SAFE_DRIVE_PATH
 mkdir $SAFE_DRIVE_PATH
-tree $SAFE_DRIVE_PATH
+if [ $(which tree) ]; then tree $SAFE_DRIVE_PATH; fi
 echo ""
 echo "TESTING: git"
 rm -rf tests-git  # In case left over after rsync
 set -e  # Exit on error
 set -v  # Echo output
-tree $DRIVE_PATH
+if [ $(which tree) ]; then tree $DRIVE_PATH; fi
 mkdir $SAFE_DRIVE_PATH/tests-git
 pushd $SAFE_DRIVE_PATH/tests-git
 git init --bare
@@ -289,9 +290,9 @@ set -e  # Exit on error
 rm -rf $SYNCDIR $SAFE_DRIVE_PATH
 mkdir $SYNCDIR
 echo a short file > $SYNCDIR/a_short_file
-tree $SYNCDIR $SAFE_DRIVE_PATH
+if [ $(which tree) ]; then tree $SYNCDIR $SAFE_DRIVE_PATH; fi
 rsync -r --delete $SYNCDIR/ $SAFE_DRIVE_PATH/
-tree $SYNCDIR $SAFE_DRIVE_PATH
+if [ $(which tree) ]; then tree $SYNCDIR $SAFE_DRIVE_PATH; fi
 diff -r $SYNCDIR/ $SAFE_DRIVE_PATH/
 
 rm $SYNCDIR/a_short_file
