@@ -162,15 +162,14 @@ set -v  # Echo output
 echo v1 > $SAFE_DRIVE_PATH/file
 echo v1 > $SAFE_DRIVE_PATH/play-dir/play-with-me
 echo v1 > $SAFE_DRIVE_PATH/del-dir/delete-me
-sleep 1
 
 [ "$(cat $SAFE_DRIVE_PATH/file)" = "v1" ]
 
-echo "v2" > $SAFE_DRIVE_PATH/file
-[ "$(cat $SAFE_DRIVE_PATH/file)" = "v2" ]
+echo "v22" > $SAFE_DRIVE_PATH/file
+[ "$(cat $SAFE_DRIVE_PATH/file)" = "v22" ]
 
-echo "v2" > $SAFE_DRIVE_PATH/play-dir/play-with-me
-[ "$(cat $SAFE_DRIVE_PATH/play-dir/play-with-me)" = "v2" ]
+echo "v22" > $SAFE_DRIVE_PATH/play-dir/play-with-me
+[ "$(cat $SAFE_DRIVE_PATH/play-dir/play-with-me)" = "v22" ]
 
 [ -f $SAFE_DRIVE_PATH/play-dir/play-with-me ]
 rm $SAFE_DRIVE_PATH/play-dir/play-with-me
