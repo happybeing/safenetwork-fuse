@@ -23,6 +23,7 @@ const debug = require('debug')('safe-fuse:stub')
 module.exports = (safeJs) => Object.assign(
   createCreate(safeJs),
   createFtruncate(safeJs),
+//  createFgetattr(safeJs),
   createGetattr(safeJs),
   createMkdir(safeJs),
   createMknod(safeJs),
