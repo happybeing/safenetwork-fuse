@@ -9,8 +9,12 @@ module.exports = (safeVfs) => {
 
         // (https://github.com/mafintosh/fuse-bindings#opsopenpath-flags-cb)
         safeVfs.getHandler(itemPath).open(itemPath, flags).then((fd) => {
-          debug('open returning fd: %s', fd)
-          reply(0, fd)
+          if (fd > 0) {
+            debug('open returning fd: %s', fd)
+            return reply(0, fd)
+          }
+          debug('open failed: ' + fd + ', ' + itemPath)
+          return reply(Fuse.EREMOTEIO)
         }).catch((e) => { throw e })
       } catch (err) {
         debug('Failed to open: ' + itemPath)
