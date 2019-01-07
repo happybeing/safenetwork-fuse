@@ -384,7 +384,7 @@ class RootHandler {
   async write (itemPath, fd, buf, len, pos) {
     debug('RootHandler for %o mounted at %s write(\'%s\', %s, buf, %s, %s)', this._containerRef, this._mountPath, itemPath, fd, len, pos)
     let containerItem = this.pruneMountPath(itemPath)
-    return (await this.getContainer(itemPath)).writeFileBuf(containerItem, fd, buf, len).catch((e) => { debug(e) })
+    return (await this.getContainer(itemPath)).writeFileBuf(containerItem, fd, buf, len, pos).catch((e) => { debug(e) })
   }
 
   async unlink (itemPath) {
