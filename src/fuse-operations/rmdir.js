@@ -5,7 +5,7 @@ module.exports = (safeVfs) => {
   return {
     rmdir (itemPath, reply) {
       try {
-        debug('rmdir(\'%s\', %s)', itemPath)
+        debug('rmdir(\'%s\')', itemPath)
         safeVfs.vfsCache().rmdirVirtual(itemPath).then((fuseResult) => {
           if (fuseResult) {
             return reply(fuseResult.returnCode)
