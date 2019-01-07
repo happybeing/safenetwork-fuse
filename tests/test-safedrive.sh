@@ -262,6 +262,7 @@ set -v  # Echo output
 if [ $(which tree) ]; then tree $DRIVE_PATH; fi
 mkdir $SAFE_DRIVE_PATH/tests-git
 pushd $SAFE_DRIVE_PATH/tests-git
+#read -p "Press enter to git init --bare"
 git init --bare
 popd
 git clone $SAFE_DRIVE_PATH/tests-git
@@ -309,6 +310,18 @@ diff -r $SYNCDIR/ $SAFE_DRIVE_PATH/
 rm $SAFE_DRIVE_PATH/a_third_file
 rsync -r --delete $SAFE_DRIVE_PATH/ $SYNCDIR/
 diff -r $SYNCDIR/ $SAFE_DRIVE_PATH/
+
+set +v  # Don't output
+# Big file test
+# Use a big file ~200k to test multiple writes/reads
+# ../package-lock.json is suitable so use that!
+set -v  # Echo output
+set -e  # Exit on error
+# Big file test
+cp ../package-lock.json $SAFE_DRIVE_PATH
+cp $SAFE_DRIVE_PATH/package-lock.json .
+diff ../package-lock.json package-lock.json
+rm $SAFE_DRIVE_PATH/package-lock.json ../tests/package-lock.json
 
 set +v  # Don't output
 # Big test
