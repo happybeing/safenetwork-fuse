@@ -1,7 +1,11 @@
-# safe-cli-boilerplate
+# safe-drive
 dist/
+dist.*/
 *.zim/
 notebook.zim
+.nexe/
+releases-unpacked/
+vaults/
 
 ### What follows is the standard .gitignore for Node
 
