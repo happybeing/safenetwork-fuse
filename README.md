@@ -1,8 +1,8 @@
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](https://github.com/standard/standard)
 
-# What is SAFE FUSE?
+# What is SAFE Drive?
 
-SAFE FUSE lets you access your SAFE Network storage as if it is on your local drive. It implements a virtual drive for SAFE Network on Windows, Mac OS and Linux computers.
+SAFE Drive lets you access your SAFE Network storage as if it is on your local drive. It implements a virtual drive for SAFE Network on Windows, Mac OS and Linux computers, and uses the nodejs `fuse-bindings` library.
 
 **NOTE:** only Linux is supported so far, but feel free to build for Windows or Mac and report back.
 
@@ -52,12 +52,15 @@ SAFE Network operates using the resources of anonymous 'farmers' who are rewarde
 SAFE is an open source project of @maidsafe, a private company which is majority owned by a Scottish charity, both based in Scotland but which is decentralised with employees and contributors based around the globe.
 
 
-# How To Use SAFE FUSE
+# How To Use SAFE Drive
+**IMPORTANT:** SAFE Drive is not currently bundled as an executable. So the instructions immediately below relating to downloading a zip file will not work until this is supported. 
+
+You can though still use SAFE Drive by cloning the repository and running `node bin.js` in the SAFE Drive directory. See the [Development](https://github.com/theWebalyst/safenetwork-fuse/#development) section for details on how to do this.
 
 ## 1. Get an account on SAFE Network
-To use SAFE FUSE you will need an account on SAFE Network, which is currently in testing (see [https://safenetwork.tech/get-involved/](https://safenetwork.tech/get-involved/)).
+To use SAFE Drive you will need an account on SAFE Network, which is currently in testing (see [https://safenetwork.tech/get-involved/](https://safenetwork.tech/get-involved/)).
 
-## 2. Install SAFE FUSE
+## 2. Install SAFE Drive
 
 Download the latest zip file for your operating system from releases and extract to a directory on your computer.
 
@@ -67,46 +70,42 @@ Latest downloads: [releases](https://github.com/theWebalyst/safenetwork-fuse/tre
 
 ### 3.1 Linux
 
-We test mainly on Ubuntu 18 for now but SAFE FUSE has been tried successfully on other distros, so if you succeed (or not) on another distro please create an issue to report your findings and we'll add a note below.
+We test mainly on Ubuntu 18 for now but SAFE Drive has been tried successfully on other distros, so if you succeed (or not) on another distro please create an issue to report your findings and we'll add a note below.
 
-In addition to Ubuntu 18, we have reports of success on Arch, Debian 9 and Fedora 28.
+In addition to Ubuntu 18, we have reports of success on Arch.
 
-To install dependencies on Ubuntu / Debian:
+To install dependencies on Ubuntu:
 ```
     sudo apt-get install libfuse-dev xdg-utils
 ```
 
-On Fedora:
-```
-    sudo dnf install fuse fuse-devel xdg-utils
-```
-
-On Arch based distros try `fuse2`:
-```
-    sudo pacman -S fuse2 xdg-utils
-```
-
-If your distro doesn't work with the above libraries or doesn't have them, try `libfuse2` and submit an issue with the results:
+If your distro doesn't have `libfuse-dev` try:
 ```
     sudo apt-get install libfuse2 xdg-utils
 ```
 
+On Arch based distros try `fuse2`:
+```
+    sudo apt-get install fuse2 xdg-utils
+```
+
 ### 3.2 Windows
 
-Windows has not yet been tested but it should build. If you want to try it out see the development section below.
+Windows has not yet been tested but there is a good chance that it will now work. If you want to try it out see the development section below. See this [forum topic](https://forum.safedev.org/t/safe-drive-windows/2221?u=happybeing) for more information. Note that the code has been updated since that topic and is more likely to work with Windows now, but has not been tested. Also, some of the instructions in that topic may have been superceded due to changes in SAFE Browser, so if anything doesn't work, check back here or post a question on the forum.
 
 ### 3.3 Mac OS
 
-Mac OS has not yet been tested but it should build. If you want to try it out see the development section below.
+Mac OS has not yet been tested but it should work as it is similar to Linux. If you want to try it out see the development section below. See this [forum topic](https://forum.safedev.org/t/safe-drive-osx/2089?u=happybeing) for more information, and [this post](https://forum.safedev.org/t/safe-drive-osx/2089/41?u=happybeing) for working around a problem with SAFE Browser authorisation on Mac OSX. Note that some of the instructions in that topic may have been superceded due to changes in SAFE Browser, so if anything doesn't work, check back here or post a question on the forum.
+
 ## 4. Login to your SAFE Account
 
 Start the SAFE Browser and log into your SAFE account.
 
 ## 5. Mount Your SAFE Drive
 
-a) Assuming you are in the SAFE FUSE directory type: `./mount-safe`
+a) Assuming you are in the SAFE Drive directory type: `./mount-safe`
 
-b) SAFE Browser should come to the front asking you to authorise SAFE FUSE to access your files, so click 'Authorise'.
+b) SAFE Browser should come to the front asking you to authorise SAFE Drive to access your files, so click 'Authorise'.
 
 c) Your SAFE Drive should now be mounted and you can test this as follows
 
@@ -132,7 +131,7 @@ You can just shut down your computer, but if you wish to unmount the drive for a
 On Linux, type:
 
 ```
-    umount ~/SAFE
+    sudo umount ~/SAFE
 ```
 
 
@@ -161,7 +160,7 @@ This will create a file `debug.txt` next to the executable with useful logging i
 Pull requests are welcome of course, so if you would like to help with development or just want to run from source, see below.
 
 ## Implementation
-SAFE FUSE is a command line application based on [safe-cli-boilerplate](https://github.com/theWebalyst/safe-cli-boilerplate).
+SAFE Drive is a command line application based on [safe-cli-boilerplate](https://github.com/theWebalyst/safe-cli-boilerplate).
 
 It is written in NodeJS using the `fuse-bindings` and `safenetworkjs` libraries, and packaged as a stand-alone executable for Windows, Mac OS and Linux. Limitations on the packaging scheme mean that some files are placed next to the executable.
 
@@ -169,7 +168,7 @@ It is written in NodeJS using the `fuse-bindings` and `safenetworkjs` libraries,
 If you are not yet familiar with developing for SAFE Network, or have not previously used the 'mock' network to develop and test your code, please run through the [SAFE Network Nodejs Tutorial](https://hub.safedev.org/platform/nodejs/) *before* proceeding. Doing so should ensure you have all the pre-requisites and help you understand anything not made explicit in the instructions below.
 
 ### a) Clone safenetworkjs:
-You need [Yarn](https://yarnpkg.com/) to run this project. Remember to fork on github and then clone your fork if you intend to work on the code. The following just clones the main repo:
+Remember to fork on github and then clone your fork if you intend to work on the code. The following just clones the main repo:
 
 ```
 git clone https://github.com/theWebalyst/safenetworkjs
@@ -196,23 +195,25 @@ NOTE: you only need one of either `libfuse-dev` or `libfuse2`, and one may fail 
 
 ## Build for mock network
 
+**IMPORTANT:** build is not currently working - see [Debugging with Chrom/Chromium](https://github.com/theWebalyst/safenetwork-fuse/#debugging-with-chromechromium), or feel free to get the build working and submit a PR!
+
 Build an executable for the host OS only, the default (output in ./dist/mock):
 ```
 export NODE_ENV=dev
 npm run build-mock
 ```
-Commands to build for Windows and Mac OS can be found in the package.json file but SAFE FUSE has not been tested on them yet. Feel free to try and report back if you have success, ideally with a pull request for any fixes! :smile:
+Commands to build for Windows and Mac OS can be found in the package.json file but SAFE Drive has not been tested on them yet. Feel free to try and report back if you have success, ideally with a pull request for any fixes! :smile:
 
 ### To test with mock
-Start the SAFE Browser in another terminal with:
+Start the SAFE Browser dev build in another terminal with:
 ```
-NODE_ENV=dev safe-browser
+safe-browser --debug
 ```
 In the browser, create an account on the mock network.
 
 In your development terminal, in your build directory type:
 ```
-NODE_ENV=dev DEBUG=safe* ./dist/mock/mount-safe
+NODE_ENV=test DEBUG=safe* ./dist/mock/mount-safe
 ```
 You should see output to the terminal, and assuming no errors you can access your SAFE drive (at ~/SAFE on Linux).
 
@@ -221,7 +222,7 @@ You should see output to the terminal, and assuming no errors you can access you
 The following command enables debug output filtered to include statements starting with `safe-fuse` or `safenetworkjs` and allows you to debug the code with the Chrome or Chromium source code debugger.
 
 ```
-DEBUG=safe-fuse*,safenetworkjs* node --inspect-brk bin.js
+NODE_ENV=test DEBUG=safe-fuse*,safenetworkjs* node --inspect-brk bin.js
 ```
 
 To use the debugger, start Chrome or Chromium, navigate to `about:inspect` and click on the link. The debugger will open and display the source code of the entry point.
@@ -229,10 +230,13 @@ To use the debugger, start Chrome or Chromium, navigate to `about:inspect` and c
 If you want to capture the console debug output, append '2>&1| tee debug.txt' to the end of the command. This will capture a copy of the console output in debug.txt. For example:
 
 ```
-DEBUG=safe-fuse*,safenetworkjs* node --inspect-brk bin.js 2>&1 | tee debug.txt
+NODE_ENV=test DEBUG=safe-fuse*,safenetworkjs* node --inspect-brk bin.js 2>&1 | tee debug.txt
 ```
 
 ## Build for live network
+
+**IMPORTANT:** build is not currently working - see [Debugging with Chrom/Chromium](https://github.com/theWebalyst/safenetwork-fuse/#debugging-with-chromechromium), or feel free to get the build working and submit a PR!
+
 Build an executable for the host OS only, the default (output in ./dist/prod):
 
 ```
